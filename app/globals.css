@@ -1,26 +1,124 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: #fafafa;
+  color: #0f172a;
+}
+
+::selection {
+  background: #6366f1;
+  color: #fff;
+}
+
+/* Gradient teks untuk headline utama */
+.text-gradient-brand {
+  background-image: linear-gradient(
+    93deg,
+    #4f46e5 0%,
+    #7c3aed 45%,
+    #db2777 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Pola titik untuk latar hero */
+.dot-pattern {
+  background-image: radial-gradient(
+    circle,
+    rgba(99, 102, 241, 0.22) 1px,
+    transparent 1px
+  );
+  background-size: 26px 26px;
+}
+
+/* Efek glow lembut di hero */
+.hero-glow {
+  background:
+    radial-gradient(60% 55% at 15% 0%, rgba(99, 102, 241, 0.18), transparent 70%),
+    radial-gradient(50% 50% at 85% 10%, rgba(236, 72, 153, 0.14), transparent 70%);
+}
+
+/* Grid halus untuk latar hero */
+.bg-grid {
+  background-image:
+    linear-gradient(to right, rgba(99, 102, 241, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(99, 102, 241, 0.07) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+/* ===== Animasi (CSS murni, tanpa JS) ===== */
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 34s linear infinite;
+}
+
+.marquee-mask {
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 12%,
+    black 88%,
+    transparent
+  );
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-delay {
+  animation-delay: 1.6s;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Hormati pengguna yang mematikan animasi */
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee,
+  .animate-float,
+  .animate-fade-up {
+    animation: none;
+  }
 }
