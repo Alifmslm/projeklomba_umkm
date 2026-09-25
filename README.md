@@ -1,10 +1,10 @@
-# Kolab.id — Jembatan UMKM & Kreator
+# Kolab — Jembatan UMKM & Kreator
 
 Platform marketplace kolaborasi untuk UMKM dan content creator (Proyek Lomba — Kompetisi Inovasi Digital).
 
 **Masalah:** Banyak UMKM dengan produk bagus gagal berkembang karena pemasaran mentok — jangkauan terbatas, iklan/agensi kemahalan, dan cari kreator ribet.
 
-**Solusi:** Kolab.id menghubungkan UMKM dengan content creator secara langsung — daftar kreator dengan **harga per video transparan**, booking kolaborasi dalam 3 langkah, dan dashboard untuk kedua sisi.
+**Solusi:** Kolab menghubungkan UMKM dengan content creator secara langsung — daftar kreator dengan **harga per video transparan**, booking kolaborasi dalam 3 langkah, dan dashboard untuk kedua sisi.
 
 ---
 
