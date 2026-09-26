@@ -7,6 +7,7 @@ import { Logo } from "./Logo";
 const links = [
   { href: "/", label: "Beranda" },
   { href: "/influencers", label: "Cari Kreator" },
+  { href: "/insights", label: "Wawasan" },
   { href: "/#cara-kerja", label: "Cara Kerja" },
 ];
 

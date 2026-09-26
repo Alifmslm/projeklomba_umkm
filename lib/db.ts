@@ -59,6 +59,21 @@ db.exec(`
     status        TEXT NOT NULL DEFAULT 'PENDING',
     created_at    TEXT NOT NULL
   );
+
+  -- Review & rating 2 arah: UMKM menilai kreator, kreator menilai UMKM.
+  -- Satu booking hanya boleh dinilai 1x per sisi (unique booking_id + reviewer_role).
+  CREATE TABLE IF NOT EXISTS reviews (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    booking_id     INTEGER NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
+    reviewer_role  TEXT NOT NULL CHECK (reviewer_role IN ('umkm','influencer')),
+    reviewer_id    INTEGER NOT NULL,
+    reviewee_type  TEXT NOT NULL CHECK (reviewee_type IN ('influencer','umkm')),
+    reviewee_id    INTEGER NOT NULL,
+    rating         INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    comment        TEXT NOT NULL DEFAULT '',
+    created_at     TEXT NOT NULL,
+    UNIQUE (booking_id, reviewer_role)
+  );
 `);
 
 export { db };

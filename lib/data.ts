@@ -6,6 +6,10 @@ import type {
   BookingWithUmkm,
   Influencer,
   Package,
+  PriceStat,
+  RecommendedInfluencer,
+  Review,
+  ReviewWithAuthor,
   Umkm,
 } from "@/lib/types";
 
@@ -70,6 +74,20 @@ function mapBooking(row: Record<string, unknown>): Booking {
     amount: Number(row.amount),
     message: String(row.message),
     status: String(row.status) as BookingStatus,
+    createdAt: String(row.created_at),
+  };
+}
+
+function mapReview(row: Record<string, unknown>): Review {
+  return {
+    id: Number(row.id),
+    bookingId: Number(row.booking_id),
+    reviewerRole: String(row.reviewer_role) as Review["reviewerRole"],
+    reviewerId: Number(row.reviewer_id),
+    revieweeType: String(row.reviewee_type) as Review["revieweeType"],
+    revieweeId: Number(row.reviewee_id),
+    rating: Number(row.rating),
+    comment: String(row.comment),
     createdAt: String(row.created_at),
   };
 }
@@ -328,4 +346,211 @@ export function getLandingStats() {
       >).c ?? 0,
     ),
   };
+}
+
+/* ------------------------------------------------------------------ */
+/* Review & rating 2 arah                                              */
+/* ------------------------------------------------------------------ */
+
+/** Review milik satu sisi (umkm/influencer) untuk sebuah booking, null jika belum. */
+export function getReviewForBookingRole(
+  bookingId: number,
+  reviewerRole: Review["reviewerRole"],
+): Review | null {
+  const row = db
+    .prepare(
+      "SELECT * FROM reviews WHERE booking_id = ? AND reviewer_role = ?",
+    )
+    .get(bookingId, reviewerRole) as Record<string, unknown> | undefined;
+  return row ? mapReview(row) : null;
+}
+
+export function hasReviewed(
+  bookingId: number,
+  reviewerRole: Review["reviewerRole"],
+): boolean {
+  return getReviewForBookingRole(bookingId, reviewerRole) !== null;
+}
+
+/** Rating rata-rata UMKM (dihitung langsung dari ulasan kreator). */
+export function getUmkmRating(umkmId: number): {
+  avg: number;
+  count: number;
+} {
+  const row = db
+    .prepare(
+      `SELECT ROUND(AVG(rating), 2) AS avg, COUNT(*) AS count
+       FROM reviews WHERE reviewee_type = 'umkm' AND reviewee_id = ?`,
+    )
+    .get(umkmId) as Record<string, unknown>;
+  return {
+    avg: Number(row.avg ?? 0),
+    count: Number(row.count ?? 0),
+  };
+}
+
+export function createReview(input: {
+  bookingId: number;
+  reviewerRole: Review["reviewerRole"];
+  reviewerId: number;
+  revieweeType: Review["revieweeType"];
+  revieweeId: number;
+  rating: number;
+  comment: string;
+}): Review {
+  db.prepare(
+    `INSERT INTO reviews
+       (booking_id, reviewer_role, reviewer_id, reviewee_type, reviewee_id, rating, comment, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+  ).run(
+      input.bookingId,
+      input.reviewerRole,
+      input.reviewerId,
+      input.revieweeType,
+      input.revieweeId,
+      input.rating,
+      input.comment,
+      new Date().toISOString(),
+    );
+
+  // Kalau kreator yang dinilai, perbarui rating & jumlah ulasannya
+  // (rata-rata tertimbang dengan data historis yang sudah ada).
+  if (input.revieweeType === "influencer") {
+    const inf = getInfluencerById(input.revieweeId);
+    if (inf) {
+      const newCount = inf.reviewCount + 1;
+      const newRating =
+        (inf.rating * inf.reviewCount + input.rating) / newCount;
+      db.prepare(
+        "UPDATE influencers SET rating = ROUND(?, 2), review_count = ? WHERE id = ?",
+      ).run(newRating, newCount, inf.id);
+    }
+  }
+
+  const review = getReviewForBookingRole(input.bookingId, input.reviewerRole);
+  if (!review) throw new Error("Gagal membuat review");
+  return review;
+}
+
+/** Ulasan yang diterima seorang kreator (ditulis oleh UMKM). */
+export function getReviewsForInfluencer(
+  influencerId: number,
+  limit?: number,
+): ReviewWithAuthor[] {
+  const rows = db
+    .prepare(
+      `SELECT r.*,
+              u.name     AS author_name,
+              u.owner    AS author_handle,
+              'from-slate-500 to-slate-700' AS author_color,
+              b.package_name AS package_name
+       FROM reviews r
+       JOIN umkms u ON u.id = r.reviewer_id AND r.reviewer_role = 'umkm'
+       JOIN bookings b ON b.id = r.booking_id
+       WHERE r.reviewee_type = 'influencer' AND r.reviewee_id = ?
+       ORDER BY r.created_at DESC, r.id DESC
+       ${limit ? "LIMIT ?" : ""}`,
+    )
+    .all(...(limit ? [influencerId, limit] : [influencerId])) as Record<
+    string,
+    unknown
+  >[];
+  return rows.map((row) => ({
+    ...mapReview(row),
+    authorName: String(row.author_name),
+    authorColor: String(row.author_color),
+    authorHandle: String(row.author_handle),
+    packageName: String(row.package_name),
+  }));
+}
+
+/** Ulasan yang diterima sebuah UMKM (ditulis oleh kreator). */
+export function getReviewsForUmkm(umkmId: number): ReviewWithAuthor[] {
+  const rows = db
+    .prepare(
+      `SELECT r.*,
+              i.name     AS author_name,
+              i.handle   AS author_handle,
+              i.color    AS author_color,
+              b.package_name AS package_name
+       FROM reviews r
+       JOIN influencers i ON i.id = r.reviewer_id AND r.reviewer_role = 'influencer'
+       JOIN bookings b ON b.id = r.booking_id
+       WHERE r.reviewee_type = 'umkm' AND r.reviewee_id = ?
+       ORDER BY r.created_at DESC, r.id DESC`,
+    )
+    .all(umkmId) as Record<string, unknown>[];
+  return rows.map((row) => ({
+    ...mapReview(row),
+    authorName: String(row.author_name),
+    authorColor: String(row.author_color),
+    authorHandle: String(row.author_handle),
+    packageName: String(row.package_name),
+  }));
+}
+
+/* ------------------------------------------------------------------ */
+/* Matchmaking sederhana (dashboard UMKM)                              */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Rekomendasi kreator untuk sebuah UMKM berdasarkan kesamaan sederhana:
+ * - kategori usaha == niche kreator  (+3)
+ * - kota usaha == kota kreator       (+2)
+ * - harga paket masih terjangkau     (+1)
+ */
+export function getRecommendedInfluencers(
+  umkm: Umkm,
+  limit = 3,
+): RecommendedInfluencer[] {
+  const all = getInfluencers();
+  const scored = all
+    .map((inf) => {
+      const reasons: string[] = [];
+      let score = 0;
+      if (inf.niche === umkm.category) {
+        score += 3;
+        reasons.push("Kategori sama dengan usahamu");
+      }
+      if (inf.city === umkm.city) {
+        score += 2;
+        reasons.push("Satu kota dengan usahamu");
+      }
+      if (inf.basePrice <= 1_500_000) {
+        score += 1;
+        reasons.push("Harga di bawah Rp 1,5 jt/video");
+      }
+      return { ...inf, score, matchReasons: reasons };
+    })
+    .sort(
+      (a, b) =>
+        b.score - a.score || b.rating - a.rating || b.followers - a.followers,
+    );
+  return scored.slice(0, limit);
+}
+
+/* ------------------------------------------------------------------ */
+/* Wawasan harga pasar per niche (halaman /insights)                   */
+/* ------------------------------------------------------------------ */
+
+export function getPriceStats(): PriceStat[] {
+  const rows = db
+    .prepare(
+      `SELECT niche,
+              COUNT(*)      AS count,
+              MIN(base_price) AS min_price,
+              ROUND(AVG(base_price)) AS avg_price,
+              MAX(base_price) AS max_price
+       FROM influencers
+       GROUP BY niche
+       ORDER BY avg_price ASC`,
+    )
+    .all() as Record<string, unknown>[];
+  return rows.map((row) => ({
+    niche: String(row.niche),
+    count: Number(row.count),
+    minPrice: Number(row.min_price),
+    avgPrice: Number(row.avg_price),
+    maxPrice: Number(row.max_price),
+  }));
 }

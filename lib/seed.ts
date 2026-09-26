@@ -350,16 +350,68 @@ const bookings: BookingSeed[] = [
   },
 ];
 
+type ReviewSeed = {
+  /** kode booking yang sudah DONE */
+  bookingCode: string;
+  reviewerRole: "umkm" | "influencer";
+  rating: number;
+  comment: string;
+  createdAt: string;
+};
+
+/**
+ * Review demo (fitur rating 2 arah).
+ * Dipilih agar tombol "Beri Ulasan"/"Nilai UMKM" tetap muncul di dashboard:
+ * - UMKM belum menilai booking 0002 (Rara Nadia)
+ * - Kreator belum menilai booking 0007 (Kopi & Kita)
+ */
+const reviews: ReviewSeed[] = [
+  // UMKM → Kreator
+  {
+    bookingCode: "CLB-2026-0001",
+    reviewerRole: "umkm",
+    rating: 5,
+    comment:
+      "Video review kopinya dapet banget. Kafe kami ramai seminggu penuh, orderan online ikut naik!",
+    createdAt: "2026-08-24T09:00:00.000Z",
+  },
+  {
+    bookingCode: "CLB-2026-0007",
+    reviewerRole: "umkm",
+    rating: 5,
+    comment:
+      "Konten kopi gayo single origin-nya bagus banget, ada beberapa pelanggan baru yang datang karena video itu.",
+    createdAt: "2026-09-08T14:00:00.000Z",
+  },
+  // Kreator → UMKM
+  {
+    bookingCode: "CLB-2026-0001",
+    reviewerRole: "influencer",
+    rating: 5,
+    comment:
+      "Brief jelas, produknya enak, jadwal tayang fleksibel. Recommended!",
+    createdAt: "2026-08-25T09:00:00.000Z",
+  },
+  {
+    bookingCode: "CLB-2026-0002",
+    reviewerRole: "influencer",
+    rating: 4,
+    comment:
+      "Produk bagus dan koordinasi rapi, tapi revisi brief agak telat menjelang tayang.",
+    createdAt: "2026-09-06T11:00:00.000Z",
+  },
+];
+
 export function seed(clear = true) {
   const run = db.prepare("SELECT COUNT(*) AS c FROM influencers").get() as {
     c: number;
   };
   if (clear || run.c === 0) {
-    db.exec("DELETE FROM bookings; DELETE FROM packages; DELETE FROM umkms; DELETE FROM influencers;");
+    db.exec("DELETE FROM reviews; DELETE FROM bookings; DELETE FROM packages; DELETE FROM umkms; DELETE FROM influencers;");
     // Reset urutan AUTOINCREMENT agar ID selalu deterministik
     // (id 1 = Rara Nadia / Warung Kopi Senja, dst. setiap kali seed dijalankan).
     db.exec(
-      "DELETE FROM sqlite_sequence WHERE name IN ('bookings','packages','umkms','influencers');",
+      "DELETE FROM sqlite_sequence WHERE name IN ('reviews','bookings','packages','umkms','influencers');",
     );
   }
 
@@ -428,7 +480,35 @@ export function seed(clear = true) {
     );
   }
 
+  const insertReview = db.prepare(
+    `INSERT INTO reviews
+       (booking_id, reviewer_role, reviewer_id, reviewee_type, reviewee_id, rating, comment, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+  );
+  const bookedById = db.prepare(
+    "SELECT id, influencer_id AS influencerId, umkm_id AS umkmId FROM bookings WHERE code = ?",
+  );
+  let reviewCount = 0;
+  for (const r of reviews) {
+    const booking = bookedById.get(r.bookingCode) as
+      | { id: number; influencerId: number; umkmId: number }
+      | undefined;
+    if (!booking) continue;
+    const isUmkm = r.reviewerRole === "umkm";
+    insertReview.run(
+      booking.id,
+      r.reviewerRole,
+      isUmkm ? booking.umkmId : booking.influencerId,
+      isUmkm ? "influencer" : "umkm",
+      isUmkm ? booking.influencerId : booking.umkmId,
+      r.rating,
+      r.comment,
+      r.createdAt,
+    );
+    reviewCount += 1;
+  }
+
   console.log(
-    `Seed selesai: ${influencers.length} influencer, ${influencers.length * 3} paket, ${umkms.length} UMKM, ${bookings.length} booking.`,
+    `Seed selesai: ${influencers.length} influencer, ${influencers.length * 3} paket, ${umkms.length} UMKM, ${bookings.length} booking, ${reviewCount} review.`,
   );
 }

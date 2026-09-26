@@ -12,12 +12,17 @@ import {
   Wallet,
 } from "lucide-react";
 import { getSession } from "@/lib/auth";
-import { getBookingsByInfluencer, getInfluencerById } from "@/lib/data";
+import {
+  getBookingsByInfluencer,
+  getInfluencerById,
+  getReviewForBookingRole,
+} from "@/lib/data";
 import { formatDate, formatRupiah } from "@/lib/format";
 import { setBookingStatus } from "@/app/actions";
 import { StatCard } from "@/components/StatCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Avatar } from "@/components/Avatar";
+import { StarRating } from "@/components/StarRating";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +31,9 @@ export const metadata: Metadata = {
   description: "Kelola permintaan kolaborasi dari UMKM di Kolab.id.",
 };
 
-export default async function InfluencerDashboardPage() {
+export default async function InfluencerDashboardPage(
+  props: PageProps<"/dashboard/influencer">,
+) {
   const session = await getSession();
   if (!session) redirect("/login");
   if (session.role !== "influencer") redirect("/dashboard");
@@ -35,6 +42,18 @@ export default async function InfluencerDashboardPage() {
   if (!profile) redirect("/");
 
   const bookings = getBookingsByInfluencer(session.subjectId);
+
+  const searchParams = await props.searchParams;
+  const reviewSent = searchParams.review === "1";
+
+  // Ulasan yang sudah kreator ini berikan (untuk booking DONE)
+  const myReviews = new Map<number, number>();
+  for (const b of bookings) {
+    if (b.status === "DONE") {
+      const review = getReviewForBookingRole(b.id, "influencer");
+      if (review) myReviews.set(b.id, review.rating);
+    }
+  }
 
   const pemasukan = bookings
     .filter((b) => b.status === "APPROVED" || b.status === "DONE")
@@ -89,6 +108,20 @@ export default async function InfluencerDashboardPage() {
           </span>
         </div>
       </div>
+
+      {/* Banner sukses mengirim rating */}
+      {reviewSent && (
+        <div className="mt-6 flex items-start gap-3 rounded-2xl border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-800">
+          <Star className="mt-0.5 h-5 w-5 shrink-0 fill-amber-400 text-amber-400" />
+          <div>
+            <p className="font-bold">Ulasan terkirim!</p>
+            <p className="mt-0.5">
+              Terima kasih sudah berbagi pengalamanmu. Rating-mu membantu
+              kreator lain memilih UMKM yang tepat.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Statistik */}
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -225,6 +258,24 @@ export default async function InfluencerDashboardPage() {
                         </button>
                       </form>
                     )}
+
+                    {b.status === "DONE" &&
+                      (myReviews.get(b.id) ? (
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-1 text-[11px] font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-200">
+                          <StarRating
+                            rating={myReviews.get(b.id)!}
+                            size="h-3 w-3"
+                          />{" "}
+                          Ulasanmu terkirim
+                        </span>
+                      ) : (
+                        <Link
+                          href={`/review/${b.id}`}
+                          className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2 text-xs font-bold text-white shadow-md shadow-indigo-500/25 transition-all hover:brightness-110"
+                        >
+                          <Star className="h-3.5 w-3.5" /> Nilai UMKM Ini
+                        </Link>
+                      ))}
 
                     {b.status === "REJECTED" && (
                       <p className="text-xs text-slate-400">

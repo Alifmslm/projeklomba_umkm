@@ -5,6 +5,7 @@ import {
   BadgeCheck,
   Check,
   MapPin,
+  Quote,
   Star,
   Users,
   MessageSquare,
@@ -14,10 +15,12 @@ import {
   getInfluencerById,
   getPackagesByInfluencer,
   getRelatedInfluencers,
+  getReviewsForInfluencer,
 } from "@/lib/data";
-import { formatFollowers, formatRupiah } from "@/lib/format";
+import { formatDate, formatFollowers, formatRupiah } from "@/lib/format";
 import { Avatar } from "@/components/Avatar";
 import { InfluencerCard } from "@/components/InfluencerCard";
+import { StarRating } from "@/components/StarRating";
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +44,7 @@ export default async function InfluencerDetailPage(
 
   const packages = getPackagesByInfluencer(inf.id);
   const related = getRelatedInfluencers(inf.niche, inf.id);
+  const reviews = getReviewsForInfluencer(inf.id, 4);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
@@ -203,6 +207,62 @@ export default async function InfluencerDetailPage(
           </div>
         </aside>
       </div>
+
+      {/* Ulasan dari UMKM partner */}
+      {reviews.length > 0 && (
+        <section className="mt-16">
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-extrabold text-slate-900 sm:text-2xl">
+                Ulasan dari UMKM partner
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Rating dua arah — begini pengalaman UMKM yang sudah
+                berkolaborasi dengan {inf.name.split(" ")[0]}.
+              </p>
+            </div>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1.5 text-sm font-bold text-amber-700 ring-1 ring-inset ring-amber-200">
+              <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+              {inf.rating.toFixed(1)} · {inf.reviewCount} ulasan
+            </span>
+          </div>
+
+          <div className="mt-6 grid gap-5 md:grid-cols-2">
+            {reviews.map((r) => (
+              <figure
+                key={r.id}
+                className="flex flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-indigo-500/10"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <StarRating rating={r.rating} size="h-4 w-4" />
+                  <span className="text-[11px] text-slate-400">
+                    {formatDate(r.createdAt)}
+                  </span>
+                </div>
+                <blockquote className="mt-3 flex-1 text-sm leading-relaxed text-slate-600">
+                  “{r.comment}”
+                </blockquote>
+                <figcaption className="mt-5 flex items-center gap-3 border-t border-slate-100 pt-4">
+                  <Avatar
+                    name={r.authorName}
+                    color={r.authorColor}
+                    size="sm"
+                  />
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-bold text-slate-900">
+                      {r.authorName}
+                    </p>
+                    <p className="truncate text-xs text-slate-500">
+                      UMKM · Paket {r.packageName}
+                    </p>
+                  </div>
+                  <Quote className="ml-auto h-4 w-4 shrink-0 text-indigo-200" />
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Kreator serupa */}
       {related.length > 0 && (

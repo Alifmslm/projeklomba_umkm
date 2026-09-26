@@ -69,3 +69,44 @@ export type Session = {
   subjectId: number;
   name: string;
 };
+
+/* ------------------------------------------------------------------ */
+/* Review & rating 2 arah (fitur pembeda)                              */
+/* ------------------------------------------------------------------ */
+
+export type Review = {
+  id: number;
+  bookingId: number;
+  /** siapa yang menulis ulasan */
+  reviewerRole: "umkm" | "influencer";
+  reviewerId: number;
+  /** siapa yang dinilai */
+  revieweeType: "influencer" | "umkm";
+  revieweeId: number;
+  rating: number;
+  comment: string;
+  createdAt: string;
+};
+
+/** Review yang sudah digabung dengan data penulis untuk ditampilkan */
+export type ReviewWithAuthor = Review & {
+  authorName: string;
+  authorColor: string;
+  authorHandle: string;
+  packageName: string;
+};
+
+/** Statistik harga per niche untuk halaman Wawasan Harga */
+export type PriceStat = {
+  niche: string;
+  count: number;
+  minPrice: number;
+  avgPrice: number;
+  maxPrice: number;
+};
+
+/** Kreator hasil matchmaking sederhana untuk dashboard UMKM */
+export type RecommendedInfluencer = Influencer & {
+  score: number;
+  matchReasons: string[];
+};

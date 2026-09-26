@@ -12,10 +12,12 @@ Platform marketplace kolaborasi untuk UMKM dan content creator (Proyek Lomba —
 
 - **Landing page** — hero, masalah/solusi, kategori kreator, cara kerja, testimoni, CTA
 - **Daftar kreator + filter** — cari nama, filter niche/kota/harga maks, urutkan (populer/rating/harga/followers)
-- **Detail kreator** — profil, statistik, paket harga (Review Video / Unboxing & Story / Kampanye Komplit)
+- **Detail kreator** — profil, statistik, paket harga (Review Video / Unboxing & Story / Kampanye Komplit), ulasan dari UMKM partner
 - **Booking kolaborasi** — pilih paket, isi brief, kirim pengajuan (khusus UMKM)
-- **Dashboard UMKM** — ringkasan statistik (total kolaborasi, berjalan, menunggu, anggaran), riwayat lengkap
+- **Dashboard UMKM** — ringkasan statistik, riwayat lengkap, dan **rekomendasi kreator otomatis** (dicocokkan dari kategori usaha, kota, & budget)
 - **Dashboard Kreator** — permintaan masuk, setujui/tolak, tandai selesai
+- **Review & rating 2 arah** ⭐ — UMKM menilai kreator, kreator menilai UMKM. Rating kreator ikut ter-update setelah ulasan masuk
+- **Wawasan Harga Pasar** 📊 — standar harga per video per kategori (min/avg/max), transparan tanpa nego
 
 ## Tech Stack
 
@@ -57,27 +59,31 @@ Buka `/login` lalu pilih salah satu:
 | --- | --- |
 | `/` | Landing page |
 | `/influencers` | Daftar kreator + filter |
-| `/influencers/[id]` | Detail kreator & paket harga |
+| `/influencers/[id]` | Detail kreator, paket harga, & ulasan UMKM |
 | `/booking/[influencerId]` | Form pengajuan kolaborasi *(guard: UMKM)* |
-| `/dashboard` | Dashboard UMKM |
+| `/dashboard` | Dashboard UMKM + rekomendasi kreator otomatis |
 | `/dashboard/influencer` | Dashboard kreator |
+| `/review/[bookingId]` | Beri rating & ulasan 2 arah (setelah kolaborasi DONE) |
+| `/insights` | Wawasan harga pasar per kategori |
 | `/login` | Login demo |
 
 ## Struktur Kode
 
 ```
 app/
-  actions.ts            # server actions (login/logout, submitBooking, setBookingStatus)
+  actions.ts            # server actions (login/logout, submitBooking, setBookingStatus, submitReview)
   page.tsx              # landing page
   influencers/          # daftar + detail kreator
   booking/[influencerId]
+  review/[bookingId]    # rating & ulasan 2 arah
+  insights/             # wawasan harga pasar
   dashboard/            # dashboard UMKM + dashboard kreator
   login/
-components/             # Navbar, Footer, InfluencerCard, StatusBadge, dll.
+components/             # Navbar, Footer, InfluencerCard, StarRating, dll.
 lib/
-  db.ts                 # koneksi SQLite + schema
+  db.ts                 # koneksi SQLite + schema (influencers, packages, umkms, bookings, reviews)
   seed.ts               # data demo
-  data.ts               # query functions
+  data.ts               # query functions (incl. rekomendasi & statistik harga)
   auth.ts               # sesi cookie mock
   format.ts             # format Rupiah, angka, tanggal
   types.ts
