@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Fragment } from "react";
 import {
   AlertCircle,
   BadgeCheck,
@@ -172,18 +173,21 @@ export default async function ReviewPage(
             <p className="mt-1 text-xs text-slate-500">
               Klik bintang untuk memilih (1 = buruk, 5 = luar biasa).
             </p>
-            <div className="mt-4 flex flex-wrap items-center gap-2">
-              {[1, 2, 3, 4, 5].map((n) => (
-                <label key={n} className="group cursor-pointer" title={`${n} bintang`}>
+            <div className="rating-input mt-4">
+              {[5, 4, 3, 2, 1].map((n) => (
+                <Fragment key={n}>
                   <input
+                    id={`rating-${n}`}
                     type="radio"
                     name="rating"
                     value={n}
-                    required
-                    className="peer sr-only"
+                    required={n === 1}
+                    className="sr-only"
                   />
-                  <Star className="h-10 w-10 text-slate-300 transition-colors peer-checked:fill-amber-400 peer-checked:text-amber-400 peer-focus-visible:ring-2 peer-focus-visible:ring-indigo-400 peer-focus-visible:ring-offset-2 group-hover:text-amber-400 group-hover:fill-amber-400" />
-                </label>
+                  <label htmlFor={`rating-${n}`} title={`${n} bintang`}>
+                    <Star className="h-10 w-10" />
+                  </label>
+                </Fragment>
               ))}
             </div>
           </fieldset>
