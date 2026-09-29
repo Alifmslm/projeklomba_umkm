@@ -80,12 +80,12 @@ export default function LandingPage() {
               className="animate-fade-up mt-6 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg"
               style={{ animationDelay: "160ms" }}
             >
-              Produkmu bagus tapi kurang dikenal? Kolab.id menghubungkan UMKM
-              dengan content creator yang pas —{" "}
+              Temukan kreator lokal yang pas untuk produkmu. Harga per video
+              jelas,{" "}
               <strong className="font-semibold text-slate-800">
-                harga per video transparan
+                tanpa agensi dan tanpa ribet
               </strong>
-              , tanpa agensi, tanpa perantara ribet. Sama-sama untung.
+              . Sama-sama untung.
             </p>
 
             <div
@@ -109,40 +109,6 @@ export default function LandingPage() {
               </Link>
             </div>
 
-            {/* Social proof */}
-            <div
-              className="animate-fade-up mt-10 flex flex-wrap items-center gap-x-6 gap-y-4"
-              style={{ animationDelay: "320ms" }}
-            >
-              <div className="flex items-center">
-                <div className="flex -space-x-2.5">
-                  {featured.slice(0, 4).map((inf) => (
-                    <Avatar
-                      key={inf.id}
-                      name={inf.name}
-                      color={inf.color}
-                      size="xs"
-                    />
-                  ))}
-                </div>
-                <div className="ml-3">
-                  <div className="flex items-center gap-0.5">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star
-                        key={i}
-                        className="h-3.5 w-3.5 fill-amber-400 text-amber-400"
-                      />
-                    ))}
-                    <span className="ml-1.5 text-sm font-bold text-slate-900">
-                      {stats.avgRating.toFixed(1)}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-500">
-                    Dipercaya ribuan UMKM & kreator lokal
-                  </p>
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* ---- Kanan: preview produk ---- */}
