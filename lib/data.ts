@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { formatRupiah } from "@/lib/format";
 import type {
   Booking,
   BookingStatus,
@@ -213,6 +214,15 @@ export function getUmkmById(id: number): Umkm | null {
   return row ? mapUmkm(row) : null;
 }
 
+export function updateUmkm(
+  id: number,
+  input: { name: string; owner: string; category: string; city: string },
+): void {
+  db.prepare(
+    "UPDATE umkms SET name = ?, owner = ?, category = ?, city = ? WHERE id = ?",
+  ).run(input.name, input.owner, input.category, input.city, id);
+}
+
 /* ------------------------------------------------------------------ */
 /* Bookings                                                            */
 /* ------------------------------------------------------------------ */
@@ -370,6 +380,88 @@ export function hasReviewed(
   reviewerRole: Review["reviewerRole"],
 ): boolean {
   return getReviewForBookingRole(bookingId, reviewerRole) !== null;
+}
+
+/* ------------------------------------------------------------------ */
+/* Notifikasi UMKM (diturunkan dari status booking, tanpa tabel baru)  */
+/* ------------------------------------------------------------------ */
+
+export type UmkmNotificationKind =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "review";
+
+export interface UmkmNotification {
+  key: string;
+  kind: UmkmNotificationKind;
+  title: string;
+  desc: string;
+  href: string;
+}
+
+/**
+ * Aktivitas terbaru untuk lonceng notifikasi + jumlah yang butuh
+ * perhatian (menunggu respons & butuh ulasan).
+ */
+export function getUmkmNotifications(
+  umkmId: number,
+  limit = 5,
+): { items: UmkmNotification[]; attentionCount: number } {
+  const bookings = getBookingsByUmkm(umkmId);
+  const items: UmkmNotification[] = [];
+  let attentionCount = 0;
+
+  for (const b of bookings) {
+    const desc = `${b.packageName} · ${formatRupiah(b.amount)}`;
+    if (b.status === "PENDING") {
+      attentionCount++;
+      if (items.length < limit) {
+        items.push({
+          key: `pending-${b.id}`,
+          kind: "pending",
+          title: `Menunggu respons ${b.influencerName}`,
+          desc,
+          href: "/dashboard/riwayat",
+        });
+      }
+    } else if (b.status === "APPROVED") {
+      if (items.length < limit) {
+        items.push({
+          key: `approved-${b.id}`,
+          kind: "approved",
+          title: `${b.influencerName} menyetujui kolaborasi`,
+          desc,
+          href: "/dashboard/riwayat",
+        });
+      }
+    } else if (b.status === "REJECTED") {
+      if (items.length < limit) {
+        items.push({
+          key: `rejected-${b.id}`,
+          kind: "rejected",
+          title: `Pengajuan ke ${b.influencerName} ditolak`,
+          desc,
+          href: "/dashboard/riwayat",
+        });
+      }
+    } else if (b.status === "DONE") {
+      if (!getReviewForBookingRole(b.id, "umkm")) {
+        attentionCount++;
+        if (items.length < limit) {
+          items.push({
+            key: `review-${b.id}`,
+            kind: "review",
+            title: `Beri ulasan untuk ${b.influencerName}`,
+            desc,
+            href: `/review/${b.id}`,
+          });
+        }
+      }
+    }
+  }
+
+  return { items, attentionCount };
 }
 
 /** Rating rata-rata UMKM (dihitung langsung dari ulasan kreator). */
