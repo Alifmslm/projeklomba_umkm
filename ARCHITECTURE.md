@@ -536,7 +536,7 @@ Rules:
 
 ## 6. Data Model Impact
 
-Changes needed on top of the current schema in `development.md`. Column-level SQL will be written once this structure is confirmed.
+The table below summarizes the delta; the column-level SQL lives in DEVELOPMENT.md §8.
 
 | Table | Change |
 | --- | --- |

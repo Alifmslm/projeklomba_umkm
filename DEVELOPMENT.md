@@ -2,7 +2,7 @@
 
 Technical documentation for developers working on Kolab.id. For a non-technical product overview, see [README.md](./README.md).
 
-> **Migration status:** the app code currently still uses local SQLite (`node:sqlite`) with mock cookie auth. This guide describes the **target stack (Supabase + Supabase Auth — decided)**. Code migration is pending work — see §6, §8, §9, and §12.
+> **Migration status:** the app code currently still uses local SQLite (`node:sqlite`) with mock cookie auth. This guide describes the **target stack (Supabase + Supabase Auth — decided)** implementing the product spec in ARCHITECTURE.md (escrow lifecycle, 3 dashboards). Code migration is pending work — see §6, §8, §9, and §12.
 
 ## 1. Tech Stack
 
@@ -96,20 +96,26 @@ Notes:
 
 ```
 app/
-  actions.ts              # Server Actions: login/logout, submitBooking, setBookingStatus, submitReview, updateProfile
+  (umkm)/                 # Route group: UMKM pages WITHOUT global navbar/footer (URLs unchanged)
+    layout.tsx            # Pass-through (sidebar+header come from UmkmShell per page)
+    dashboard/
+      page.tsx            # UMKM dashboard: KPI cards, recommendations, history summary
+      riwayat/            # Full UMKM collaboration history
+      profile/            # UMKM business profile view + edit
+      chat/               # Chat list (coming-soon stub → ARCHITECTURE.md §2.7)
+  actions.ts              # Server Actions: login/logout, submitBooking, setBookingStatus, submitReview,
+                          # updateProfile (+ future: offers, deliveries, disputes — see ARCHITECTURE.md)
   page.tsx                # Landing page
   influencers/            # Creator list + filters, creator detail (packages, reviews)
-  booking/[influencerId]/ # Collaboration request form (UMKM-only guard)
-  review/[bookingId]/     # Two-way rating & review form (after DONE booking)
+  booking/[influencerId]/ # Collaboration request form: creates PENDING booking + chat room (UMKM-only guard)
+  review/[bookingId]/     # Two-way rating & review form (after COMPLETED booking or dispute decision)
   insights/               # Market price insights per category
   dashboard/
-    page.tsx              # UMKM dashboard: sidebar shell, KPI cards, recommendations, history summary
-    riwayat/              # Full UMKM collaboration history
-    profile/              # UMKM business profile view + edit
-    influencer/           # Creator dashboard (keeps global navbar/footer)
+    influencer/           # Creator dashboard (+ planned: chat/, paket/ — see ARCHITECTURE.md §4)
+  admin/                  # (planned) Admin: dashboard, Antrian Kasus, Detail Kasus (see ARCHITECTURE.md §5)
   login/                  # Login / signup pages (Supabase Auth, see §9)
-components/               # Navbar, Footer, SiteChrome (chrome switch), DashboardShell (sidebar),
-                          # BookingHistoryList, InfluencerCard, StarRating, etc.
+components/               # Navbar, Footer, DashboardShell (sidebar+header), UmkmShell (server wrapper),
+                          # NotificationBell, BookingHistoryList, InfluencerCard, StarRating, etc.
 lib/
   supabase/
     client.ts             # Browser client (createBrowserClient) — "use client" only
@@ -190,12 +196,18 @@ export const config = {
 | `/` | Landing page | Public |
 | `/influencers` | Creator list + search/filter/sort | Public |
 | `/influencers/[id]` | Creator profile, packages, UMKM reviews | Public |
-| `/booking/[influencerId]` | Submit collaboration request | Supabase session + `umkm` role |
+| `/booking/[influencerId]` | Submit collaboration request (creates `PENDING` booking + chat room) | Supabase session + `umkm` role |
 | `/dashboard` | UMKM dashboard (sidebar shell, KPI cards, recommendations, history summary) | Supabase session + `umkm` role |
 | `/dashboard/riwayat` | Full UMKM collaboration history | Supabase session + `umkm` role |
 | `/dashboard/profile` | UMKM business profile view + edit | Supabase session + `umkm` role |
-| `/dashboard/influencer` | Creator dashboard (accept/reject/complete) | Supabase session + `influencer` role |
-| `/review/[bookingId]` | Two-way rating after DONE booking | Involved party only |
+| `/dashboard/chat` | UMKM chat list, one conversation per booking (coming-soon stub) | Supabase session + `umkm` role |
+| `/dashboard/influencer` | Creator dashboard: incoming requests, status updates, income | Supabase session + `influencer` role |
+| `/dashboard/influencer/chat` | (planned) Creator chat list — see ARCHITECTURE.md §4 | Supabase session + `influencer` role |
+| `/dashboard/influencer/paket` | (planned) `Paket & Harga` management — see ARCHITECTURE.md §4.6 | Supabase session + `influencer` role |
+| `/admin` | (planned) Admin dashboard: case queue summary — see ARCHITECTURE.md §5 | Supabase session + `admin` role |
+| `/admin/kasus` | (planned) `Antrian Kasus` full list — see ARCHITECTURE.md §5.7 | Supabase session + `admin` role |
+| `/admin/kasus/[id]` | (planned) `Detail Kasus` + decision panel — see ARCHITECTURE.md §5.7 | Supabase session + `admin` role |
+| `/review/[bookingId]` | Two-way rating after `COMPLETED` booking or dispute decision | Involved party only |
 | `/insights` | Market price standards per category (min/avg/max) | Public |
 | `/login` | Login (Supabase Auth) | Public (redirects away if already signed in) |
 | `/signup` | Signup (Supabase Auth) | Public (redirects away if already signed in) |
@@ -206,7 +218,7 @@ Guards move from parsing the mock cookie to `supabase.auth.getUser()` in Server 
 
 ## 8. Database Schema (Postgres)
 
-The schema lives in versioned migrations (`supabase/migrations/0001_init.sql`), not in app code. Postgres port of the current tables, plus a new `profiles` table linking logins to business/creator rows:
+The schema lives in versioned migrations (`supabase/migrations/0001_init.sql`), not in app code. It implements the product spec in ARCHITECTURE.md §2 (escrow lifecycle) and §6 (data model): Postgres port of the prototype tables, plus payment/revision/dispute/chat/notification tables.
 
 ```sql
 create table if not exists influencers (
@@ -225,12 +237,14 @@ create table if not exists influencers (
 );
 
 create table if not exists packages (
-  id            bigint generated always as identity primary key,
-  influencer_id bigint not null references influencers(id) on delete cascade,
-  name          text not null,
-  price         integer not null,
-  summary       text not null default '',
-  includes      jsonb not null default '[]'
+  id             bigint generated always as identity primary key,
+  influencer_id  bigint not null references influencers(id) on delete cascade,
+  name           text not null,
+  price          integer not null,
+  summary        text not null default '',
+  includes       jsonb not null default '[]',
+  revision_quota integer not null default 1 check (revision_quota between 1 and 5),
+  estimated_days integer not null default 3
 );
 
 create table if not exists umkms (
@@ -242,16 +256,108 @@ create table if not exists umkms (
 );
 
 create table if not exists bookings (
-  id            bigint generated always as identity primary key,
-  code          text not null unique,
-  influencer_id bigint not null references influencers(id),
-  umkm_id       bigint not null references umkms(id),
-  package_name  text not null,
-  amount        integer not null,
-  message       text not null default '',
-  status        text not null default 'PENDING'
-    check (status in ('PENDING', 'APPROVED', 'REJECTED', 'DONE')),
-  created_at    timestamptz not null default now()
+  id                 bigint generated always as identity primary key,
+  code               text not null unique,
+  influencer_id      bigint not null references influencers(id),
+  umkm_id            bigint not null references umkms(id),
+  package_name       text not null,
+  amount             integer not null,
+  message            text not null default '',
+  status             text not null default 'PENDING'
+    check (status in ('PENDING','ACCEPTED','FUNDED','SUBMITTED','REVISION','DISPUTED','COMPLETED','REJECTED','CANCELLED')),
+  -- Snapshot of package terms at submit time (later package edits don't affect running bookings)
+  revision_quota     integer not null default 1,
+  estimated_days     integer not null default 3,
+  revisions_used     integer not null default 0,
+  brief_locked_at    timestamptz,
+  funded_at          timestamptz,
+  submitted_at       timestamptz,
+  review_due_at      timestamptz,
+  -- Simulated escrow (no real money moves in the prototype)
+  payment_status     text not null default 'UNPAID'
+    check (payment_status in ('UNPAID','HELD','RELEASED','REFUNDED','SPLIT')),
+  creator_amount     integer not null default 0,
+  umkm_refund_amount integer not null default 0,
+  created_at         timestamptz not null default now()
+);
+
+-- One content version per round submitted by the creator
+create table if not exists deliveries (
+  id          bigint generated always as identity primary key,
+  booking_id  bigint not null references bookings(id) on delete cascade,
+  round       integer not null,
+  content_url text not null default '',
+  note        text not null default '',
+  submitted_at timestamptz not null default now(),
+  unique (booking_id, round)
+);
+
+-- Revision requests; off_brief = flagged as not matching the locked brief (no quota consumed)
+create table if not exists revision_requests (
+  id         bigint generated always as identity primary key,
+  booking_id bigint not null references bookings(id) on delete cascade,
+  round      integer not null,
+  section    text not null default '',
+  note       text not null default '',
+  off_brief  boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+-- Settlement offers (extra revision, discount, cancellation): no extra booking statuses needed
+create table if not exists resolution_offers (
+  id           bigint generated always as identity primary key,
+  booking_id   bigint not null references bookings(id) on delete cascade,
+  offered_by   text not null check (offered_by in ('umkm','influencer')),
+  kind         text not null check (kind in ('extra_revision','discount','cancellation')),
+  value_text   text not null default '',
+  value_amount integer not null default 0,
+  status       text not null default 'PENDING'
+    check (status in ('PENDING','ACCEPTED','DECLINED','EXPIRED')),
+  expires_at   timestamptz,
+  created_at   timestamptz not null default now()
+);
+
+-- One conversation per booking
+create table if not exists conversations (
+  id         bigint generated always as identity primary key,
+  booking_id bigint not null unique references bookings(id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists messages (
+  id              bigint generated always as identity primary key,
+  conversation_id bigint not null references conversations(id) on delete cascade,
+  sender_role     text not null check (sender_role in ('umkm','influencer','admin')),
+  body            text not null default '',
+  read_at         timestamptz,
+  created_at      timestamptz not null default now()
+);
+
+create table if not exists disputes (
+  id                    bigint generated always as identity primary key,
+  booking_id            bigint not null unique references bookings(id) on delete cascade,
+  opened_by             text not null check (opened_by in ('umkm','influencer')),
+  reason                text not null default '',
+  status                text not null default 'OPEN'
+    check (status in ('OPEN','NEED_INFO','RESOLVED')),
+  decision              text check (decision in ('RELEASE_FULL','REFUND_FULL','SPLIT')),
+  creator_share_percent integer,
+  decision_note         text not null default '',
+  decided_by            uuid references auth.users(id),
+  decided_at            timestamptz,
+  due_at                timestamptz not null,
+  created_at            timestamptz not null default now()
+);
+
+create table if not exists notifications (
+  id         bigint generated always as identity primary key,
+  recipient  uuid not null references auth.users(id) on delete cascade,
+  kind       text not null,
+  booking_id bigint references bookings(id) on delete cascade,
+  title      text not null default '',
+  body       text not null default '',
+  read_at    timestamptz,
+  created_at timestamptz not null default now()
 );
 
 create table if not exists reviews (
@@ -267,16 +373,21 @@ create table if not exists reviews (
   unique (booking_id, reviewer_role)
 );
 
--- One login per UMKM / creator. Links Supabase Auth users to domain rows.
+-- Reviews open when the booking is COMPLETED, or after a dispute decision (any outcome).
+-- Enforced in the review Server Action, not in the DB.
+
+-- One login per UMKM / creator / admin. Links Supabase Auth users to domain rows.
+-- Admins are created manually (no signup/onboarding) with both FKs null.
 create table if not exists profiles (
   user_id       uuid primary key references auth.users(id) on delete cascade,
-  role          text not null check (role in ('umkm', 'influencer')),
+  role          text not null check (role in ('umkm', 'influencer', 'admin')),
   umkm_id       bigint references umkms(id) on delete cascade,
   influencer_id bigint references influencers(id) on delete cascade,
   created_at    timestamptz not null default now(),
   check (
     (role = 'umkm'       and umkm_id is not null       and influencer_id is null) or
-    (role = 'influencer' and influencer_id is not null and umkm_id is null)
+    (role = 'influencer' and influencer_id is not null and umkm_id is null) or
+    (role = 'admin'      and umkm_id is null           and influencer_id is null)
   )
 );
 ```
@@ -294,12 +405,19 @@ Type differences from SQLite to be aware of when porting `lib/data.ts`:
 Enable RLS on every table and start with this baseline (competition-friendly, tighten later):
 
 ```sql
-alter table influencers enable row level security;
-alter table packages     enable row level security;
-alter table umkms        enable row level security;
-alter table bookings     enable row level security;
-alter table reviews      enable row level security;
-alter table profiles     enable row level security;
+alter table influencers         enable row level security;
+alter table packages            enable row level security;
+alter table umkms               enable row level security;
+alter table bookings            enable row level security;
+alter table reviews             enable row level security;
+alter table profiles            enable row level security;
+alter table deliveries          enable row level security;
+alter table revision_requests   enable row level security;
+alter table resolution_offers   enable row level security;
+alter table conversations       enable row level security;
+alter table messages            enable row level security;
+alter table disputes            enable row level security;
+alter table notifications       enable row level security;
 
 -- Catalog tables: public read, no direct writes (writes go through Server Actions).
 create policy "public read" on influencers for select using (true);
@@ -307,7 +425,23 @@ create policy "public read" on packages     for select using (true);
 create policy "public read" on umkms        for select using (true);
 ```
 
-Recommended write model: **all writes go through Server Actions using a service-role client** (server-only, bypasses RLS). This keeps the demo simple and secure by default — the publishable key effectively becomes read-only for catalog data. For production hardening, replace service-role writes with per-user RLS policies matching `auth.uid()` against `profiles` (e.g. a UMKM may insert bookings only for its own `umkm_id`, a creator may update only its own bookings).
+Recommended write model: **all writes go through Server Actions using a service-role client** (server-only, bypasses RLS). This keeps the demo simple and secure by default — the publishable key effectively becomes read-only for catalog data. This is mandatory for dispute decisions and payment status changes: they must never be writable from the browser. For production hardening, replace service-role writes with per-user RLS policies matching `auth.uid()` against `profiles` (e.g. a UMKM may insert bookings only for its own `umkm_id`, a creator may update only its own bookings).
+
+Chat access: conversation participants (the two parties of the booking) may read/write messages; `admin` may read a booking's chat **only** while its dispute is undecided (`OPEN` / `NEED_INFO`), e.g.:
+
+```sql
+create policy "dispute chat read for admin" on messages
+  for select using (
+    exists (
+      select 1 from profiles p
+      join conversations c on c.id = messages.conversation_id
+      join disputes d on d.booking_id = c.booking_id
+      where p.user_id = auth.uid()
+        and p.role = 'admin'
+        and d.status in ('OPEN', 'NEED_INFO')
+    )
+  );
+```
 
 Influencer `rating` / `review_count` stay denormalized — update them in the same Server Action that inserts a UMKM review (or via a Postgres trigger).
 
@@ -326,7 +460,7 @@ Influencer `rating` / `review_count` stay denormalized — update them in the sa
 
 ### Data model: `profiles`
 
-One login per UMKM / creator. `profiles.user_id → auth.users(id)` carries the `role` plus exactly one of `umkm_id` / `influencer_id` (schema in §8). Rows are created by an **onboarding Server Action** (service-role client), never by the browser:
+One login per UMKM / creator / admin. `profiles.user_id → auth.users(id)` carries the `role` plus exactly one of `umkm_id` / `influencer_id` — except `admin`, which has both null and is created manually (Supabase Dashboard → Auth → Users, then insert the `profiles` row with a service-role script). No signup or onboarding exists for admins. UMKM/creator rows are created by an **onboarding Server Action** (service-role client), never by the browser:
 
 1. User signs up / signs in (either method) → auth user exists, no profile yet.
 2. Middleware sees the missing profile → forces `/onboarding`.
@@ -352,16 +486,16 @@ create policy "umkm creates own bookings" on bookings
 ### Flows
 
 - **Email signup** — `/signup` form (name, email, password) → Server Action `signUp` → confirm email (disabled in dev, enabled in prod) → `/onboarding` (no profile yet).
-- **Email login** — `/login` form → `signInWithPassword` → `revalidatePath("/", "layout")` → redirect by role (`/dashboard` for UMKM, `/dashboard/influencer` for creators).
+- **Email login** — `/login` form → `signInWithPassword` → `revalidatePath("/", "layout")` → redirect by role (`/dashboard` for UMKM, `/dashboard/influencer` for creators, `/admin` for admins).
 - **Google OAuth** — button → `signInWithOAuth` with `redirectTo: <origin>/auth/callback` → callback route exchanges the code for a session → `/onboarding` or dashboard depending on profile presence.
 - **Logout** — Server Action `supabase.auth.signOut()` → redirect `/`.
-- **Role checks** — helper `requireRole("umkm" | "influencer")` in `lib/auth.ts`: `getUser()` → read `profiles` row → scope every query by the linked `umkm_id`/`influencer_id`. Never trust a role sent from the client.
+- **Role checks** — helper `requireRole("umkm" | "influencer" | "admin")` in `lib/auth.ts`: `getUser()` → read `profiles` row → scope every query by the linked `umkm_id`/`influencer_id` (admins skip scoping but are limited to dispute flows). Never trust a role sent from the client.
 
 ### Route protection (middleware)
 
 - Public: `/`, `/influencers*`, `/insights`, `/login`, `/signup`, `/auth/*`.
 - `updateSession` refresh runs on every non-static request.
-- Unauthenticated users are redirected away from `/dashboard*`, `/booking*`, `/review/[bookingId]`, `/onboarding`; authenticated users with a profile are redirected away from `/login`/`/signup`; authenticated users without one are forced to `/onboarding`.
+- Unauthenticated users are redirected away from `/dashboard*`, `/booking*`, `/review/[bookingId]`, `/onboarding`, `/admin/*`; authenticated users with a profile are redirected away from `/login`/`/signup`; authenticated users without one are forced to `/onboarding`. `/admin/*` additionally requires `requireRole("admin")` and redirects other roles to their own dashboard.
 
 ### Supabase dashboard setup (auth)
 
@@ -369,7 +503,7 @@ create policy "umkm creates own bookings" on bookings
 2. Google provider: create an OAuth client in Google Cloud Console, paste the client ID/secret into Supabase; allowlist `https://<project-ref>.supabase.co/auth/v1/callback` on the Google side.
 3. Authentication → URL Configuration: `SITE_URL` = deployed domain; Redirect URLs include `http://localhost:3000/**` (dev) and the prod domain (for `/auth/callback`).
 4. Translate the auth email templates to Bahasa Indonesia.
-5. Demo accounts: create `umkm-demo@kolab.id` / `kreator-demo@kolab.id` (linked to seeded rows via `profiles`) in the Dashboard or a service-role script. A one-click demo-login button is allowed in dev only.
+5. Demo accounts: create `umkm-demo@kolab.id` / `kreator-demo@kolab.id` (linked to seeded rows via `profiles`) in the Dashboard or a service-role script. A one-click demo-login button is allowed in dev only. Admin accounts are always created manually the same way (user + `profiles` row with `role = 'admin'`), never via signup.
 
 ### Migrating off the mock
 
@@ -383,6 +517,7 @@ create policy "umkm creates own bookings" on bookings
 - Keep `export const dynamic = "force-dynamic"` on DB-backed pages initially — same as before. Add per-page caching deliberately later, not by accident.
 - Server Components and Server Actions must use the per-request server client (`lib/supabase/server.ts`), never a module-level singleton.
 - PostgREST returns `numeric` columns as strings — cast ratings/amounts with `Number()` at the boundary (e.g. in `lib/data.ts`).
+- Notification feed: the prototype derives it from bookings; the target reads the `notifications` table (unread = `read_at is null`) with badge counts, refreshed via revalidation. No realtime subscription in the prototype.
 - Currency formatting still uses `lib/format.ts` (IDR/Rupiah helpers).
 
 ## 11. Troubleshooting
@@ -396,6 +531,7 @@ create policy "umkm creates own bookings" on bookings
 | Signup succeeds but user can't log in | "Confirm email" is on and the inbox wasn't confirmed. Turn it off for the dev project or confirm the user in the Dashboard |
 | Google OAuth loops back to login | Redirect/callback URL not allowlisted in Supabase URL Configuration, or `SITE_URL` still points at localhost in prod |
 | `numeric` rating arrives as `"4.8"` (string) | Expected PostgREST behavior — cast with `Number()` |
+| Admin locked out of chat, or decision/payment write denied | RLS: admin chat reads apply only while the dispute is `OPEN`/`NEED_INFO`; decisions and payment changes must use the service-role client, never the publishable key |
 | Old SQLite errors (`database is locked`, `node:sqlite` missing) | Leftover from the pre-Supabase code. Upgrading Node isn't the fix anymore — finish the migration in §6/§8 |
 
 ## 12. Deployment Checklist
@@ -406,3 +542,5 @@ create policy "umkm creates own bookings" on bookings
 4. `npm run build` passes; smoke-test login → booking → review flows for both roles.
 5. Mock-auth cleanup done: no `kolab_session` code paths, no one-click demo backdoor in prod.
 6. Backups: Supabase daily backups are on free-tier-daily / PITR on paid — verify before launch.
+7. Admin account provisioned manually (auth user + `profiles` row with `role = 'admin'`); no signup path exists for it.
+8. Status migration applied: prototype bookings (`PENDING`/`APPROVED`/`DONE`/`REJECTED`) mapped onto the nine-value lifecycle in §8, with package snapshots (`revision_quota`, `estimated_days`) backfilled.
