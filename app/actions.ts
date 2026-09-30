@@ -12,6 +12,7 @@ import {
   getUmkmById,
   hasReviewed,
   updateBookingStatus,
+  updateUmkm,
 } from "@/lib/data";
 import type { BookingStatus, Session } from "@/lib/types";
 
@@ -42,6 +43,33 @@ export async function loginAsInfluencer(): Promise<void> {
 export async function logout(): Promise<void> {
   await clearSession();
   redirect("/");
+}
+
+/* ------------------------------------------------------------------ */
+/* Profil UMKM                                                         */
+/* ------------------------------------------------------------------ */
+
+export async function updateProfile(formData: FormData): Promise<void> {
+  const session = await getSession();
+  if (!session || session.role !== "umkm") redirect("/login");
+
+  const name = String(formData.get("name") ?? "").trim().slice(0, 80);
+  const owner = String(formData.get("owner") ?? "").trim().slice(0, 80);
+  const category = String(formData.get("category") ?? "").trim().slice(0, 40);
+  const city = String(formData.get("city") ?? "").trim().slice(0, 40);
+
+  if (!name || !owner || !category || !city) {
+    redirect("/dashboard/profile?gagal=1");
+  }
+
+  const umkm = getUmkmById(session.subjectId);
+  if (!umkm) redirect("/dashboard/profile?gagal=1");
+
+  updateUmkm(umkm.id, { name, owner, category, city });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/profile");
+  redirect("/dashboard/profile?updated=1");
 }
 
 /* ------------------------------------------------------------------ */

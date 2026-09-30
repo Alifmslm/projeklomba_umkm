@@ -2,7 +2,7 @@
 
 Platform kolaborasi yang mempertemukan **UMKM** dengan **content creator** secara langsung, dengan **harga transparan** dan proses yang jelas, tanpa agensi mahal dan tanpa negosiasi yang membingungkan.
 
-> Catatan untuk developer: panduan teknis lengkap (instalasi, build, struktur kode) ada di [development.md](./DEVELOPMENT.md).
+> Catatan untuk developer dan desainer: panduan teknis ada di [DEVELOPMENT.md](./DEVELOPMENT.md), arsitektur informasi dan alur tiap tugas ada di [ARCHITECTURE.md](./ARCHITECTURE.md).
 
 ---
 
@@ -33,6 +33,7 @@ Kolab.id menjadi **jembatan dua arah** antara UMKM dan kreator:
 - **Harga transparan per video.** Setiap kreator menampilkan paket dan harganya secara terbuka, sehingga tidak ada lagi tebak-tebakan harga lewat chat pribadi.
 - **Filter harga di daftar kreator.** UMKM bisa menyaring kreator sesuai budget dan membandingkan harga antar kreator dalam satu halaman, sehingga mudah menilai kewajaran harga.
 - **Kolaborasi dalam 3 langkah.** Pilih kreator, ajukan brief, lalu pantau progres, semuanya di satu tempat.
+- **Pembayaran yang aman.** Dana ditahan dulu dan baru diteruskan ke kreator setelah konten disetujui. Semua diskusi tercatat di Chat tiap kolaborasi.
 - **Jangkauan ke Gen Z dan anak muda.** Lewat konten kreator yang sudah dipercaya audiens muda, UMKM bisa tampil di tempat calon pelanggan benar-benar mencari referensi.
 - **Ruang tumbuh bagi kreator kecil.** Semua kreator mendapat halaman profil, paket harga, dan ulasan yang setara, sehingga kualitas dan reputasi, bukan jumlah pengikut semata, yang membuka peluang kerja sama.
 
@@ -58,65 +59,10 @@ Kolab.id menjadi **jembatan dua arah** antara UMKM dan kreator:
 - **Terima permintaan kolaborasi** yang masuk dari UMKM
 - **Setujui, tolak, atau tandai selesai** setiap proyek dengan satu klik
 - **Bangun reputasi** lewat rating dan ulasan dari UMKM partner
+- **Beri nilai dan ulasan** untuk UMKM partner setelah proyek selesai
 
----
-
-## Alur Aplikasi
-
-### Masuk (login demo, tanpa kata sandi)
-
-```
-/login
-  |-- Masuk sebagai UMKM ----> /dashboard
-  |-- Masuk sebagai Kreator --> /dashboard/influencer
-Keluar --> kembali ke beranda (/)
-```
-
-- Belum masuk: hanya bisa melihat beranda, daftar kreator, detail kreator, dan wawasan harga.
-- Halaman booking, dashboard, dan ulasan otomatis mengarahkan ke `/login` jika belum masuk.
-- Salah peran (mis. kreator membuka dashboard UMKM) otomatis dialihkan ke dashboard yang benar.
-
-### Alur kolaborasi (UMKM + kreator)
-
-```
-UMKM                                     KREATOR
-----                                     -------
-/influencers (cari + filter kreator)
-        |
-/influencers/[id] (lihat paket + ulasan)
-        |
-/booking/[id] (pilih paket + tulis brief)
-        |  status = PENDING
-        v
-                dashboard kreator (/dashboard/influencer)
-                             |
-               +-------------+-------------+
-               |                           |
-            Setujui                       Tolak
-        (APPROVED)                 (REJECTED, berakhir)
-               |
-        konten diproduksi
-               |
-        kreator tandai selesai (DONE)
-               |
-               v
-  /review/[id] - ulasan dua arah (masing-masing 1x)
-               |
-               v
-  rating kreator + wawasan harga ikut diperbarui
-```
-
-- UMKM memantau semua status di `/dashboard` (menunggu, berjalan, selesai, anggaran).
-- Kreator mengelola semua permintaan di `/dashboard/influencer` (masuk, berjalan, pemasukan).
-- Ulasan hanya bisa diberikan untuk kolaborasi berstatus DONE, satu kali per pihak.
-
-### Siklus status booking
-
-```
-PENDING --> APPROVED --> DONE --> ulasan dua arah
-   |
-   +-----> REJECTED (berakhir, tanpa ulasan)
-```
+### Untuk Semua Pengunjung
+- **Lihat Wawasan Harga Pasar** — standar harga video promosi per kategori usaha, terbuka tanpa perlu masuk
 
 ---
 
@@ -127,4 +73,9 @@ PENDING --> APPROVED --> DONE --> ulasan dua arah
 | Beranda | Pengenalan Kolab.id, cara kerja, dan testimoni |
 | Daftar Kreator | Semua kreator lengkap dengan filter pencarian (kategori, kota, dan harga) |
 | Detail Kreator | Profil, paket harga, dan ulasan dari UMKM |
-| Dashboard | Ringkasan aktivitas Anda (berbeda untuk UMKM dan kreator) |
+| Wawasan Harga | Standar harga video promosi per kategori usaha |
+| Dashboard UMKM | Ringkasan aktivitas, rekomendasi kreator, dan riwayat kolaborasi |
+| Riwayat Kolaborasi | Semua pengajuan kolaborasi beserta statusnya |
+| Profile Usaha | Data usaha UMKM (bisa diubah, memengaruhi rekomendasi kreator) |
+| Dashboard Kreator | Permintaan masuk, konfirmasi, dan penyelesaian proyek |
+| Chat | Diskusi langsung dengan kreator di tiap kolaborasi |
