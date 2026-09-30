@@ -1,6 +1,6 @@
 # Development Guide — Kolab.id
 
-Technical documentation for developers working on Kolab.id. For a non-technical product overview, see [README.md](./README.md).
+Technical documentation for developers working on Kolab.id. For the product overview see [README.md](./README.md); for information architecture and task flows see [ARCHITECTURE.md](./ARCHITECTURE.md); for design tokens and components see [DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md).
 
 > **Migration status:** the app code currently still uses local SQLite (`node:sqlite`) with mock cookie auth. This guide describes the **target stack (Supabase + Supabase Auth — decided)** implementing the product spec in ARCHITECTURE.md (escrow lifecycle, 3 dashboards). Code migration is pending work — see §6, §8, §9, and §12.
 
@@ -10,7 +10,7 @@ Technical documentation for developers working on Kolab.id. For a non-technical 
 | --- | --- | --- |
 | Framework | Next.js 16.3.6 (App Router) | Server Components + Server Actions |
 | Language | TypeScript 5 | Strict mode (see `tsconfig.json`) |
-| UI | React 19.2.8, Tailwind CSS v4 (`@tailwindcss/postcss`) | Utility-first styling |
+| UI | React 19.2.8, Tailwind CSS v4 (`@tailwindcss/postcss`) | Utility-first styling; tokens in DESIGN_SYSTEM.md, implemented as `@theme` in `app/globals.css` |
 | Icons | lucide-react 1.47.0 | — |
 | Database | Supabase (managed Postgres) | Accessed via `@supabase/ssr` + `@supabase/supabase-js`. Replaces local SQLite |
 | Auth | Supabase Auth (see §9) | Replaces the mock `kolab_session` cookie |
@@ -74,7 +74,7 @@ Re-running `npm run db:seed` resets the demo data (truncate + re-insert).
 | `start` | `next start` — serve the production build |
 | `lint` | `eslint` — lint the codebase |
 | `db:migrate` | Apply `supabase/migrations/*.sql` to the linked project (`supabase db push`) |
-| `db:seed` | Seed demo data into Supabase via `scripts/seed.ts` (service-role key, server-side only) |
+| `db:seed` | Seed demo data into Supabase via `scripts/seed.ts` (service-role key, server-side only). Extend fixtures with escrow/dispute/chat/notification cases when implementing ARCHITECTURE.md §2–§5 |
 | `db:types` | Regenerate typed schema (`supabase gen types typescript --linked > lib/supabase/database.types.ts`) |
 
 ## 5. Production Build
@@ -111,7 +111,7 @@ app/
   review/[bookingId]/     # Two-way rating & review form (after COMPLETED booking or dispute decision)
   insights/               # Market price insights per category
   dashboard/
-    influencer/           # Creator dashboard (+ planned: chat/, paket/ — see ARCHITECTURE.md §4)
+    influencer/           # Creator dashboard (+ planned: chat/, paket/, sidebar+header shell — see ARCHITECTURE.md §4)
   admin/                  # (planned) Admin: dashboard, Antrian Kasus, Detail Kasus (see ARCHITECTURE.md §5)
   login/                  # Login / signup pages (Supabase Auth, see §9)
 components/               # Navbar, Footer, DashboardShell (sidebar+header), UmkmShell (server wrapper),
@@ -517,6 +517,7 @@ create policy "umkm creates own bookings" on bookings
 - Keep `export const dynamic = "force-dynamic"` on DB-backed pages initially — same as before. Add per-page caching deliberately later, not by accident.
 - Server Components and Server Actions must use the per-request server client (`lib/supabase/server.ts`), never a module-level singleton.
 - PostgREST returns `numeric` columns as strings — cast ratings/amounts with `Number()` at the boundary (e.g. in `lib/data.ts`).
+- UI must use design-token utilities (`bg-primary-600`, `text-success-700`, `rounded-xl`, `shadow-sm`, ...) per DESIGN_SYSTEM.md §16 — never raw hex or arbitrary values. Custom values live in `@theme` in `app/globals.css`.
 - Notification feed: the prototype derives it from bookings; the target reads the `notifications` table (unread = `read_at is null`) with badge counts, refreshed via revalidation. No realtime subscription in the prototype.
 - Currency formatting still uses `lib/format.ts` (IDR/Rupiah helpers).
 
@@ -539,7 +540,7 @@ create policy "umkm creates own bookings" on bookings
 1. Supabase **prod** project: migrations applied, RLS policies on, seed/demo data replaced with real (or clearly-marked demo) data.
 2. Auth configured: `SITE_URL` + redirect URLs set to the prod domain, Google OAuth client wired, email templates translated to Bahasa Indonesia, "Confirm email" set per launch policy.
 3. Host (Vercel recommended): set `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
-4. `npm run build` passes; smoke-test login → booking → review flows for both roles.
+4. `npm run build` passes; smoke-test login → booking → pay → review flows for both roles, plus the dispute path (`Ajukan Sengketa` → decision → review).
 5. Mock-auth cleanup done: no `kolab_session` code paths, no one-click demo backdoor in prod.
 6. Backups: Supabase daily backups are on free-tier-daily / PITR on paid — verify before launch.
 7. Admin account provisioned manually (auth user + `profiles` row with `role = 'admin'`); no signup path exists for it.
