@@ -186,7 +186,9 @@ export const config = {
 | `/influencers` | Creator list + search/filter/sort | Public |
 | `/influencers/[id]` | Creator profile, packages, UMKM reviews | Public |
 | `/booking/[influencerId]` | Submit collaboration request | Supabase session + `umkm` role |
-| `/dashboard` | UMKM dashboard + auto creator recommendations | Supabase session + `umkm` role |
+| `/dashboard` | UMKM dashboard (sidebar shell, KPI cards, recommendations, history summary) | Supabase session + `umkm` role |
+| `/dashboard/riwayat` | Full UMKM collaboration history | Supabase session + `umkm` role |
+| `/dashboard/profile` | UMKM business profile view + edit | Supabase session + `umkm` role |
 | `/dashboard/influencer` | Creator dashboard (accept/reject/complete) | Supabase session + `influencer` role |
 | `/review/[bookingId]` | Two-way rating after DONE booking | Involved party only |
 | `/insights` | Market price standards per category (min/avg/max) | Public |

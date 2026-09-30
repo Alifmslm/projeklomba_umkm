@@ -6,12 +6,10 @@ import {
   BadgeCheck,
   CheckCircle2,
   Clock,
-  Handshake,
+  FileText,
   PartyPopper,
-  Search,
   Sparkles,
   Star,
-  Wallet,
 } from "lucide-react";
 import { getSession } from "@/lib/auth";
 import {
@@ -20,12 +18,12 @@ import {
   getReviewForBookingRole,
   getUmkmById,
 } from "@/lib/data";
-import { formatDate, formatRupiah } from "@/lib/format";
+import { formatRupiah } from "@/lib/format";
 import type { Review } from "@/lib/types";
 import { StatCard } from "@/components/StatCard";
-import { StatusBadge } from "@/components/StatusBadge";
 import { Avatar } from "@/components/Avatar";
-import { StarRating } from "@/components/StarRating";
+import { DashboardShell } from "@/components/DashboardShell";
+import { BookingHistoryList } from "@/components/BookingHistoryList";
 
 export const dynamic = "force-dynamic";
 
@@ -59,34 +57,23 @@ export default async function UmkmDashboardPage(
   }
 
   const total = bookings.length;
-  const aktif = bookings.filter((b) => b.status === "APPROVED").length;
   const menunggu = bookings.filter((b) => b.status === "PENDING").length;
-  const anggaran = bookings
-    .filter((b) => b.status !== "REJECTED")
-    .reduce((sum, b) => sum + b.amount, 0);
+  const berjalan = bookings.filter((b) => b.status === "APPROVED").length;
   const selesai = bookings.filter((b) => b.status === "DONE").length;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+    <DashboardShell userName={session.name}>
       {/* Header */}
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="text-sm font-bold uppercase tracking-widest text-indigo-600">
-            Dashboard UMKM
-          </p>
-          <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-slate-900">
-            Halo, {session.name}! 👋
-          </h1>
-          <p className="mt-1.5 text-slate-600">
-            Ini ringkasan semua kolaborasi dengan kreator.
-          </p>
-        </div>
-        <Link
-          href="/influencers"
-          className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-indigo-500/25 transition-all hover:shadow-lg hover:brightness-110"
-        >
-          <Search className="h-4 w-4" /> Cari Kreator Baru
-        </Link>
+      <div>
+        <p className="text-sm font-bold uppercase tracking-widest text-indigo-600">
+          Dashboard
+        </p>
+        <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-slate-900">
+          Halo, {session.name}!
+        </h1>
+        <p className="mt-1.5 text-slate-600">
+          Ini ringkasan semua kolaborasi dengan kreator.
+        </p>
       </div>
 
       {/* Banner sukses booking baru */}
@@ -117,39 +104,39 @@ export default async function UmkmDashboardPage(
         </div>
       )}
 
-      {/* Statistik */}
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {/* KPI Card */}
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
-          icon={Handshake}
-          label="Total Kolaborasi"
+          icon={FileText}
+          label="Total Pengajuan"
           value={String(total)}
-          hint={`${selesai} selesai`}
+          hint="semua pengajuan kolaborasi"
           accent="indigo"
+        />
+        <StatCard
+          icon={Clock}
+          label="Menunggu Respons"
+          value={String(menunggu)}
+          hint="menunggu konfirmasi kreator"
+          accent="amber"
         />
         <StatCard
           icon={CheckCircle2}
           label="Sedang Berjalan"
-          value={String(aktif)}
+          value={String(berjalan)}
           hint="konten sedang diproduksi"
           accent="emerald"
         />
         <StatCard
-          icon={Clock}
-          label="Menunggu"
-          value={String(menunggu)}
-          hint="konfirmasi kreator"
-          accent="amber"
-        />
-        <StatCard
-          icon={Wallet}
-          label="Total Anggaran"
-          value={formatRupiah(anggaran)}
-          hint="paket aktif & selesai"
+          icon={BadgeCheck}
+          label="Selesai"
+          value={String(selesai)}
+          hint="kolaborasi selesai"
           accent="violet"
         />
       </div>
 
-      {/* Matchmaking: kreator yang cocok */}
+      {/* Rekomendasi Creator */}
       {recommended.length > 0 && (
         <section className="mt-10">
           <div className="flex flex-wrap items-end justify-between gap-4">
@@ -234,9 +221,9 @@ export default async function UmkmDashboardPage(
         </section>
       )}
 
-      {/* Daftar kolaborasi */}
+      {/* Riwayat Kolaborasi */}
       <div className="mt-10">
-        <div className="flex items-end justify-between gap-4">
+        <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h2 className="text-xl font-extrabold text-slate-900">
               Riwayat Kolaborasi
@@ -246,85 +233,18 @@ export default async function UmkmDashboardPage(
               profil lengkap.
             </p>
           </div>
+          {bookings.length > 3 && (
+            <Link
+              href="/dashboard/riwayat"
+              className="inline-flex items-center gap-1 text-sm font-semibold text-indigo-600 hover:text-indigo-800"
+            >
+              Lihat Semua <ArrowRight className="h-4 w-4" />
+            </Link>
+          )}
         </div>
 
-        {bookings.length === 0 ? (
-          <div className="mt-6 flex flex-col items-center rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center">
-            <span className="grid h-14 w-14 place-items-center rounded-2xl bg-indigo-50 text-indigo-600">
-              <Handshake className="h-7 w-7" />
-            </span>
-            <h3 className="mt-4 text-lg font-bold text-slate-900">
-              Belum ada kolaborasi
-            </h3>
-            <p className="mt-1 max-w-sm text-sm text-slate-500">
-              Yuk mulai gandeng kreator pertama UMKM-mu. Pilih dari daftar
-              kreator yang sudah terkurasi.
-            </p>
-            <Link
-              href="/influencers"
-              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
-            >
-              Cari Kreator <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-        ) : (
-          <div className="mt-6 space-y-4">
-            {bookings.map((b) => (
-              <div
-                key={b.id}
-                className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center"
-              >
-                <Link
-                  href={`/influencers/${b.influencerId}`}
-                  className="flex min-w-0 flex-1 items-center gap-4"
-                >
-                  <Avatar
-                    name={b.influencerName}
-                    color={b.influencerColor}
-                    size="md"
-                  />
-                  <div className="min-w-0">
-                    <p className="flex items-center gap-1.5 truncate text-sm font-bold text-slate-900 hover:text-indigo-700">
-                      {b.influencerName}
-                      <BadgeCheck className="h-4 w-4 shrink-0 text-slate-400" />
-                    </p>
-                    <p className="truncate text-xs text-slate-500">
-                      {b.influencerHandle} · {b.influencerCity} · {b.niche}
-                    </p>
-                    <p className="mt-1 truncate text-xs text-slate-400">
-                      {b.packageName} · {formatDate(b.createdAt)}
-                    </p>
-                  </div>
-                </Link>
-
-                <div className="flex shrink-0 items-center gap-4 sm:flex-col sm:items-end">
-                  <p className="text-sm font-extrabold text-slate-900">
-                    {formatRupiah(b.amount)}
-                  </p>
-                  <StatusBadge status={b.status} />
-                  {b.status === "DONE" &&
-                    (myReviews.get(b.id) ? (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-1 text-[11px] font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-200">
-                        <StarRating
-                          rating={myReviews.get(b.id)!.rating}
-                          size="h-3 w-3"
-                        />
-                        Sudah dinilai
-                      </span>
-                    ) : (
-                      <Link
-                        href={`/review/${b.id}`}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-3.5 py-2 text-xs font-bold text-white shadow-sm transition-all hover:brightness-110"
-                      >
-                        <Star className="h-3.5 w-3.5" /> Beri Ulasan
-                      </Link>
-                    ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        <BookingHistoryList bookings={bookings.slice(0, 3)} reviews={myReviews} />
       </div>
-    </div>
+    </DashboardShell>
   );
 }

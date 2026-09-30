@@ -213,6 +213,15 @@ export function getUmkmById(id: number): Umkm | null {
   return row ? mapUmkm(row) : null;
 }
 
+export function updateUmkm(
+  id: number,
+  input: { name: string; owner: string; category: string; city: string },
+): void {
+  db.prepare(
+    "UPDATE umkms SET name = ?, owner = ?, category = ?, city = ? WHERE id = ?",
+  ).run(input.name, input.owner, input.category, input.city, id);
+}
+
 /* ------------------------------------------------------------------ */
 /* Bookings                                                            */
 /* ------------------------------------------------------------------ */
