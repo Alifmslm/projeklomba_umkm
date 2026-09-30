@@ -6,7 +6,7 @@ import {
   getReviewForBookingRole,
 } from "@/lib/data";
 import type { Review } from "@/lib/types";
-import { DashboardShell } from "@/components/DashboardShell";
+import { UmkmShell } from "@/components/UmkmShell";
 import { BookingHistoryList } from "@/components/BookingHistoryList";
 
 export const dynamic = "force-dynamic";
@@ -32,7 +32,7 @@ export default async function RiwayatPage() {
   }
 
   return (
-    <DashboardShell userName={session.name}>
+    <UmkmShell>
       <div>
         <p className="text-sm font-bold uppercase tracking-widest text-indigo-600">
           Riwayat Kolaborasi
@@ -47,6 +47,6 @@ export default async function RiwayatPage() {
       </div>
 
       <BookingHistoryList bookings={bookings} reviews={myReviews} />
-    </DashboardShell>
+    </UmkmShell>
   );
 }

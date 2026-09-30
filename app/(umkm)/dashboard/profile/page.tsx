@@ -4,7 +4,7 @@ import { AlertCircle, CheckCircle2, Store } from "lucide-react";
 import { getSession } from "@/lib/auth";
 import { getUmkmById } from "@/lib/data";
 import { updateProfile } from "@/app/actions";
-import { DashboardShell } from "@/components/DashboardShell";
+import { UmkmShell } from "@/components/UmkmShell";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +35,7 @@ export default async function ProfilePage(
   ];
 
   return (
-    <DashboardShell userName={session.name}>
+    <UmkmShell>
       <div>
         <p className="text-sm font-bold uppercase tracking-widest text-indigo-600">
           Profile
@@ -135,6 +135,6 @@ export default async function ProfilePage(
           </button>
         </form>
       </div>
-    </DashboardShell>
+    </UmkmShell>
   );
 }

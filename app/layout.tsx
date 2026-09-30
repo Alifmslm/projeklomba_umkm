@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
-import { SiteChrome } from "@/components/SiteChrome";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 
@@ -35,9 +34,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="id" className={`${jakarta.variable} h-full`}>
       <body className="flex min-h-full flex-col font-sans antialiased">
-        <SiteChrome navbar={<Navbar />} footer={<Footer />}>
-          {children}
-        </SiteChrome>
+        <Navbar />
+        <main className="flex-1">{children}</main>
+        <Footer />
       </body>
     </html>
   );

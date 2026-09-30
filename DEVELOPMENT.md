@@ -96,15 +96,20 @@ Notes:
 
 ```
 app/
-  actions.ts              # Server Actions: login/logout, submitBooking, setBookingStatus, submitReview
+  actions.ts              # Server Actions: login/logout, submitBooking, setBookingStatus, submitReview, updateProfile
   page.tsx                # Landing page
   influencers/            # Creator list + filters, creator detail (packages, reviews)
   booking/[influencerId]/ # Collaboration request form (UMKM-only guard)
   review/[bookingId]/     # Two-way rating & review form (after DONE booking)
   insights/               # Market price insights per category
-  dashboard/              # UMKM dashboard (+ auto recommendations) & creator dashboard
+  dashboard/
+    page.tsx              # UMKM dashboard: sidebar shell, KPI cards, recommendations, history summary
+    riwayat/              # Full UMKM collaboration history
+    profile/              # UMKM business profile view + edit
+    influencer/           # Creator dashboard (keeps global navbar/footer)
   login/                  # Login / signup pages (Supabase Auth, see §9)
-components/               # Navbar, Footer, InfluencerCard, StarRating, etc.
+components/               # Navbar, Footer, SiteChrome (chrome switch), DashboardShell (sidebar),
+                          # BookingHistoryList, InfluencerCard, StarRating, etc.
 lib/
   supabase/
     client.ts             # Browser client (createBrowserClient) — "use client" only
@@ -245,7 +250,7 @@ create table if not exists bookings (
   amount        integer not null,
   message       text not null default '',
   status        text not null default 'PENDING'
-    check (status in ('PENDING', 'ACCEPTED', 'REJECTED', 'DONE')),
+    check (status in ('PENDING', 'APPROVED', 'REJECTED', 'DONE')),
   created_at    timestamptz not null default now()
 );
 

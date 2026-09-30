@@ -22,7 +22,7 @@ import { formatRupiah } from "@/lib/format";
 import type { Review } from "@/lib/types";
 import { StatCard } from "@/components/StatCard";
 import { Avatar } from "@/components/Avatar";
-import { DashboardShell } from "@/components/DashboardShell";
+import { UmkmShell } from "@/components/UmkmShell";
 import { BookingHistoryList } from "@/components/BookingHistoryList";
 
 export const dynamic = "force-dynamic";
@@ -62,7 +62,7 @@ export default async function UmkmDashboardPage(
   const selesai = bookings.filter((b) => b.status === "DONE").length;
 
   return (
-    <DashboardShell userName={session.name}>
+    <UmkmShell>
       {/* Header */}
       <div>
         <p className="text-sm font-bold uppercase tracking-widest text-indigo-600">
@@ -245,6 +245,6 @@ export default async function UmkmDashboardPage(
 
         <BookingHistoryList bookings={bookings.slice(0, 3)} reviews={myReviews} />
       </div>
-    </DashboardShell>
+    </UmkmShell>
   );
 }
