@@ -33,6 +33,7 @@ Kolab.id menjadi **jembatan dua arah** antara UMKM dan kreator:
 - **Harga transparan per video.** Setiap kreator menampilkan paket dan harganya secara terbuka, sehingga tidak ada lagi tebak-tebakan harga lewat chat pribadi.
 - **Filter harga di daftar kreator.** UMKM bisa menyaring kreator sesuai budget dan membandingkan harga antar kreator dalam satu halaman, sehingga mudah menilai kewajaran harga.
 - **Kolaborasi dalam 3 langkah.** Pilih kreator, ajukan brief, lalu pantau progres, semuanya di satu tempat.
+- **Pembayaran yang aman.** Dana ditahan dulu dan baru diteruskan ke kreator setelah konten disetujui. Semua diskusi tercatat di Chat tiap kolaborasi.
 - **Jangkauan ke Gen Z dan anak muda.** Lewat konten kreator yang sudah dipercaya audiens muda, UMKM bisa tampil di tempat calon pelanggan benar-benar mencari referensi.
 - **Ruang tumbuh bagi kreator kecil.** Semua kreator mendapat halaman profil, paket harga, dan ulasan yang setara, sehingga kualitas dan reputasi, bukan jumlah pengikut semata, yang membuka peluang kerja sama.
 
@@ -77,3 +78,4 @@ Kolab.id menjadi **jembatan dua arah** antara UMKM dan kreator:
 | Riwayat Kolaborasi | Semua pengajuan kolaborasi beserta statusnya |
 | Profile Usaha | Data usaha UMKM (bisa diubah, memengaruhi rekomendasi kreator) |
 | Dashboard Kreator | Permintaan masuk, konfirmasi, dan penyelesaian proyek |
+| Chat | Diskusi langsung dengan kreator di tiap kolaborasi |
