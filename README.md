@@ -53,6 +53,7 @@ Kolab.id menjadi **jembatan dua arah** antara UMKM dan kreator:
 - **Ajukan kolaborasi** dengan mengisi brief singkat tentang produk dan kebutuhan promosi
 - **Pantau semua pengajuan** di dashboard, lengkap dengan status dan riwayat
 - **Dapatkan rekomendasi kreator otomatis** yang dicocokkan dengan jenis usaha, kota, dan budget
+- **Lihat estimasi jangkauan & ROI** tiap kreator sebelum booking — perkiraan audiens tersentuh per video dan potensi balik modal tiap paket, dengan asumsi yang transparan
 - **Beri nilai dan ulasan** setelah kerja sama selesai
 
 ### Untuk Kreator / Influencer
@@ -72,7 +73,7 @@ Kolab.id menjadi **jembatan dua arah** antara UMKM dan kreator:
 | --- | --- |
 | Beranda | Pengenalan Kolab.id, cara kerja, dan testimoni |
 | Daftar Kreator | Semua kreator lengkap dengan filter pencarian (kategori, kota, dan harga) |
-| Detail Kreator | Profil, paket harga, dan ulasan dari UMKM |
+| Detail Kreator | Profil, paket harga + **estimasi jangkauan & ROI**, dan ulasan dari UMKM |
 | Wawasan Harga | Standar harga video promosi per kategori usaha |
 | Dashboard UMKM | Ringkasan aktivitas, rekomendasi kreator, dan riwayat kolaborasi |
 | Riwayat Kolaborasi | Semua pengajuan kolaborasi beserta statusnya |

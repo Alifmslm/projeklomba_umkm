@@ -10,6 +10,7 @@ import {
   Users,
   MessageSquare,
   ArrowRight,
+  Radar,
 } from "lucide-react";
 import {
   getInfluencerById,
@@ -18,6 +19,12 @@ import {
   getReviewsForInfluencer,
 } from "@/lib/data";
 import { formatDate, formatFollowers, formatRupiah } from "@/lib/format";
+import {
+  estimateReach,
+  estimateRoi,
+  CONVERSION_RATE,
+  AVG_BASKET_RP,
+} from "@/lib/estimate";
 import { Avatar } from "@/components/Avatar";
 import { InfluencerCard } from "@/components/InfluencerCard";
 import { StarRating } from "@/components/StarRating";
@@ -43,6 +50,7 @@ export default async function InfluencerDetailPage(
   if (!inf) notFound();
 
   const packages = getPackagesByInfluencer(inf.id);
+  const reachEstimate = estimateReach(inf.followers, inf.engagementRate);
   const related = getRelatedInfluencers(inf.niche, inf.id);
   const reviews = getReviewsForInfluencer(inf.id, 4);
 
@@ -87,7 +95,7 @@ export default async function InfluencerDetailPage(
               </div>
             </div>
 
-            <div className="mt-6 grid grid-cols-3 divide-x divide-slate-100 rounded-2xl bg-slate-50 py-4 text-center">
+            <div className="mt-6 grid grid-cols-2 divide-x divide-slate-100 rounded-2xl bg-slate-50 py-4 text-center sm:grid-cols-4">
               {[
                 {
                   icon: Users,
@@ -103,6 +111,11 @@ export default async function InfluencerDetailPage(
                   icon: MessageSquare,
                   value: `${packages.length} paket`,
                   label: "ketersediaan",
+                },
+                {
+                  icon: Radar,
+                  value: `≈ ${formatFollowers(Math.round(reachEstimate))}`,
+                  label: "tersentuh/video",
                 },
               ].map((s, i) => (
                 <div key={i}>
@@ -161,11 +174,14 @@ export default async function InfluencerDetailPage(
             </p>
 
             <div className="mt-5 space-y-4">
-              {packages.map((pkg) => (
-                <div
-                  key={pkg.id}
-                  className="rounded-2xl border border-slate-200 p-4 transition-colors hover:border-indigo-300"
-                >
+              {packages.map((pkg) => {
+                const roi = estimateRoi(pkg.price, reachEstimate);
+                const roiHealthy = roi >= 1;
+                return (
+                  <div
+                    key={pkg.id}
+                    className="rounded-2xl border border-slate-200 p-4 transition-colors hover:border-indigo-300"
+                  >
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <h3 className="text-sm font-bold text-slate-900">
@@ -190,15 +206,39 @@ export default async function InfluencerDetailPage(
                       </li>
                     ))}
                   </ul>
+                  <div
+                    className={`mt-3 flex items-center justify-between rounded-lg px-3 py-2 ${
+                      roiHealthy
+                        ? "bg-emerald-50 text-emerald-700"
+                        : "bg-amber-50 text-amber-700"
+                    }`}
+                  >
+                    <span className="text-[11px] font-bold uppercase tracking-wide">
+                      Est. ROI
+                    </span>
+                    <span className="text-xs font-bold">
+                      {roiHealthy
+                        ? `× ${roi.toFixed(1)} balik modal`
+                        : `× ${roi.toFixed(1)} di bawah balik modal`}
+                    </span>
+                  </div>
                   <Link
                     href={`/booking/${inf.id}?paket=${pkg.id}`}
                     className="mt-3 block w-full rounded-xl bg-slate-900 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-indigo-600"
                   >
                     Ajukan Kolaborasi
                   </Link>
-                </div>
-              ))}
+                  </div>
+                );
+              })}
             </div>
+
+            <p className="mt-4 rounded-xl bg-slate-50 p-3 text-[11px] leading-relaxed text-slate-500">
+              *Estimasi jangkauan dihitung dari followers × engagement rate;
+              ROI memakai asumsi konversi {CONVERSION_RATE * 100}% dan nilai
+              transaksi rata-rata {formatRupiah(AVG_BASKET_RP)}. Angka ini
+              perkiraan kasar, bukan jaminan hasil nyata.
+            </p>
 
             <p className="mt-4 text-center text-[11px] leading-relaxed text-slate-400">
               Demo: pembayaran disimulasikan. Pembayaran asli akan dikelola

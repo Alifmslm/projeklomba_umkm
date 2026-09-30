@@ -22,8 +22,9 @@ db.exec(`
     handle     TEXT NOT NULL UNIQUE,
     niche      TEXT NOT NULL,
     city       TEXT NOT NULL,
-    followers  INTEGER NOT NULL,
-    base_price INTEGER NOT NULL,
+    followers      INTEGER NOT NULL,
+    engagement_rate REAL NOT NULL DEFAULT 0.035,
+    base_price     INTEGER NOT NULL,
     rating     REAL NOT NULL,
     review_count INTEGER NOT NULL,
     verified   INTEGER NOT NULL DEFAULT 0,
@@ -75,5 +76,17 @@ db.exec(`
     UNIQUE (booking_id, reviewer_role)
   );
 `);
+
+// Migrasi aditif: CREATE TABLE IF NOT EXISTS tidak menambah kolom ke tabel
+// yang sudah ada. Tambahkan engagement_rate untuk data.db lama (gitignored)
+// supaya kolom baru selalu tersedia tanpa harus drop data.
+const influencerColumns = db
+  .prepare("PRAGMA table_info(influencers)")
+  .all() as { name: string }[];
+if (!influencerColumns.some((c) => c.name === "engagement_rate")) {
+  db.exec(
+    "ALTER TABLE influencers ADD COLUMN engagement_rate REAL NOT NULL DEFAULT 0.035;",
+  );
+}
 
 export { db };

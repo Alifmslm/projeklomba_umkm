@@ -5,6 +5,8 @@ export type Influencer = {
   niche: string;
   city: string;
   followers: number;
+  /** rasio interaksi untuk estimasi jangkauan (0.03 = 3%) */
+  engagementRate: number;
   /** harga terendah per video (Rp) */
   basePrice: number;
   rating: number;

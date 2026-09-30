@@ -35,6 +35,7 @@ function mapInfluencer(row: Record<string, unknown>): Influencer {
     niche: String(row.niche),
     city: String(row.city),
     followers: Number(row.followers),
+    engagementRate: Number(row.engagement_rate ?? 0.035),
     basePrice: Number(row.base_price),
     rating: Number(row.rating),
     reviewCount: Number(row.review_count),

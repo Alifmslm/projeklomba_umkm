@@ -14,6 +14,7 @@ type InfluencerSeed = {
   niche: string;
   city: string;
   followers: number;
+  engagementRate: number;
   basePrice: number;
   rating: number;
   reviewCount: number;
@@ -29,6 +30,7 @@ const influencers: InfluencerSeed[] = [
     niche: "Kuliner",
     city: "Bandung",
     followers: 245_000,
+    engagementRate: 0.06,
     basePrice: 1_200_000,
     rating: 4.9,
     reviewCount: 127,
@@ -42,6 +44,7 @@ const influencers: InfluencerSeed[] = [
     niche: "Gadget & Teknologi",
     city: "Jakarta",
     followers: 512_000,
+    engagementRate: 0.045,
     basePrice: 2_500_000,
     rating: 4.8,
     reviewCount: 203,
@@ -55,6 +58,7 @@ const influencers: InfluencerSeed[] = [
     niche: "Kecantikan",
     city: "Jakarta",
     followers: 389_000,
+    engagementRate: 0.07,
     basePrice: 1_800_000,
     rating: 4.7,
     reviewCount: 168,
@@ -68,6 +72,7 @@ const influencers: InfluencerSeed[] = [
     niche: "Kesehatan & Fitnes",
     city: "Surabaya",
     followers: 178_000,
+    engagementRate: 0.05,
     basePrice: 850_000,
     rating: 4.6,
     reviewCount: 94,
@@ -81,6 +86,7 @@ const influencers: InfluencerSeed[] = [
     niche: "Parenting & Edukasi",
     city: "Yogyakarta",
     followers: 96_000,
+    engagementRate: 0.08,
     basePrice: 600_000,
     rating: 4.9,
     reviewCount: 76,
@@ -94,6 +100,7 @@ const influencers: InfluencerSeed[] = [
     niche: "Travel",
     city: "Medan",
     followers: 620_000,
+    engagementRate: 0.03,
     basePrice: 3_000_000,
     rating: 4.8,
     reviewCount: 241,
@@ -107,6 +114,7 @@ const influencers: InfluencerSeed[] = [
     niche: "Fashion",
     city: "Jakarta",
     followers: 410_000,
+    engagementRate: 0.05,
     basePrice: 2_000_000,
     rating: 4.7,
     reviewCount: 182,
@@ -120,6 +128,7 @@ const influencers: InfluencerSeed[] = [
     niche: "Gaming",
     city: "Surabaya",
     followers: 335_000,
+    engagementRate: 0.04,
     basePrice: 1_500_000,
     rating: 4.5,
     reviewCount: 143,
@@ -133,6 +142,7 @@ const influencers: InfluencerSeed[] = [
     niche: "Kuliner",
     city: "Yogyakarta",
     followers: 152_000,
+    engagementRate: 0.07,
     basePrice: 700_000,
     rating: 4.8,
     reviewCount: 88,
@@ -146,6 +156,7 @@ const influencers: InfluencerSeed[] = [
     niche: "Rumah & Dekorasi",
     city: "Bandung",
     followers: 74_000,
+    engagementRate: 0.06,
     basePrice: 450_000,
     rating: 4.6,
     reviewCount: 51,
@@ -159,6 +170,7 @@ const influencers: InfluencerSeed[] = [
     niche: "Fashion",
     city: "Bali",
     followers: 205_000,
+    engagementRate: 0.055,
     basePrice: 950_000,
     rating: 4.9,
     reviewCount: 119,
@@ -172,6 +184,7 @@ const influencers: InfluencerSeed[] = [
     niche: "Otomotif",
     city: "Jakarta",
     followers: 88_000,
+    engagementRate: 0.04,
     basePrice: 500_000,
     rating: 4.4,
     reviewCount: 42,
@@ -417,8 +430,8 @@ export function seed(clear = true) {
 
   const insertInfluencer = db.prepare(
     `INSERT INTO influencers
-       (name, handle, niche, city, followers, base_price, rating, review_count, verified, bio, color)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       (name, handle, niche, city, followers, engagement_rate, base_price, rating, review_count, verified, bio, color)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   );
   const insertPackage = db.prepare(
     `INSERT INTO packages (influencer_id, name, price, summary, includes)
@@ -441,6 +454,7 @@ export function seed(clear = true) {
       inf.niche,
       inf.city,
       inf.followers,
+      inf.engagementRate,
       inf.basePrice,
       inf.rating,
       inf.reviewCount,

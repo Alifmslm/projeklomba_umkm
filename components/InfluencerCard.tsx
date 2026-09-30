@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { BadgeCheck, MapPin, Star } from "lucide-react";
+import { BadgeCheck, MapPin, Radar, Star } from "lucide-react";
 import type { Influencer } from "@/lib/types";
 import { formatFollowers, formatRupiah } from "@/lib/format";
+import { estimateReach } from "@/lib/estimate";
 import { Avatar } from "./Avatar";
 
 export function InfluencerCard({
@@ -12,6 +13,9 @@ export function InfluencerCard({
   className?: string;
 }) {
   const inf = influencer;
+  const reachEstimate = Math.round(
+    estimateReach(inf.followers, inf.engagementRate),
+  );
   return (
     <Link
       href={`/influencers/${inf.id}`}
@@ -65,6 +69,11 @@ export function InfluencerCard({
           </p>
         </div>
       </div>
+
+      <p className="mt-3 flex items-center justify-center gap-1 text-[11px] font-medium text-slate-500">
+        <Radar className="h-3 w-3 text-indigo-500" />
+        ≈ {formatFollowers(reachEstimate)} tersentuh/video
+      </p>
 
       <div className="mt-4 flex items-center justify-between">
         <div>
