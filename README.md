@@ -61,6 +61,65 @@ Kolab.id menjadi **jembatan dua arah** antara UMKM dan kreator:
 
 ---
 
+## Alur Aplikasi
+
+### Masuk (login demo, tanpa kata sandi)
+
+```
+/login
+  |-- Masuk sebagai UMKM ----> /dashboard
+  |-- Masuk sebagai Kreator --> /dashboard/influencer
+Keluar --> kembali ke beranda (/)
+```
+
+- Belum masuk: hanya bisa melihat beranda, daftar kreator, detail kreator, dan wawasan harga.
+- Halaman booking, dashboard, dan ulasan otomatis mengarahkan ke `/login` jika belum masuk.
+- Salah peran (mis. kreator membuka dashboard UMKM) otomatis dialihkan ke dashboard yang benar.
+
+### Alur kolaborasi (UMKM + kreator)
+
+```
+UMKM                                     KREATOR
+----                                     -------
+/influencers (cari + filter kreator)
+        |
+/influencers/[id] (lihat paket + ulasan)
+        |
+/booking/[id] (pilih paket + tulis brief)
+        |  status = PENDING
+        v
+                dashboard kreator (/dashboard/influencer)
+                             |
+               +-------------+-------------+
+               |                           |
+            Setujui                       Tolak
+        (APPROVED)                 (REJECTED, berakhir)
+               |
+        konten diproduksi
+               |
+        kreator tandai selesai (DONE)
+               |
+               v
+  /review/[id] - ulasan dua arah (masing-masing 1x)
+               |
+               v
+  rating kreator + wawasan harga ikut diperbarui
+```
+
+- UMKM memantau semua status di `/dashboard` (menunggu, berjalan, selesai, anggaran).
+- Kreator mengelola semua permintaan di `/dashboard/influencer` (masuk, berjalan, pemasukan).
+- Ulasan hanya bisa diberikan untuk kolaborasi berstatus DONE, satu kali per pihak.
+
+### Siklus status booking
+
+```
+PENDING --> APPROVED --> DONE --> ulasan dua arah
+   |
+   +-----> REJECTED (berakhir, tanpa ulasan)
+```
+
+---
+
 ## Halaman-Halaman Utama
 
 | Halaman | Isinya |
@@ -69,5 +128,3 @@ Kolab.id menjadi **jembatan dua arah** antara UMKM dan kreator:
 | Daftar Kreator | Semua kreator lengkap dengan filter pencarian (kategori, kota, dan harga) |
 | Detail Kreator | Profil, paket harga, dan ulasan dari UMKM |
 | Dashboard | Ringkasan aktivitas Anda (berbeda untuk UMKM dan kreator) |
-
----
