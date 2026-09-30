@@ -2,7 +2,7 @@
 
 Platform kolaborasi yang mempertemukan **UMKM** dengan **content creator** secara langsung, dengan **harga transparan** dan proses yang jelas, tanpa agensi mahal dan tanpa negosiasi yang membingungkan.
 
-> Catatan untuk developer: panduan teknis lengkap (instalasi, build, struktur kode) ada di [development.md](./development.md).
+> Catatan untuk developer: panduan teknis lengkap (instalasi, build, struktur kode) ada di [development.md](./DEVELOPMENT.md).
 
 ---
 
