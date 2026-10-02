@@ -112,10 +112,10 @@ app/
   insights/               # Market price insights per category
   dashboard/
     influencer/           # Creator dashboard (+ planned: chat/, paket/, sidebar+header shell — see ARCHITECTURE.md §4)
-  admin/                  # (planned) Admin: dashboard, Antrian Kasus, Detail Kasus (see ARCHITECTURE.md §5)
+  admin/                  # Admin: dashboard, Antrian Kasus, Detail Kasus, profile (see ARCHITECTURE.md §5)
   login/                  # Login / signup pages (Supabase Auth, see §9)
 components/               # Navbar, Footer, DashboardShell (sidebar+header), UmkmShell (server wrapper),
-                          # NotificationBell, BookingHistoryList, InfluencerCard, StarRating, etc.
+                          # NotificationBell, BookingHistoryList, StarRating, etc.
 lib/
   supabase/
     client.ts             # Browser client (createBrowserClient) — "use client" only

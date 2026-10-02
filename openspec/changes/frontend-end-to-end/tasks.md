@@ -38,7 +38,7 @@
 - [x] 3.17 Build `/admin` (KPI: `Kasus Terbuka`, `Menunggu Info`, `Melewati Batas`, `Dana Ditahan`, plus queue summary sorted by deadline) and verify with a mock admin fixture (elaborate after core pages land)
 - [x] 3.18 Build `/admin/kasus` (`Antrian Kasus` with `Semua`/`Dibuka`/`Menunggu Info`/`Terlambat`/`Diputuskan` filters, `Terlambat` markers) and verify sorting by nearest `Batas Keputusan`
 - [x] 3.19 Build `/admin/kasus/[id]` (`Detail Kasus` evidence sections + decision panel with required `Alasan Keputusan`) and verify each of the 4 actions shows its correct result state
-- [ ] 3.20 Remove superseded one-off components and helpers, lint for stray `slate-*`/hex/arbitrary values outside the §16 mapping, and verify a clean `npm run build`
+- [x] 3.20 Remove superseded one-off components and helpers, lint for stray `slate-*`/hex/arbitrary values outside the §16 mapping, and verify a clean `npm run build`
 
 ## 4. Integration check
 

@@ -160,7 +160,7 @@ export default async function AdminKasusPage(
       </div>
 
       <p className="mt-3 text-xs text-neutral-500">
-        <Scale className="mr-1 inline h-3.5 w-3.5 align-[-2px]" />
+        <Scale className="mr-1 inline h-3.5 w-3.5 align-middle" />
         Batas keputusan = 3 hari kerja sejak kasus dibuka; jam berhenti selama
         kasus Menunggu Info.
       </p>

@@ -14,11 +14,9 @@ export {
   type FilterTab,
 } from "./FilterTabs";
 export { Footer } from "./Footer";
-export { InfluencerCard } from "./InfluencerCard";
 export { Input } from "./Input";
 export { KpiCard, type KpiAccent } from "./KpiCard";
 export { Logo } from "./Logo";
-export { MobileMenu } from "./MobileMenu";
 export { Navbar } from "./Navbar";
 export { NotificationBell } from "./NotificationBell";
 export { PackageCard } from "./PackageCard";
@@ -29,7 +27,6 @@ export { ReviewCard } from "./ReviewCard";
 export { Select } from "./Select";
 export { Sidebar, type SidebarRole } from "./Sidebar";
 export { StarRating } from "./StarRating";
-export { StatCard } from "./StatCard";
 export { StatusBadge, type StatusKey } from "./StatusBadge";
 export { Textarea } from "./Textarea";
 export { UmkmShell } from "./UmkmShell";

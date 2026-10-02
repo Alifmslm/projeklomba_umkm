@@ -357,21 +357,27 @@ export default async function AdminKasusDetailPage(
         <h3 className="flex items-center gap-2 font-head text-base font-bold tracking-[-0.02em] text-neutral-900">
           <Timer className="h-4.5 w-4.5 text-primary-600" /> Timeline
         </h3>
-        <ol className="mt-4 space-y-0">
-          {kasus.timeline.map((t, i) => (
-            <li key={t.key} className="relative flex gap-4 pb-5 last:pb-0">
-              {i < kasus.timeline.length - 1 && (
-                <span className="absolute left-[7px] top-4 h-full w-px bg-neutral-200" />
-              )}
-              <span className="relative mt-1.5 h-3.5 w-3.5 shrink-0 rounded-full border-2 border-primary-500 bg-neutral-0" />
-              <div>
-                <p className="text-xs font-semibold text-neutral-400">
-                  {formatDateTime(t.at)}
-                </p>
-                <p className="mt-0.5 text-sm text-neutral-800">{t.text}</p>
-              </div>
-            </li>
-          ))}
+        <ol>
+          {kasus.timeline.map((t, i) => {
+            const isLast = i === kasus.timeline.length - 1;
+            return (
+              <li key={t.key} className="flex items-start gap-4 pb-5 last:pb-0">
+                <span
+                  aria-hidden
+                  className="flex w-4 shrink-0 flex-col items-center self-stretch"
+                >
+                  <span className="mt-1.5 h-3.5 w-3.5 rounded-full border-2 border-primary-500 bg-neutral-0" />
+                  {!isLast && <span className="mt-1 w-px flex-1 bg-neutral-200" />}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-semibold text-neutral-400">
+                    {formatDateTime(t.at)}
+                  </p>
+                  <p className="mt-0.5 text-sm text-neutral-800">{t.text}</p>
+                </div>
+              </li>
+            );
+          })}
         </ol>
       </section>
 

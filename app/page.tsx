@@ -728,7 +728,7 @@ export default function LandingPage() {
           CTA FINAL
       ================================================================ */}
       <section className="mx-auto max-w-6xl px-4 pb-20 sm:px-6">
-        <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800 px-6 py-16 text-center text-white sm:px-12 lg:py-20">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800 px-6 py-16 text-center text-white sm:px-12 lg:py-20">
           <div className="dot-pattern absolute inset-0 opacity-15" />
           <div className="bg-grid absolute inset-0 opacity-20" />
 
