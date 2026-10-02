@@ -42,4 +42,4 @@
 
 ## 4. Integration check
 
-- [ ] 4.1 Run the full route matrix logged-out, as UMKM, and as creator, and verify every guard redirect, dashboard render, and the booking-to-review flow match pre-migration behavior
+- [x] 4.1 Run the full route matrix logged-out, as UMKM, and as creator, and verify every guard redirect, dashboard render, and the booking-to-review flow match pre-migration behavior
