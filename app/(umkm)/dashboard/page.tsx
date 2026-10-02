@@ -20,7 +20,7 @@ import {
 } from "@/lib/data";
 import { formatRupiah } from "@/lib/format";
 import type { Review } from "@/lib/types";
-import { StatCard } from "@/components/StatCard";
+import { KpiCard } from "@/components/KpiCard";
 import { Avatar } from "@/components/Avatar";
 import { UmkmShell } from "@/components/UmkmShell";
 import { BookingHistoryList } from "@/components/BookingHistoryList";
@@ -104,35 +104,39 @@ export default async function UmkmDashboardPage(
         </div>
       )}
 
-      {/* KPI Card */}
+      {/* KPI Card (ARCHITECTURE §3.4 — 4 kartu) */}
       <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
+        <KpiCard
           icon={FileText}
           label="Total Pengajuan"
           value={String(total)}
           hint="semua pengajuan kolaborasi"
-          accent="indigo"
+          accent="primary"
+          href="/dashboard/riwayat?filter=semua"
         />
-        <StatCard
+        <KpiCard
           icon={Clock}
           label="Menunggu Respons"
           value={String(menunggu)}
           hint="menunggu konfirmasi kreator"
-          accent="amber"
+          accent="warning"
+          href="/dashboard/riwayat?filter=menunggu"
         />
-        <StatCard
+        <KpiCard
           icon={CheckCircle2}
           label="Sedang Berjalan"
           value={String(berjalan)}
           hint="konten sedang diproduksi"
-          accent="emerald"
+          accent="primary"
+          href="/dashboard/riwayat?filter=berjalan"
         />
-        <StatCard
+        <KpiCard
           icon={BadgeCheck}
           label="Selesai"
           value={String(selesai)}
           hint="kolaborasi selesai"
-          accent="violet"
+          accent="success"
+          href="/dashboard/riwayat?filter=selesai"
         />
       </div>
 

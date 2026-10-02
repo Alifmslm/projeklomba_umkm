@@ -2,20 +2,20 @@
 
 ## 1. Design tokens in Tailwind theme
 
-- [ ] 1.1 Add the DESIGN_SYSTEM.md §14 `@theme` block (primary, success, neutral, error, warning, info, fonts, shadows, easing) to `app/globals.css` and verify `npm run build` passes with no visual change
-- [ ] 1.2 Replace the off-system hero helpers in `app/globals.css` (indigo/violet/pink gradients) with blue-tinted equivalents and verify the landing hero still builds and renders
+- [x] 1.1 Add the DESIGN_SYSTEM.md §14 `@theme` block (primary, success, neutral, error, warning, info, fonts, shadows, easing) to `app/globals.css` and verify `npm run build` passes with no visual change
+- [x] 1.2 Replace the off-system hero helpers in `app/globals.css` (indigo/violet/pink gradients) with blue-tinted equivalents and verify the landing hero still builds and renders
 
 ## 2. Shared components (from ARCHITECTURE.md; reuse/extend existing where noted)
 
-- [ ] 2.1 Build frame components: role-driven `Sidebar` (items + badges for unread chat / open cases), `DashboardHeader` (title + bell + profile entry), `ProfileMenu` (`Profile Saya`, `Logout`) and verify them on the UMKM shell with a mock session
-- [ ] 2.2 Generalize `StatCard` into `KpiCard` (label, value, hint, optional filter link) plus `EmptyState`, and verify all KPI sets render (UMKM 4, creator 5, admin 4 per ARCHITECTURE §3.4/§4.4/§5.6)
-- [ ] 2.3 Build `DataTable` (columns, status cell, row actions, empty state) plus `FilterTabs` (`Semua`/`Menunggu`/`Berjalan`/`Sengketa`/`Selesai`/`Batal`, admin variants per §5.7) and verify with mock bookings including an overdue `Terlambat` row
-- [ ] 2.4 Extend `StatusBadge` from 4 to all 9 booking statuses plus the 3 dispute statuses per §2.1/§5.7, and verify every label renders with its color plus text (never color alone)
-- [ ] 2.5 Build `CreatorCard` (from `InfluencerCard`), `PackageCard` (quota + `Estimasi Pengerjaan`), `PriceDisplay`, and `ReviewCard`/`RatingInput` per DESIGN_SYSTEM §10.2–10.4 and verify against mock creator, package, and review data
-- [ ] 2.6 Build the chat kit per §2.7: `ChatList` (unread badges), `ChatThread`, `MessageBubble`, and state-aware `ChatInput`, and verify the open, read-only (`COMPLETED`/`CANCELLED`), and closed (`REJECTED`) states all render
-- [ ] 2.7 Build the booking-detail kit: `SectionCard`, `RevisionCounter` (`Revisi 1 dari 2`), `Timeline`, `OfferCard` (`Terima`/`Tolak`), and verify on a mock booking carrying revisions, offers, and deliveries
-- [ ] 2.8 Build form primitives `Button` (variants per §10.1), `Input`/`Textarea`/`Select` with labels and error states, and verify focus ring, 44px targets, and error recovery text
-- [ ] 2.9 Document component props and token usage in a short `components/README.md` and verify every example in it renders as written
+- [x] 2.1 Build frame components: role-driven `Sidebar` (items + badges for unread chat / open cases), `DashboardHeader` (title + bell + profile entry), `ProfileMenu` (`Profile Saya`, `Logout`) and verify them on the UMKM shell with a mock session
+- [x] 2.2 Generalize `StatCard` into `KpiCard` (label, value, hint, optional filter link) plus `EmptyState`, and verify all KPI sets render (UMKM 4, creator 5, admin 4 per ARCHITECTURE §3.4/§4.4/§5.6)
+- [x] 2.3 Build `DataTable` (columns, status cell, row actions, empty state) plus `FilterTabs` (`Semua`/`Menunggu`/`Berjalan`/`Sengketa`/`Selesai`/`Batal`, admin variants per §5.7) and verify with mock bookings including an overdue `Terlambat` row
+- [x] 2.4 Extend `StatusBadge` from 4 to all 9 booking statuses plus the 3 dispute statuses per §2.1/§5.7, and verify every label renders with its color plus text (never color alone)
+- [x] 2.5 Build `CreatorCard` (from `InfluencerCard`), `PackageCard` (quota + `Estimasi Pengerjaan`), `PriceDisplay`, and `ReviewCard`/`RatingInput` per DESIGN_SYSTEM §10.2–10.4 and verify against mock creator, package, and review data
+- [x] 2.6 Build the chat kit per §2.7: `ChatList` (unread badges), `ChatThread`, `MessageBubble`, and state-aware `ChatInput`, and verify the open, read-only (`COMPLETED`/`CANCELLED`), and closed (`REJECTED`) states all render
+- [x] 2.7 Build the booking-detail kit: `SectionCard`, `RevisionCounter` (`Revisi 1 dari 2`), `Timeline`, `OfferCard` (`Terima`/`Tolak`), and verify on a mock booking carrying revisions, offers, and deliveries
+- [x] 2.8 Build form primitives `Button` (variants per §10.1), `Input`/`Textarea`/`Select` with labels and error states, and verify focus ring, 44px targets, and error recovery text
+- [x] 2.9 Document component props and token usage in a short `components/README.md` and verify every example in it renders as written
 
 ## 3. Page build (one task per page; mock data layer untouched)
 

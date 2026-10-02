@@ -19,7 +19,7 @@ import {
 } from "@/lib/data";
 import { formatDate, formatRupiah } from "@/lib/format";
 import { setBookingStatus } from "@/app/actions";
-import { StatCard } from "@/components/StatCard";
+import { KpiCard } from "@/components/KpiCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Avatar } from "@/components/Avatar";
 import { StarRating } from "@/components/StarRating";
@@ -55,12 +55,16 @@ export default async function InfluencerDashboardPage(
     }
   }
 
-  const pemasukan = bookings
-    .filter((b) => b.status === "APPROVED" || b.status === "DONE")
-    .reduce((sum, b) => sum + b.amount, 0);
-  const selesai = bookings.filter((b) => b.status === "DONE").length;
-  const menunggu = bookings.filter((b) => b.status === "PENDING").length;
+  // KPI kreator per ARCHITECTURE §4.4 (5 kartu)
+  const permintaanMasuk = bookings.filter((b) => b.status === "PENDING").length;
   const berjalan = bookings.filter((b) => b.status === "APPROVED").length;
+  const selesai = bookings.filter((b) => b.status === "DONE").length;
+  const danaDitahan = bookings
+    .filter((b) => b.status === "APPROVED")
+    .reduce((sum, b) => sum + b.amount, 0);
+  const pemasukan = bookings
+    .filter((b) => b.status === "DONE")
+    .reduce((sum, b) => sum + b.amount, 0);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
@@ -123,35 +127,42 @@ export default async function InfluencerDashboardPage(
         </div>
       )}
 
-      {/* Statistik */}
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          icon={Wallet}
-          label="Pemasukan"
-          value={formatRupiah(pemasukan)}
-          hint="dari paket disetujui & selesai"
-          accent="emerald"
-        />
-        <StatCard
-          icon={Handshake}
-          label="Kolaborasi"
-          value={String(bookings.length)}
-          hint={`${berjalan} sedang berjalan`}
-          accent="indigo"
-        />
-        <StatCard
+      {/* Statistik kreator (ARCHITECTURE §4.4 — 5 KPI) */}
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <KpiCard
           icon={Clock}
-          label="Perlu Respon"
-          value={String(menunggu)}
-          hint="permintaan baru masuk"
-          accent="amber"
+          label="Permintaan Masuk"
+          value={String(permintaanMasuk)}
+          hint="menunggu konfirmasi kamu"
+          accent="warning"
         />
-        <StatCard
+        <KpiCard
           icon={CheckCircle2}
+          label="Sedang Berjalan"
+          value={String(berjalan)}
+          hint="konten sedang diproduksi"
+          accent="primary"
+        />
+        <KpiCard
+          icon={Handshake}
           label="Selesai"
           value={String(selesai)}
           hint="konten sudah tayang"
-          accent="violet"
+          accent="success"
+        />
+        <KpiCard
+          icon={Wallet}
+          label="Dana Ditahan"
+          value={formatRupiah(danaDitahan)}
+          hint="dipegang Kolab.id (eskrow)"
+          accent="info"
+        />
+        <KpiCard
+          icon={Wallet}
+          label="Total Pemasukan"
+          value={formatRupiah(pemasukan)}
+          hint="dana sudah dicairkan"
+          accent="success"
         />
       </div>
 

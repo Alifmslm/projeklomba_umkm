@@ -18,8 +18,8 @@ export function StarRating({
           key={i}
           className={`${size} ${
             i <= Math.round(rating)
-              ? "fill-amber-400 text-amber-400"
-              : "text-slate-300"
+              ? "fill-warning-500 text-warning-500"
+              : "text-neutral-300"
           }`}
         />
       ))}
