@@ -9,13 +9,31 @@ import { Sidebar, type SidebarRole } from "./Sidebar";
 const TITLES: Record<string, string> = {
   "/dashboard": "Dashboard",
   "/dashboard/riwayat": "Riwayat Kolaborasi",
+  "/dashboard/riwayat/[id]": "Detail Kolaborasi",
   "/dashboard/profile": "Profile",
   "/dashboard/chat": "Chat",
   "/dashboard/influencer": "Dashboard",
   "/dashboard/influencer/riwayat": "Riwayat Kolaborasi",
   "/dashboard/influencer/chat": "Chat",
   "/dashboard/influencer/paket": "Paket & Harga",
+  "/admin": "Dashboard",
+  "/admin/kasus": "Antrian Kasus",
+  "/admin/kasus/[id]": "Detail Kasus",
+  "/admin/profile": "Profile",
 };
+
+/** Judul halaman: kecocokan tepat dulu, lalu prefix terpanjang (untuk
+ *  route dinamis seperti `/admin/kasus/[id]`). */
+function resolveTitle(pathname: string): string {
+  if (TITLES[pathname]) return TITLES[pathname];
+  const match = Object.entries(TITLES)
+    .filter(
+      ([key]) =>
+        key.endsWith("/[id]") && pathname.startsWith(key.slice(0, -5)),
+    )
+    .sort((a, b) => b[0].length - a[0].length)[0];
+  return match?.[1] ?? "Dashboard";
+}
 
 const PROFILE_HREF: Record<SidebarRole, string> = {
   umkm: "/dashboard/profile",
@@ -45,6 +63,7 @@ export function DashboardShell({
   profileHref,
   logoHref,
   notificationHref,
+  notificationFooterLabel,
   children,
 }: {
   role: SidebarRole;
@@ -56,11 +75,13 @@ export function DashboardShell({
   profileHref?: string;
   logoHref?: string;
   notificationHref?: string;
+  /** label tautan footer bell notifikasi (berbeda per role) */
+  notificationFooterLabel?: string;
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
-  const title = TITLES[pathname] ?? "Dashboard";
+  const title = resolveTitle(pathname);
   const resolvedProfile = profileHref ?? PROFILE_HREF[role];
   const resolvedLogo = logoHref ?? LOGO_HREF[role];
   const resolvedBell = notificationHref ?? "/dashboard/riwayat";
@@ -85,6 +106,7 @@ export function DashboardShell({
           profileHref={resolvedProfile}
           logoHref={resolvedLogo}
           notificationHref={resolvedBell}
+          notificationFooterLabel={notificationFooterLabel}
           onOpenMenu={() => setOpen(true)}
         />
 

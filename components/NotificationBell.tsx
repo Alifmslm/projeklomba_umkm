@@ -22,11 +22,14 @@ export function NotificationBell({
   items,
   attentionCount,
   footerHref = "/dashboard/riwayat",
+  footerLabel = "Lihat Riwayat Kolaborasi",
 }: {
   items: UmkmNotification[];
   attentionCount: number;
-  /** tautan footer "Lihat Riwayat Kolaborasi" — beda per role */
+  /** tautan footer bell notifikasi — beda per role */
   footerHref?: string;
+  /** label tautan footer bell notifikasi */
+  footerLabel?: string;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -97,7 +100,7 @@ export function NotificationBell({
               onClick={() => setOpen(false)}
               className="block border-t border-neutral-100 px-4 py-2.5 text-center text-xs font-bold text-primary-600 hover:text-primary-800"
             >
-              Lihat Riwayat Kolaborasi
+              {footerLabel}
             </Link>
           </div>
         </>

@@ -19,6 +19,7 @@ export function DashboardHeader({
   profileHref,
   logoHref = "/dashboard",
   notificationHref = "/dashboard/riwayat",
+  notificationFooterLabel,
   onOpenMenu,
 }: {
   title: string;
@@ -29,6 +30,8 @@ export function DashboardHeader({
   logoHref?: string;
   /** tautan footer bell notifikasi (berbeda per role) */
   notificationHref?: string;
+  /** label tautan footer bell notifikasi */
+  notificationFooterLabel?: string;
   onOpenMenu?: () => void;
 }) {
   return (
@@ -59,6 +62,7 @@ export function DashboardHeader({
             items={notifications}
             attentionCount={attentionCount}
             footerHref={notificationHref}
+            footerLabel={notificationFooterLabel}
           />
           <ProfileMenu userName={userName} profileHref={profileHref} />
         </div>
