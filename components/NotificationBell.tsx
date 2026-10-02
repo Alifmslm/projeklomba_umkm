@@ -21,9 +21,12 @@ const KIND_STYLE = {
 export function NotificationBell({
   items,
   attentionCount,
+  footerHref = "/dashboard/riwayat",
 }: {
   items: UmkmNotification[];
   attentionCount: number;
+  /** tautan footer "Lihat Riwayat Kolaborasi" — beda per role */
+  footerHref?: string;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -90,7 +93,7 @@ export function NotificationBell({
               </ul>
             )}
             <Link
-              href="/dashboard/riwayat"
+              href={footerHref}
               onClick={() => setOpen(false)}
               className="block border-t border-neutral-100 px-4 py-2.5 text-center text-xs font-bold text-primary-600 hover:text-primary-800"
             >

@@ -18,6 +18,7 @@ export function DashboardHeader({
   attentionCount,
   profileHref,
   logoHref = "/dashboard",
+  notificationHref = "/dashboard/riwayat",
   onOpenMenu,
 }: {
   title: string;
@@ -26,6 +27,8 @@ export function DashboardHeader({
   attentionCount: number;
   profileHref: string;
   logoHref?: string;
+  /** tautan footer bell notifikasi (berbeda per role) */
+  notificationHref?: string;
   onOpenMenu?: () => void;
 }) {
   return (
@@ -52,7 +55,11 @@ export function DashboardHeader({
           {title}
         </h1>
         <div className="ml-auto flex shrink-0 items-center gap-2.5">
-          <NotificationBell items={notifications} attentionCount={attentionCount} />
+          <NotificationBell
+            items={notifications}
+            attentionCount={attentionCount}
+            footerHref={notificationHref}
+          />
           <ProfileMenu userName={userName} profileHref={profileHref} />
         </div>
       </div>

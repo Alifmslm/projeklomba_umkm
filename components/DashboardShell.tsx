@@ -11,6 +11,10 @@ const TITLES: Record<string, string> = {
   "/dashboard/riwayat": "Riwayat Kolaborasi",
   "/dashboard/profile": "Profile",
   "/dashboard/chat": "Chat",
+  "/dashboard/influencer": "Dashboard",
+  "/dashboard/influencer/riwayat": "Riwayat Kolaborasi",
+  "/dashboard/influencer/chat": "Chat",
+  "/dashboard/influencer/paket": "Paket & Harga",
 };
 
 const PROFILE_HREF: Record<SidebarRole, string> = {
@@ -40,6 +44,7 @@ export function DashboardShell({
   openCasesCount = 0,
   profileHref,
   logoHref,
+  notificationHref,
   children,
 }: {
   role: SidebarRole;
@@ -50,6 +55,7 @@ export function DashboardShell({
   openCasesCount?: number;
   profileHref?: string;
   logoHref?: string;
+  notificationHref?: string;
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
@@ -57,6 +63,7 @@ export function DashboardShell({
   const title = TITLES[pathname] ?? "Dashboard";
   const resolvedProfile = profileHref ?? PROFILE_HREF[role];
   const resolvedLogo = logoHref ?? LOGO_HREF[role];
+  const resolvedBell = notificationHref ?? "/dashboard/riwayat";
 
   return (
     <div className="min-h-screen bg-neutral-50">
@@ -77,6 +84,7 @@ export function DashboardShell({
           attentionCount={attentionCount}
           profileHref={resolvedProfile}
           logoHref={resolvedLogo}
+          notificationHref={resolvedBell}
           onOpenMenu={() => setOpen(true)}
         />
 

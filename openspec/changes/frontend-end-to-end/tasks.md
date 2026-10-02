@@ -29,11 +29,11 @@
 - [x] 3.8 Build `/dashboard/riwayat/[id]` (booking detail: locked brief, package snapshot, `Revisi x dari y`, deliveries, offers with `Terima`/`Tolak`, `Timeline`, per-status actions with simulated `Bayar`) and verify each ARCHITECTURE §3.5 action row appears for its status
 - [x] 3.9 Build `/dashboard/profile` (Profile Usaha view + edit form) and verify saved edits update the summary and re-match recommendations
 - [x] 3.10 Build `/dashboard/chat` (conversation list with unread badges + thread, replacing the stub) and verify open/read-only/closed states per §2.7
-- [ ] 3.11 Build `/dashboard/influencer` (creator KPIs, incoming summary, income stats) and verify counts and notification rendering against mock data
-- [ ] 3.12 Build `/dashboard/influencer/riwayat` (full list, default `Menunggu` filter, inline `Setujui`/`Tolak`) and verify new requests are never missed and ownership checks hold
-- [ ] 3.13 Build `/dashboard/influencer/chat` (creator conversation list + thread) and verify it reuses the §2.6 chat kit with creator-side labels
-- [ ] 3.14 Build `/dashboard/influencer/paket` (`Paket & Harga`: `Tambah`/`Edit`/`Hapus`, quota 1–5, `Estimasi Pengerjaan`, public-visibility reminder) and verify the snapshot wording that edits affect new requests only
-- [ ] 3.15 Rebuild `/booking/[influencerId]` (package select with quota/`Estimasi` display, brief form max 500 chars) and verify submit creates a `PENDING` booking and redirects to `/dashboard?status=baru`
+- [x] 3.11 Build `/dashboard/influencer` (creator KPIs, incoming summary, income stats) and verify counts and notification rendering against mock data
+- [x] 3.12 Build `/dashboard/influencer/riwayat` (full list, default `Menunggu` filter, inline `Setujui`/`Tolak`) and verify new requests are never missed and ownership checks hold
+- [x] 3.13 Build `/dashboard/influencer/chat` (creator conversation list + thread) and verify it reuses the §2.6 chat kit with creator-side labels
+- [x] 3.14 Build `/dashboard/influencer/paket` (`Paket & Harga`: `Tambah`/`Edit`/`Hapus`, quota 1–5, `Estimasi Pengerjaan`, public-visibility reminder) and verify the snapshot wording that edits affect new requests only
+- [x] 3.15 Rebuild `/booking/[influencerId]` (package select with quota/`Estimasi` display, brief form max 500 chars) and verify submit creates a `PENDING` booking and redirects to `/dashboard?status=baru`
 - [ ] 3.16 Rebuild `/review/[bookingId]` (two-way star rating + comment, one per side) and verify guards (DONE-only, involved party, no re-submit) redirect as before
 - [ ] 3.17 Build `/admin` (KPI: `Kasus Terbuka`, `Menunggu Info`, `Melewati Batas`, `Dana Ditahan`, plus queue summary sorted by deadline) and verify with a mock admin fixture (elaborate after core pages land)
 - [ ] 3.18 Build `/admin/kasus` (`Antrian Kasus` with `Semua`/`Dibuka`/`Menunggu Info`/`Terlambat`/`Diputuskan` filters, `Terlambat` markers) and verify sorting by nearest `Batas Keputusan`
