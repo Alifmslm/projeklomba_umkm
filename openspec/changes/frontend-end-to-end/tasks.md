@@ -19,10 +19,10 @@
 
 ## 3. Page build (one task per page; mock data layer untouched)
 
-- [ ] 3.1 Build `/` (Beranda: hero, masalah/solusi, cara kerja, testimoni) on shared components and verify content, anchors, and navigation are unchanged
-- [ ] 3.2 Build `/influencers` (Daftar Kreator: name search, niche/city/price filters, sort) with filter chips and creator cards, and verify every filter/sort combination works on mock data
-- [ ] 3.3 Build `/influencers/[id]` (Detail Kreator: profile, packages with quota/`Estimasi`, UMKM reviews, `Ajukan Kolaborasi` with package preselect) and verify package data and review list render
-- [ ] 3.4 Build `/insights` (Wawasan Harga: min/avg/max per category) with data-viz tokens and verify stats match the mock price data
+- [x] 3.1 Build `/` (Beranda: hero, masalah/solusi, cara kerja, testimoni) on shared components and verify content, anchors, and navigation are unchanged
+- [x] 3.2 Build `/influencers` (Daftar Kreator: name search, niche/city/price filters, sort) with filter chips and creator cards, and verify every filter/sort combination works on mock data
+- [x] 3.3 Build `/influencers/[id]` (Detail Kreator: profile, packages with quota/`Estimasi`, UMKM reviews, `Ajukan Kolaborasi` with package preselect) and verify package data and review list render
+- [x] 3.4 Build `/insights` (Wawasan Harga: min/avg/max per category) with data-viz tokens and verify stats match the mock price data
 - [ ] 3.5 Restyle `/login` on shared form components and verify the demo picker redirects per role as before (`/signup`, `/onboarding`, `/auth/callback` stay deferred to the auth-migration change)
 - [ ] 3.6 Build `/dashboard` (KPI cards, Rekomendasi Creator, Riwayat summary, header notifications) and verify counts, recommendations, and notification items against mock data
 - [ ] 3.7 Build `/dashboard/riwayat` (full history with `Semua`/`Menunggu`/`Berjalan`/`Sengketa`/`Selesai`/`Batal` filters) and verify each filter shows the right statuses
