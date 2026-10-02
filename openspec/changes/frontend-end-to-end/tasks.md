@@ -23,12 +23,12 @@
 - [x] 3.2 Build `/influencers` (Daftar Kreator: name search, niche/city/price filters, sort) with filter chips and creator cards, and verify every filter/sort combination works on mock data
 - [x] 3.3 Build `/influencers/[id]` (Detail Kreator: profile, packages with quota/`Estimasi`, UMKM reviews, `Ajukan Kolaborasi` with package preselect) and verify package data and review list render
 - [x] 3.4 Build `/insights` (Wawasan Harga: min/avg/max per category) with data-viz tokens and verify stats match the mock price data
-- [ ] 3.5 Restyle `/login` on shared form components and verify the demo picker redirects per role as before (`/signup`, `/onboarding`, `/auth/callback` stay deferred to the auth-migration change)
-- [ ] 3.6 Build `/dashboard` (KPI cards, Rekomendasi Creator, Riwayat summary, header notifications) and verify counts, recommendations, and notification items against mock data
-- [ ] 3.7 Build `/dashboard/riwayat` (full history with `Semua`/`Menunggu`/`Berjalan`/`Sengketa`/`Selesai`/`Batal` filters) and verify each filter shows the right statuses
-- [ ] 3.8 Build `/dashboard/riwayat/[id]` (booking detail: locked brief, package snapshot, `Revisi x dari y`, deliveries, offers with `Terima`/`Tolak`, `Timeline`, per-status actions with simulated `Bayar`) and verify each ARCHITECTURE §3.5 action row appears for its status
-- [ ] 3.9 Build `/dashboard/profile` (Profile Usaha view + edit form) and verify saved edits update the summary and re-match recommendations
-- [ ] 3.10 Build `/dashboard/chat` (conversation list with unread badges + thread, replacing the stub) and verify open/read-only/closed states per §2.7
+- [x] 3.5 Restyle `/login` on shared form components and verify the demo picker redirects per role as before (`/signup`, `/onboarding`, `/auth/callback` stay deferred to the auth-migration change)
+- [x] 3.6 Build `/dashboard` (KPI cards, Rekomendasi Creator, Riwayat summary, header notifications) and verify counts, recommendations, and notification items against mock data
+- [x] 3.7 Build `/dashboard/riwayat` (full history with `Semua`/`Menunggu`/`Berjalan`/`Sengketa`/`Selesai`/`Batal` filters) and verify each filter shows the right statuses
+- [x] 3.8 Build `/dashboard/riwayat/[id]` (booking detail: locked brief, package snapshot, `Revisi x dari y`, deliveries, offers with `Terima`/`Tolak`, `Timeline`, per-status actions with simulated `Bayar`) and verify each ARCHITECTURE §3.5 action row appears for its status
+- [x] 3.9 Build `/dashboard/profile` (Profile Usaha view + edit form) and verify saved edits update the summary and re-match recommendations
+- [x] 3.10 Build `/dashboard/chat` (conversation list with unread badges + thread, replacing the stub) and verify open/read-only/closed states per §2.7
 - [ ] 3.11 Build `/dashboard/influencer` (creator KPIs, incoming summary, income stats) and verify counts and notification rendering against mock data
 - [ ] 3.12 Build `/dashboard/influencer/riwayat` (full list, default `Menunggu` filter, inline `Setujui`/`Tolak`) and verify new requests are never missed and ownership checks hold
 - [ ] 3.13 Build `/dashboard/influencer/chat` (creator conversation list + thread) and verify it reuses the §2.6 chat kit with creator-side labels

@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { ArrowRight, LayoutDashboard, MessageCircle } from "lucide-react";
+import { redirect } from "next/navigation";
+import { getSession } from "@/lib/auth";
+import { getBookingsByUmkm } from "@/lib/data";
+import { formatDate, initials } from "@/lib/format";
 import { UmkmShell } from "@/components/UmkmShell";
+import type { ChatConversation, ChatMessage, ChatState } from "@/components/chat";
+import { ChatClient } from "./chat-client";
 
 export const dynamic = "force-dynamic";
 
@@ -10,46 +14,82 @@ export const metadata: Metadata = {
   description: "Diskusi langsung dengan kreator di Kolab.id.",
 };
 
+/** State chat per status booking (ARCHITECTURE §2.7). */
+function chatStateOf(status: string): ChatState {
+  switch (status) {
+    case "DONE":
+      return "readonly";
+    case "REJECTED":
+      return "closed";
+    default:
+      return "open"; // PENDING..DISPUTED
+  }
+}
+
 export default async function ChatPage() {
+  const session = await getSession();
+  if (!session) redirect("/login");
+  if (session.role !== "umkm") redirect("/dashboard/influencer");
+
+  const bookings = getBookingsByUmkm(session.subjectId);
+
+  // Satu percakapan per booking (§2.7). Pesan lain difixture deterministik
+  // dari brief; kirim pesan hanya memengaruhi state lokal prototipe.
+  const conversations: ChatConversation[] = bookings.map((b) => ({
+    id: `booking-${b.id}`,
+    partnerName: b.influencerName,
+    partnerInitial: initials(b.influencerName),
+    lastMessage: b.message,
+    time: formatDate(b.createdAt),
+    unread: b.status === "PENDING" || b.status === "APPROVED" ? 1 : 0,
+    state: chatStateOf(b.status),
+  }));
+
+  const messages: Record<string, ChatMessage[]> = {};
+  for (const b of bookings) {
+    const id = `booking-${b.id}`;
+    const brief: ChatMessage = {
+      id: `${id}-brief`,
+      side: "me",
+      senderName: session.name,
+      text: b.message,
+      time: formatDate(b.createdAt),
+    };
+    const reply: ChatMessage = {
+      id: `${id}-reply`,
+      side: "other",
+      senderName: b.influencerName,
+      text:
+        b.status === "DONE"
+          ? "Konten sudah saya kirim — terima kasih atas kolaborasinya! 🙌"
+          : b.status === "REJECTED"
+            ? "Mohon maaf, jadwal saya penuh untuk periode ini."
+            : "Siap, brief-nya jelas. Saya konfirmasi lewat dashboard dan mulai garap ya.",
+      time: formatDate(b.createdAt),
+    };
+    messages[id] = [brief, reply];
+  }
+
   return (
     <UmkmShell>
       <div>
-        <p className="text-sm font-bold uppercase tracking-widest text-indigo-600">
+        <p className="text-sm font-bold uppercase tracking-widest text-primary-700">
           Chat
         </p>
-        <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-slate-900">
+        <h1 className="mt-1 font-head text-3xl font-extrabold tracking-[-0.02em] text-neutral-900">
           Chat dengan Kreator
         </h1>
-        <p className="mt-1.5 text-slate-600">
+        <p className="mt-1.5 text-neutral-600">
           Diskusi brief dan progres langsung di satu tempat.
         </p>
       </div>
 
-      <div className="mt-8 flex flex-col items-center rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center">
-        <span className="grid h-14 w-14 place-items-center rounded-2xl bg-indigo-50 text-indigo-600">
-          <MessageCircle className="h-7 w-7" />
-        </span>
-        <h2 className="mt-4 text-lg font-bold text-slate-900">
-          Fitur Chat segera hadir
-        </h2>
-        <p className="mt-1 max-w-sm text-sm text-slate-500">
-          Saat ini konfirmasi dan pembaruan kolaborasi berjalan lewat
-          dashboard dan riwayat. Chat langsung sedang disiapkan.
-        </p>
-        <div className="mt-5 flex flex-wrap justify-center gap-3">
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
-          >
-            <LayoutDashboard className="h-4 w-4" /> Kembali ke Dashboard
-          </Link>
-          <Link
-            href="/dashboard/riwayat"
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 hover:border-indigo-300 hover:text-indigo-700"
-          >
-            Lihat Riwayat <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
+      <div className="mt-8">
+        <ChatClient
+          conversations={conversations}
+          messages={messages}
+          userName={session.name}
+        />
       </div>
     </UmkmShell>
   );
