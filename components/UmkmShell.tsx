@@ -5,8 +5,8 @@ import { getUmkmNotifications } from "@/lib/data";
 import { DashboardShell } from "./DashboardShell";
 
 /**
- * Server wrapper that guards UMKM-only routes, loads the notification
- * feed, and renders the sidebar + header shell around the content.
+ * Server wrapper yang menjaga route khusus UMKM, memuat feed notifikasi,
+ * dan merender frame sidebar + header di sekitar konten.
  */
 export async function UmkmShell({ children }: { children: ReactNode }) {
   const session = await getSession();
@@ -17,6 +17,7 @@ export async function UmkmShell({ children }: { children: ReactNode }) {
 
   return (
     <DashboardShell
+      role="umkm"
       userName={session.name}
       notifications={items}
       attentionCount={attentionCount}

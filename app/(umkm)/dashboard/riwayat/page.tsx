@@ -1,13 +1,9 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
-import {
-  getBookingsByUmkm,
-  getReviewForBookingRole,
-} from "@/lib/data";
-import type { Review } from "@/lib/types";
+import { getBookingsByUmkm, getReviewForBookingRole } from "@/lib/data";
 import { UmkmShell } from "@/components/UmkmShell";
-import { BookingHistoryList } from "@/components/BookingHistoryList";
+import { RiwayatClient } from "./riwayat-client";
 
 export const dynamic = "force-dynamic";
 
@@ -16,37 +12,49 @@ export const metadata: Metadata = {
   description: "Semua pengajuan kolaborasi UMKM-mu di Kolab.id.",
 };
 
-export default async function RiwayatPage() {
+export default async function RiwayatPage(
+  props: PageProps<"/dashboard/riwayat">,
+) {
   const session = await getSession();
   if (!session) redirect("/login");
   if (session.role !== "umkm") redirect("/dashboard/influencer");
 
+  const searchParams = await props.searchParams;
+  const filter =
+    typeof searchParams.filter === "string" ? searchParams.filter : "semua";
+
   const bookings = getBookingsByUmkm(session.subjectId);
 
-  const myReviews = new Map<number, Review>();
+  // Ulasan yang sudah diberikan UMKM ini (untuk kolom aksi "Beri Ulasan")
+  const reviewRatings: Record<number, number> = {};
   for (const b of bookings) {
     if (b.status === "DONE") {
       const review = getReviewForBookingRole(b.id, "umkm");
-      if (review) myReviews.set(b.id, review);
+      if (review) reviewRatings[b.id] = review.rating;
     }
   }
 
   return (
     <UmkmShell>
       <div>
-        <p className="text-sm font-bold uppercase tracking-widest text-indigo-600">
+        <p className="text-sm font-bold uppercase tracking-widest text-primary-700">
           Riwayat Kolaborasi
         </p>
-        <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-slate-900">
-          Semua Pengajuan
+        <h1 className="mt-1 font-head text-3xl font-extrabold tracking-[-0.02em] text-neutral-900">
+          Riwayat Kolaborasi
         </h1>
-        <p className="mt-1.5 text-slate-600">
-          {bookings.length} pengajuan tercatat. Klik kreator untuk melihat
-          profil lengkap.
+        <p className="mt-1.5 text-neutral-600">
+          Semua pengajuan, dari menunggu konfirmasi sampai selesai.
         </p>
       </div>
 
-      <BookingHistoryList bookings={bookings} reviews={myReviews} />
+      <div className="mt-6">
+        <RiwayatClient
+          bookings={bookings}
+          reviewRatings={reviewRatings}
+          initialFilter={filter}
+        />
+      </div>
     </UmkmShell>
   );
 }

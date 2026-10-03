@@ -5,6 +5,8 @@ import { getSession } from "@/lib/auth";
 import { getUmkmById } from "@/lib/data";
 import { updateProfile } from "@/app/actions";
 import { UmkmShell } from "@/components/UmkmShell";
+import { Button } from "@/components/Button";
+import { Input } from "@/components/Input";
 
 export const dynamic = "force-dynamic";
 
@@ -37,19 +39,19 @@ export default async function ProfilePage(
   return (
     <UmkmShell>
       <div>
-        <p className="text-sm font-bold uppercase tracking-widest text-indigo-600">
+        <p className="text-sm font-bold uppercase tracking-widest text-primary-700">
           Profile
         </p>
-        <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-slate-900">
+        <h1 className="mt-1 font-head text-3xl font-extrabold tracking-[-0.02em] text-neutral-900">
           Profil Usaha
         </h1>
-        <p className="mt-1.5 text-slate-600">
+        <p className="mt-1.5 text-neutral-600">
           Informasi ini dipakai untuk mencocokkan rekomendasi kreator.
         </p>
       </div>
 
       {updated && (
-        <div className="mt-6 flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+        <div className="mt-6 flex items-start gap-3 rounded-2xl border border-success-200 bg-success-50 p-4 text-sm text-success-700">
           <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" />
           <div>
             <p className="font-bold">Profil tersimpan!</p>
@@ -61,7 +63,7 @@ export default async function ProfilePage(
       )}
 
       {gagal && (
-        <div className="mt-6 flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+        <div className="mt-6 flex items-start gap-3 rounded-2xl border border-error-200 bg-error-50 p-4 text-sm text-error-700">
           <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
           <div>
             <p className="font-bold">Gagal menyimpan</p>
@@ -72,32 +74,32 @@ export default async function ProfilePage(
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_1.2fr]">
         {/* Ringkasan */}
-        <div className="h-fit rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="h-fit rounded-3xl border border-neutral-200 bg-neutral-0 p-6 shadow-xs">
           <div className="flex items-center gap-4">
-            <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-500 text-white">
+            <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 text-neutral-0">
               <Store className="h-6 w-6" />
             </span>
             <div className="min-w-0">
-              <p className="truncate text-lg font-extrabold text-slate-900">
+              <p className="truncate font-head text-lg font-extrabold tracking-[-0.02em] text-neutral-900">
                 {umkm.name}
               </p>
-              <p className="truncate text-sm text-slate-500">
+              <p className="truncate text-sm text-neutral-500">
                 {umkm.category} · {umkm.city}
               </p>
             </div>
           </div>
-          <dl className="mt-6 space-y-3 border-t border-slate-100 pt-6 text-sm">
+          <dl className="mt-6 space-y-3 border-t border-neutral-100 pt-6 text-sm">
             <div className="flex justify-between gap-4">
-              <dt className="text-slate-500">Pemilik</dt>
-              <dd className="font-semibold text-slate-900">{umkm.owner}</dd>
+              <dt className="text-neutral-500">Pemilik</dt>
+              <dd className="font-semibold text-neutral-900">{umkm.owner}</dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt className="text-slate-500">Kategori</dt>
-              <dd className="font-semibold text-slate-900">{umkm.category}</dd>
+              <dt className="text-neutral-500">Kategori</dt>
+              <dd className="font-semibold text-neutral-900">{umkm.category}</dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt className="text-slate-500">Kota</dt>
-              <dd className="font-semibold text-slate-900">{umkm.city}</dd>
+              <dt className="text-neutral-500">Kota</dt>
+              <dd className="font-semibold text-neutral-900">{umkm.city}</dd>
             </div>
           </dl>
         </div>
@@ -105,34 +107,26 @@ export default async function ProfilePage(
         {/* Form ubah */}
         <form
           action={updateProfile}
-          className="h-fit rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+          className="h-fit rounded-3xl border border-neutral-200 bg-neutral-0 p-6 shadow-xs sm:p-8"
         >
-          <h2 className="text-base font-extrabold text-slate-900">
+          <h2 className="font-head text-base font-extrabold tracking-[-0.02em] text-neutral-900">
             Ubah Profil
           </h2>
           <div className="mt-5 space-y-4">
             {fields.map((f) => (
-              <label key={f.name} className="block">
-                <span className="mb-1.5 block text-xs font-semibold text-slate-600">
-                  {f.label}
-                </span>
-                <input
-                  type="text"
-                  name={f.name}
-                  defaultValue={f.value}
-                  maxLength={f.max}
-                  required
-                  className="w-full rounded-2xl border border-slate-300 px-4 py-2.5 text-sm text-slate-800 shadow-sm outline-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-                />
-              </label>
+              <Input
+                key={f.name}
+                name={f.name}
+                label={f.label}
+                defaultValue={f.value}
+                maxLength={f.max}
+                required
+              />
             ))}
           </div>
-          <button
-            type="submit"
-            className="mt-6 w-full rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/25 transition-all hover:shadow-xl hover:brightness-110"
-          >
+          <Button type="submit" variant="primary" className="mt-6 w-full">
             Simpan Perubahan
-          </button>
+          </Button>
         </form>
       </div>
     </UmkmShell>
