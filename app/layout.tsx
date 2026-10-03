@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { headers } from "next/headers";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { getSession } from "@/lib/auth";
 
 const jakarta = localFont({
   src: [
@@ -30,13 +32,29 @@ export const metadata: Metadata = {
     "Platform kolaborasi UMKM dan content creator. Pilih kreator, lihat harga per video, ajukan kolaborasi, dan kelola semuanya di dashboard.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  // Global site chrome (Navbar + Footer) is hidden on:
+  // - "/" (landing page renders standalone, no header/footer)
+  // - "/dashboard*" (UMKM + influencer dashboards use DashboardShell sidebar+header)
+  // - "/admin*" (admin routes use AdminShell sidebar+header)
+  // - "/influencers*" when logged in as UMKM (renders inside UmkmShell instead)
+  // All other public routes keep Navbar + Footer.
+  const pathname = (await headers()).get("x-pathname") ?? "";
+  const session = await getSession();
+  const isUmkmBrowsingCreators =
+    session?.role === "umkm" && pathname.startsWith("/influencers");
+  const hideSiteChrome =
+    pathname === "/" ||
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/admin") ||
+    isUmkmBrowsingCreators;
+
   return (
     <html lang="id" className={`${jakarta.variable} h-full`}>
       <body className="flex min-h-full flex-col font-sans antialiased">
-        <Navbar />
+        {!hideSiteChrome && <Navbar />}
         <main className="flex-1">{children}</main>
-        <Footer />
+        {!hideSiteChrome && <Footer />}
       </body>
     </html>
   );

@@ -23,7 +23,6 @@ import type { Review } from "@/lib/types";
 import { KpiCard } from "@/components/KpiCard";
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
-import { UmkmShell } from "@/components/UmkmShell";
 import { BookingHistoryList } from "@/components/BookingHistoryList";
 
 export const dynamic = "force-dynamic";
@@ -63,7 +62,7 @@ export default async function UmkmDashboardPage(
   const selesai = bookings.filter((b) => b.status === "DONE").length;
 
   return (
-    <UmkmShell>
+    <>
       {/* Header */}
       <div>
         <p className="text-sm font-bold uppercase tracking-widest text-primary-700">
@@ -247,6 +246,6 @@ export default async function UmkmDashboardPage(
 
         <BookingHistoryList bookings={bookings.slice(0, 3)} reviews={myReviews} />
       </div>
-    </UmkmShell>
+    </>
   );
 }

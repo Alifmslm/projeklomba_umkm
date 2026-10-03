@@ -1,10 +1,12 @@
 import type { ReactNode } from "react";
+import { UmkmShell } from "@/components/UmkmShell";
 
 /**
- * UMKM dashboard routes live in the (umkm) route group so they render
- * WITHOUT the global navbar + footer — they use DashboardShell
- * (sidebar + header) instead. URL paths are unaffected by the group.
+ * All UMKM dashboard routes (`/dashboard*` in this group) render inside
+ * UmkmShell — sidebar + header — and WITHOUT the global navbar + footer
+ * (hidden by the root layout for `/dashboard*` and `/`). URL paths are
+ * unaffected by the route group.
  */
 export default function UmkmGroupLayout({ children }: { children: ReactNode }) {
-  return <>{children}</>;
+  return <UmkmShell>{children}</UmkmShell>;
 }
