@@ -17,7 +17,6 @@ import {
   getReviewForBookingRole,
 } from "@/lib/data";
 import { formatDate, formatRupiah, initials } from "@/lib/format";
-import { UmkmShell } from "@/components/UmkmShell";
 import { Avatar } from "@/components/Avatar";
 import { StatusBadge, type StatusKey } from "@/components/StatusBadge";
 import { SectionCard, RevisionCounter, Timeline, type TimelineItem } from "@/components/booking";
@@ -100,7 +99,7 @@ export default async function BookingDetailPage(
       : [];
 
   return (
-    <UmkmShell>
+    <>
       <div>
         <p className="flex flex-wrap items-center gap-2 text-sm font-bold uppercase tracking-widest text-primary-700">
           <Link href="/dashboard/riwayat" className="hover:text-primary-800">
@@ -274,6 +273,6 @@ export default async function BookingDetailPage(
           />
         </SectionCard>
       </div>
-    </UmkmShell>
+    </>
   );
 }

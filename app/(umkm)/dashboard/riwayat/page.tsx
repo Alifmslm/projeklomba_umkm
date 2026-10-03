@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { getBookingsByUmkm, getReviewForBookingRole } from "@/lib/data";
-import { UmkmShell } from "@/components/UmkmShell";
 import { RiwayatClient } from "./riwayat-client";
 
 export const dynamic = "force-dynamic";
@@ -35,7 +34,7 @@ export default async function RiwayatPage(
   }
 
   return (
-    <UmkmShell>
+    <>
       <div>
         <p className="text-sm font-bold uppercase tracking-widest text-primary-700">
           Riwayat Kolaborasi
@@ -55,6 +54,6 @@ export default async function RiwayatPage(
           initialFilter={filter}
         />
       </div>
-    </UmkmShell>
+    </>
   );
 }

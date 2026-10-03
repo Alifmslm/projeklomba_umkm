@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { getBookingsByUmkm } from "@/lib/data";
 import { formatDate, initials } from "@/lib/format";
-import { UmkmShell } from "@/components/UmkmShell";
 import type { ChatConversation, ChatMessage, ChatState } from "@/components/chat";
 import { ChatClient } from "./chat-client";
 
@@ -71,7 +70,7 @@ export default async function ChatPage() {
   }
 
   return (
-    <UmkmShell>
+    <>
       <div>
         <p className="text-sm font-bold uppercase tracking-widest text-primary-700">
           Chat
@@ -91,6 +90,6 @@ export default async function ChatPage() {
           userName={session.name}
         />
       </div>
-    </UmkmShell>
+    </>
   );
 }

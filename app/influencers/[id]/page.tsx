@@ -29,6 +29,8 @@ import { Avatar } from "@/components/Avatar";
 import { CreatorCard } from "@/components/CreatorCard";
 import { PackageCard } from "@/components/PackageCard";
 import { ReviewCard } from "@/components/ReviewCard";
+import { getSession } from "@/lib/auth";
+import { UmkmShell } from "@/components/UmkmShell";
 
 export const dynamic = "force-dynamic";
 
@@ -50,13 +52,19 @@ export default async function InfluencerDetailPage(
   const inf = getInfluencerById(Number(id));
   if (!inf) notFound();
 
+  const session = await getSession();
+  const isUmkm = session?.role === "umkm";
+
   const packages = getPackagesByInfluencer(inf.id);
   const reachEstimate = estimateReach(inf.followers, inf.engagementRate);
   const related = getRelatedInfluencers(inf.niche, inf.id);
   const reviews = getReviewsForInfluencer(inf.id, 4);
 
-  return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+  // Same content renders in both contexts — UMKM sees it inside the
+  // dashboard sidebar + header (UmkmShell provides the page container),
+  // guests/public keep the standalone centered container.
+  const body = (
+    <>
       <nav className="text-sm text-neutral-500">
         <Link href="/influencers" className="hover:text-primary-700">
           Kreator
@@ -274,6 +282,12 @@ export default async function InfluencerDetailPage(
           </div>
         </div>
       )}
-    </div>
+    </>
+  );
+
+  if (isUmkm) return <UmkmShell>{body}</UmkmShell>;
+
+  return (
+    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">{body}</div>
   );
 }

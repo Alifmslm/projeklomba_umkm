@@ -2,7 +2,12 @@ import { type NextRequest } from "next/server";
 import { updateSession } from "@/utils/supabase/middleware";
 
 export async function middleware(request: NextRequest) {
-  return await updateSession(request);
+  // Expose the current pathname to server components (e.g. root layout)
+  // so global Navbar/Footer can be hidden on dashboard + landing routes.
+  request.headers.set("x-pathname", request.nextUrl.pathname);
+  const response = await updateSession(request);
+  response.headers.set("x-pathname", request.nextUrl.pathname);
+  return response;
 }
 
 export const config = {

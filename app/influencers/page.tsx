@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SearchX, SlidersHorizontal } from "lucide-react";
 import { getCities, getInfluencers, getNiches } from "@/lib/data";
+import { getSession } from "@/lib/auth";
+import { UmkmShell } from "@/components/UmkmShell";
 import { CreatorCard } from "@/components/CreatorCard";
 import { EmptyState } from "@/components/EmptyState";
 import { Input } from "@/components/Input";
@@ -31,6 +33,9 @@ const SORTS = [
 ];
 
 export default async function InfluencersPage(props: PageProps<"/influencers">) {
+  const session = await getSession();
+  const isUmkm = session?.role === "umkm";
+
   const params = await props.searchParams;
   const q = typeof params.q === "string" ? params.q.trim() : "";
   const niche = typeof params.niche === "string" ? params.niche : "";
@@ -75,8 +80,11 @@ export default async function InfluencersPage(props: PageProps<"/influencers">) 
         : "border-neutral-200 bg-white text-neutral-700 hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700"
     }`;
 
-  return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+  // Same content renders in both contexts — UMKM sees it inside the
+  // dashboard sidebar + header (UmkmShell provides the page container),
+  // guests/public keep the standalone centered container.
+  const body = (
+    <>
       {/* Header */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
@@ -190,6 +198,12 @@ export default async function InfluencersPage(props: PageProps<"/influencers">) 
           />
         </div>
       )}
-    </div>
+    </>
+  );
+
+  if (isUmkm) return <UmkmShell>{body}</UmkmShell>;
+
+  return (
+    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">{body}</div>
   );
 }

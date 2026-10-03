@@ -12,6 +12,8 @@ const TITLES: Record<string, string> = {
   "/dashboard/riwayat/[id]": "Detail Kolaborasi",
   "/dashboard/profile": "Profile",
   "/dashboard/chat": "Chat",
+  "/influencers": "Cari Kreator",
+  "/influencers/[id]": "Detail Kreator",
   "/dashboard/influencer": "Dashboard",
   "/dashboard/influencer/riwayat": "Riwayat Kolaborasi",
   "/dashboard/influencer/chat": "Chat",

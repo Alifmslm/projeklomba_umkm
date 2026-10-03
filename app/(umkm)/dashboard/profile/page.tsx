@@ -4,7 +4,6 @@ import { AlertCircle, CheckCircle2, Store } from "lucide-react";
 import { getSession } from "@/lib/auth";
 import { getUmkmById } from "@/lib/data";
 import { updateProfile } from "@/app/actions";
-import { UmkmShell } from "@/components/UmkmShell";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
 
@@ -37,7 +36,7 @@ export default async function ProfilePage(
   ];
 
   return (
-    <UmkmShell>
+    <>
       <div>
         <p className="text-sm font-bold uppercase tracking-widest text-primary-700">
           Profile
@@ -129,6 +128,6 @@ export default async function ProfilePage(
           </Button>
         </form>
       </div>
-    </UmkmShell>
+    </>
   );
 }
