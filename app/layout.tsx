@@ -34,17 +34,15 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   // Global site chrome (Navbar + Footer) is hidden on:
-  // - "/" (landing page renders standalone, no header/footer)
   // - "/dashboard*" (UMKM + influencer dashboards use DashboardShell sidebar+header)
   // - "/admin*" (admin routes use AdminShell sidebar+header)
   // - "/influencers*" when logged in as UMKM (renders inside UmkmShell instead)
-  // All other public routes keep Navbar + Footer.
+  // All other routes — including the landing page "/" — keep Navbar + Footer.
   const pathname = (await headers()).get("x-pathname") ?? "";
   const session = await getSession();
   const isUmkmBrowsingCreators =
     session?.role === "umkm" && pathname.startsWith("/influencers");
   const hideSiteChrome =
-    pathname === "/" ||
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/admin") ||
     isUmkmBrowsingCreators;
