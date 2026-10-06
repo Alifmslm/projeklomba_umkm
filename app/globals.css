@@ -129,6 +129,114 @@
   --shadow-lg: 0 16px 40px rgba(29, 29, 26, 0.12);
 }
 
+/* ========== TIPOGRAFI (DESIGN_SYSTEM.md §4) ==========
+   Primitif + semantik landing/dashboard. Sengaja di :root (bukan
+   @theme): dikonsumsi via var() / arbitrary value Tailwind v4,
+   mis. text-(--type-body-size), tracking-(--type-body-tracking). */
+:root {
+  /* ========== PRIMITIVE: Font Weight ========== */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* ========== PRIMITIVE: Font Size (skala rem, base 16px) ========== */
+  --font-size-2xs: 0.6875rem; /* 11px */
+  --font-size-xs: 0.75rem; /* 12px */
+  --font-size-sm: 0.875rem; /* 14px */
+  --font-size-md: 1rem; /* 16px */
+  --font-size-lg: 1.125rem; /* 18px */
+  --font-size-xl: 1.25rem; /* 20px */
+  --font-size-2xl: 1.5rem; /* 24px */
+  --font-size-3xl: 1.875rem; /* 30px */
+  --font-size-4xl: 2.25rem; /* 36px */
+
+  /* Fluid, khusus landing page */
+  --font-size-fluid-display: clamp(2.5rem, 1.5rem + 4vw, 4.5rem);
+  --font-size-fluid-h1: clamp(2rem, 1.3rem + 2.8vw, 3.5rem);
+  --font-size-fluid-h2: clamp(1.625rem, 1.2rem + 1.7vw, 2.5rem);
+
+  /* ========== PRIMITIVE: Letter Spacing ========== */
+  --letter-spacing-tighter: -0.04em;
+  --letter-spacing-tight: -0.02em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.02em;
+  --letter-spacing-wider: 0.06em;
+  --letter-spacing-widest: 0.1em;
+}
+
+/* ========== SEMANTIC: Landing Page ========== */
+:root {
+  --type-display-size: var(--font-size-fluid-display);
+  --type-display-weight: var(--font-weight-bold);
+  --type-display-tracking: var(--letter-spacing-tighter);
+
+  --type-h1-size: var(--font-size-fluid-h1);
+  --type-h1-weight: var(--font-weight-bold);
+  --type-h1-tracking: var(--letter-spacing-tight);
+
+  --type-h2-size: var(--font-size-fluid-h2);
+  --type-h2-weight: var(--font-weight-semibold);
+  --type-h2-tracking: var(--letter-spacing-tight);
+
+  --type-lead-size: var(--font-size-xl);
+  --type-lead-weight: var(--font-weight-regular);
+  --type-lead-tracking: var(--letter-spacing-normal);
+
+  --type-body-size: var(--font-size-md);
+  --type-body-weight: var(--font-weight-regular);
+  --type-body-tracking: var(--letter-spacing-normal);
+
+  --type-eyebrow-size: var(--font-size-xs);
+  --type-eyebrow-weight: var(--font-weight-semibold);
+  --type-eyebrow-tracking: var(--letter-spacing-widest);
+
+  --type-button-size: var(--font-size-md);
+  --type-button-weight: var(--font-weight-semibold);
+  --type-button-tracking: var(--letter-spacing-normal);
+}
+
+/* ========== SEMANTIC: Dashboard (lebih kompak) ========== */
+:root {
+  --type-page-title-size: var(--font-size-2xl);
+  --type-page-title-weight: var(--font-weight-semibold);
+  --type-page-title-tracking: var(--letter-spacing-tight);
+
+  --type-section-title-size: var(--font-size-lg);
+  --type-section-title-weight: var(--font-weight-semibold);
+  --type-section-title-tracking: var(--letter-spacing-tight);
+
+  --type-card-title-size: var(--font-size-md);
+  --type-card-title-weight: var(--font-weight-medium);
+  --type-card-title-tracking: var(--letter-spacing-normal);
+
+  --type-metric-size: var(--font-size-3xl);
+  --type-metric-weight: var(--font-weight-bold);
+  --type-metric-tracking: var(--letter-spacing-tighter);
+
+  --type-table-size: var(--font-size-sm);
+  --type-table-weight: var(--font-weight-regular);
+  --type-table-tracking: var(--letter-spacing-normal);
+
+  --type-table-head-size: var(--font-size-xs);
+  --type-table-head-weight: var(--font-weight-semibold);
+  --type-table-head-tracking: var(
+    --letter-spacing-wider
+  ); /* dipakai dengan uppercase */
+
+  --type-label-size: var(--font-size-sm);
+  --type-label-weight: var(--font-weight-medium);
+  --type-label-tracking: var(--letter-spacing-normal);
+
+  --type-caption-size: var(--font-size-xs);
+  --type-caption-weight: var(--font-weight-regular);
+  --type-caption-tracking: var(--letter-spacing-wide);
+
+  --type-badge-size: var(--font-size-2xs);
+  --type-badge-weight: var(--font-weight-semibold);
+  --type-badge-tracking: var(--letter-spacing-wider);
+}
+
 html {
   scroll-behavior: smooth;
 }
