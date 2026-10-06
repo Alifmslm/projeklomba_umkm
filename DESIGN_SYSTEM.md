@@ -1,6 +1,6 @@
 # Kolab.id --- Design System
 
-**UMKM × Creator Collaboration Platform** · Design System **v1.1**
+**UMKM × Creator Collaboration Platform** · Design System **v1.3**
 
 Kolab.id is a collaboration platform that connects **UMKM** with
 **content creators** through transparent pricing, clear collaboration
@@ -25,17 +25,19 @@ creators and small businesses.
 
 ### 1.2 Playful, but not childish
 
-The visual identity is led by **deep Kolab Blue** with friendly
-typography. Use strong color blocks and clear hierarchy, but keep
-layouts structured and professional. There is no secondary brand
-color: every brand moment uses the primary blue scale.
+The visual identity is led by **Kolab Purple** with friendly
+typography, supported by a **Secondary Yellow** accent for highlights
+and companions to brand moments. Use strong color blocks and clear
+hierarchy, but keep layouts structured and professional.
 
-### 1.3 Blue means brand and action
+### 1.3 Purple means brand and action
 
-Blue carries the whole brand: identity, primary actions, links,
+Purple carries the whole brand: identity, primary actions, links,
 selected states, and highlights. When something needs emphasis, use a
-stronger blue step (e.g. `--primary-600` / `--primary-700`) or a blue
-surface (`--primary-50`) --- never a second hue.
+stronger purple step (e.g. `--primary-600` / `--primary-700`) or a
+purple surface (`--primary-50`). The secondary lime (`--secondary-500`)
+is reserved for accents and highlights --- it never replaces blue
+for primary actions.
 
 ### 1.4 Green means positive progress
 
@@ -57,11 +59,11 @@ information is communicated.
 
 # 2. Color Tokens
 
-The brand color is **Kolab Blue** (`#394F9D`). It is expanded into a
-50--900 scale so components have clear hover, pressed, surface, and
-text states. A warm neutral scale plus semantic colors (success,
-warning, error, info) support it. There is no secondary or accent
-brand hue.
+The brand colors are **Kolab Purple** (`#812BFF`) and **Secondary
+Lime** (`#AAFF2B`). Each is expanded into a 50--900 scale so
+components have clear hover, pressed, surface, and text states. A warm
+neutral scale plus semantic colors (success, warning, error, info)
+support them.
 
 ------------------------------------------------------------------------
 
@@ -69,18 +71,18 @@ brand hue.
 
   Token             Hex         Role
   ----------------- ----------- ------------------------------------
-  `--primary-50`    `#F1F4FF`   Very soft blue surface
-  `--primary-100`   `#E2E8FF`   Selected backgrounds
-  `--primary-200`   `#C5D0F5`   Soft borders / illustrations
-  `--primary-300`   `#9EAFE6`   Decorative elements
-  `--primary-400`   `#657CC2`   Secondary interactive states
-  `--primary-500`   `#394F9D`   **Brand primary**
-  `--primary-600`   `#30458C`   Hover / stronger interactive state
-  `--primary-700`   `#273A78`   Pressed state / dark text
-  `--primary-800`   `#1F2F61`   High-emphasis text
-  `--primary-900`   `#172449`   Deepest blue
+  `--primary-50`    `#F7F2FF`   Very soft purple surface
+  `--primary-100`   `#F0E6FF`   Selected backgrounds
+  `--primary-200`   `#E0CAFF`   Soft borders / illustrations
+  `--primary-300`   `#C6A0FF`   Decorative elements
+  `--primary-400`   `#A76BFF`   Secondary interactive states
+  `--primary-500`   `#812BFF`   **Brand primary**
+  `--primary-600`   `#7226E0`   Hover / stronger interactive state
+  `--primary-700`   `#6120BF`   Pressed state / dark text
+  `--primary-800`   `#4D1A99`   High-emphasis text
+  `--primary-900`   `#3A1373`   Deepest purple
 
-**Primary base:** `#394F9D`
+**Primary base:** `#812BFF`
 
 Use `--primary-500` for the core Kolab.id identity. Use `--primary-600`
 and `--primary-700` for interaction states rather than darkening the
@@ -88,7 +90,36 @@ base arbitrarily.
 
 ------------------------------------------------------------------------
 
-## 2.2 Semantic --- Success Green
+## 2.2 Brand --- Secondary Lime
+
+  Token               Hex         Role
+  ------------------- ----------- ------------------------------------
+  `--secondary-50`    `#FAFFF2`   Very soft lime surface
+  `--secondary-100`   `#F5FFE6`   Highlighted backgrounds
+  `--secondary-200`   `#EAFFCA`   Soft borders / illustrations
+  `--secondary-300`   `#D9FFA0`   Decorative elements
+  `--secondary-400`   `#C4FF6B`   Secondary interactive states
+  `--secondary-500`   `#AAFF2B`   **Brand secondary**
+  `--secondary-600`   `#96E026`   Hover / stronger interactive state
+  `--secondary-700`   `#80BF20`   Pressed state / dark text
+  `--secondary-800`   `#66991A`   High-emphasis text
+  `--secondary-900`   `#4C7313`   Deepest lime
+
+**Secondary base:** `#AAFF2B`
+
+Use `--secondary-500` for accents, badges, and highlights that
+companion the primary purple. Lime carries less contrast on white,
+so pair `--secondary-*` surfaces with dark text (`--neutral-900`)
+and never use it for primary actions or body links.
+
+Current landing-page placements: the solution-banner CTA fill
+(`bg-secondary-500`), the rating stat tile (`bg-secondary-100` /
+`text-secondary-800`), the cara-kerja connector gradient midpoint
+(`via-secondary-400`), and the final-CTA pill tint.
+
+------------------------------------------------------------------------
+
+## 2.3 Semantic --- Success Green
 
   Token             Hex         Role
   ----------------- ----------- ----------------------------
@@ -110,7 +141,7 @@ only. Do not use it as a generic decorative color.
 
 ------------------------------------------------------------------------
 
-## 2.3 Neutral --- Ink
+## 2.4 Neutral --- Ink
 
   Token             Hex         Role
   ----------------- ----------- -----------------------------
@@ -129,7 +160,7 @@ only. Do not use it as a generic decorative color.
 
 ------------------------------------------------------------------------
 
-## 2.4 Semantic Colors
+## 2.5 Semantic Colors
 
 ### Error
 
@@ -160,16 +191,18 @@ only. Do not use it as a generic decorative color.
 
 ------------------------------------------------------------------------
 
-## 2.5 Recommended Color Pairings
+## 2.6 Recommended Color Pairings
 
   Foreground        Background        Use
   ----------------- ----------------- --------------------------
   `--neutral-900`   `--neutral-0`     Default text
   `--neutral-900`   `--neutral-50`    Default page copy
-  `--neutral-800`   `--primary-50`    Blue surface heading
+  `--neutral-800`   `--primary-50`    Purple surface heading
   `--primary-700`   `--neutral-0`     Links / interactive text
   `--neutral-0`     `--primary-500`   Primary filled button
-  `--neutral-0`     `--primary-700`   High-contrast blue CTA
+  `--neutral-0`     `--primary-700`   High-contrast purple CTA
+  `--neutral-900`   `--secondary-500` Secondary accent badge
+  `--neutral-900`   `--secondary-100` Lime highlight surface
   `--success-700`   `--success-50`    Success message
   `--error-700`     `--error-50`      Error message
   `--warning-700`   `--warning-50`    Warning message
@@ -194,6 +227,9 @@ referencing primitive colors.
   `--color-brand-primary`           `--primary-500`   Brand actions
   `--color-brand-primary-hover`     `--primary-600`   Primary hover
   `--color-brand-primary-pressed`   `--primary-700`   Primary pressed
+  `--color-brand-secondary`         `--secondary-500` Secondary accents
+  `--color-brand-secondary-hover`   `--secondary-600` Secondary hover
+  `--color-brand-secondary-pressed` `--secondary-700` Secondary pressed
   `--color-success`                 `--success-500`   Successful states
   `--color-error`                   `--error-500`     Errors
   `--color-warning`                 `--warning-500`   Warnings
@@ -327,6 +363,7 @@ Motion should communicate feedback and hierarchy rather than decoration.
   --------------------- ---------------------------- --------------------------
   `--ease-standard`     `cubic-bezier(.2,.8,.2,1)`   General transition
   `--ease-emphasized`   `cubic-bezier(.16,1,.3,1)`   Enter / expand
+  `--ease-out`          `cubic-bezier(.23,1,.32,1)`  Scroll-reveal entrances
   `--duration-fast`     `150ms`                      Hover / press
   `--duration-normal`   `250ms`                      Component transitions
   `--duration-slow`     `400ms`                      Page / panel transitions
@@ -676,8 +713,9 @@ This keeps the dashboard practical while preserving the brand identity.
 
 ### Do
 
--   Use blue as the primary visual anchor.
--   Use stronger blue steps or blue surfaces to draw attention.
+-   Use purple as the primary visual anchor.
+-   Use stronger purple steps or purple surfaces to draw attention.
+-   Use secondary lime sparingly for accents and highlights.
 -   Use green primarily for success and positive progress.
 -   Keep prices highly scannable.
 -   Show creator information consistently.
@@ -687,7 +725,7 @@ This keeps the dashboard practical while preserving the brand identity.
 
 ### Don't
 
--   Introduce a secondary brand color.
+-   Use secondary lime for primary actions or body links.
 -   Make every component a pill.
 -   Use green as a generic decorative color.
 -   Use follower count as the only indicator of creator quality.
@@ -703,25 +741,39 @@ This keeps the dashboard practical while preserving the brand identity.
 The app uses Tailwind CSS v4 (`@import "tailwindcss"` in
 `app/globals.css`). Custom values live in `@theme`, which turns each
 `--color-*`, `--font-*`, `--shadow-*`, and `--ease-*` entry into a
-utility (`bg-primary-600`, `font-head`, `shadow-sm`, ...). Tokens that
-already exist in Tailwind (radius, spacing, durations) are consumed via
-built-in classes --- see the mapping in section 16.
+utility (`bg-primary-600`, `font-head`, `shadow-sm`, ...). Spacing
+and duration tokens that already exist in Tailwind are consumed via
+built-in classes --- see the mapping in section 16. Radius is the
+exception: all rectangular steps are overridden to a global 10px in
+`@theme` (see Shape below).
 
 ``` css
 @import "tailwindcss";
 
 @theme {
   /* Brand — Primary */
-  --primary-50: #F1F4FF;
-  --primary-100: #E2E8FF;
-  --primary-200: #C5D0F5;
-  --primary-300: #9EAFE6;
-  --primary-400: #657CC2;
-  --primary-500: #394F9D;
-  --primary-600: #30458C;
-  --primary-700: #273A78;
-  --primary-800: #1F2F61;
-  --primary-900: #172449;
+  --primary-50: #F7F2FF;
+  --primary-100: #F0E6FF;
+  --primary-200: #E0CAFF;
+  --primary-300: #C6A0FF;
+  --primary-400: #A76BFF;
+  --primary-500: #812BFF;
+  --primary-600: #7226E0;
+  --primary-700: #6120BF;
+  --primary-800: #4D1A99;
+  --primary-900: #3A1373;
+
+  /* Brand — Secondary */
+  --secondary-50: #FAFFF2;
+  --secondary-100: #F5FFE6;
+  --secondary-200: #EAFFCA;
+  --secondary-300: #D9FFA0;
+  --secondary-400: #C4FF6B;
+  --secondary-500: #AAFF2B;
+  --secondary-600: #96E026;
+  --secondary-700: #80BF20;
+  --secondary-800: #66991A;
+  --secondary-900: #4C7313;
 
   /* Supporting — Success (semantic only) */
   --success-50: #E8FFF2;
@@ -777,17 +829,21 @@ built-in classes --- see the mapping in section 16.
   --color-brand-primary: var(--primary-500);
   --color-brand-primary-hover: var(--primary-600);
   --color-brand-primary-pressed: var(--primary-700);
+  --color-brand-secondary: var(--secondary-500);
+  --color-brand-secondary-hover: var(--secondary-600);
+  --color-brand-secondary-pressed: var(--secondary-700);
   --color-success: var(--success-500);
   --color-error: var(--error-500);
   --color-warning: var(--warning-500);
   --color-info: var(--info-500);
 
-  /* Shape */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
-  --radius-2xl: 24px;
+  /* Shape — global 10px */
+  --radius-sm: 10px;
+  --radius-md: 10px;
+  --radius-lg: 10px;
+  --radius-xl: 10px;
+  --radius-2xl: 10px;
+  --radius-3xl: 10px;
   --radius-pill: 999px;
 
   /* Spacing */
@@ -807,6 +863,7 @@ built-in classes --- see the mapping in section 16.
   /* Motion */
   --ease-standard: cubic-bezier(.2,.8,.2,1);
   --ease-emphasized: cubic-bezier(.16,1,.3,1);
+  --ease-out: cubic-bezier(.23,1,.32,1);
   --duration-fast: 150ms;
   --duration-normal: 250ms;
   --duration-slow: 400ms;
@@ -829,12 +886,13 @@ built-in classes --- see the mapping in section 16.
 
   Dimension                 Kolab.id Direction
   ------------------------- ----------------------------------
-  Primary                   Deep Kolab Blue `#394F9D`
+  Primary                   Kolab Purple `#812BFF`
+  Secondary                 Secondary Lime `#AAFF2B` (accents only)
   Supporting                Vivid Green `#02D160` (semantic only)
   Personality               Friendly, energetic, trustworthy
   Typography                Plus Jakarta Sans + Inter
-  Buttons                   Moderately rounded, 12px
-  Cards                     Soft 16px radius
+  Buttons                   Moderately rounded, 10px
+  Cards                     Soft 10px radius
   Surfaces                  Warm off-white + white
   Primary action            Blue
   Highlight                 Blue tint / strong blue
@@ -847,9 +905,9 @@ built-in classes --- see the mapping in section 16.
 
 # 16. Tailwind Mapping
 
-How each token is written in code. Colors, fonts, shadows, and easing
-come from the `@theme` block in section 14; everything else uses
-built-in Tailwind utilities.
+How each token is written in code. Colors, fonts, radius, shadows,
+and easing come from the `@theme` block in section 14; everything
+else uses built-in Tailwind utilities.
 
 ### Colors
 
@@ -860,6 +918,7 @@ built-in Tailwind utilities.
   `--primary-700`     Pressed fills, links: `text-primary-700`
   `--primary-50`      Tinted surfaces: `bg-primary-50`
   `--primary-200`     Focus rings: `focus:ring-primary-200`
+  `--secondary-*`     Accents: `bg-secondary-500`, `bg-secondary-100`, ...
   `--success-*`       `bg-success-50`, `text-success-700`, ...
   `--error-*`         `bg-error-50`, `text-error-700`, ...
   `--warning-*`       `bg-warning-50`, `text-warning-700`, ...
@@ -873,13 +932,19 @@ built-in Tailwind utilities.
 
 ### Radius
 
+All rectangular radii are unified to a global **10px** via `@theme`
+overrides in `app/globals.css` (`rounded-sm` through `rounded-3xl`,
+including directional variants like `rounded-br-md`). Only pills stay
+round.
+
   Token           Value   Tailwind class
   --------------- ------- ------------------
-  `--radius-sm`   `8px`   `rounded-lg`
-  `--radius-md`   `12px`  `rounded-xl`
-  `--radius-lg`   `16px`  `rounded-2xl`
-  `--radius-xl`   `20px`  `rounded-[20px]`
-  `--radius-2xl`  `24px`  `rounded-3xl`
+  `--radius-sm`   `10px`  `rounded-sm`
+  `--radius-md`   `10px`  `rounded-md`
+  `--radius-lg`   `10px`  `rounded-lg`
+  `--radius-xl`   `10px`  `rounded-xl`
+  `--radius-2xl`  `10px`  `rounded-2xl`
+  `--radius-3xl`  `10px`  `rounded-3xl`
   `--radius-pill` `999px` `rounded-full`
 
 ### Spacing (4px base)
@@ -916,6 +981,7 @@ Layout constants: `--container-lg` (1024px) → `max-w-[1024px]`,
   `--duration-slow`     `duration-400`
   `--ease-standard`     `ease-standard`
   `--ease-emphasized`   `ease-emphasized`
+  `--ease-out`          `ease-out`
 
 ### Typography
 
@@ -937,5 +1003,6 @@ Headings additionally use `tracking-[-0.02em]`.
 
 ------------------------------------------------------------------------
 
-*Kolab.id Design System v1.1 · Single-brand revision: orange accent
-removed, tokens mapped to Tailwind v4.*
+*Kolab.id Design System v1.3 · Palette re-based to primary
+`#812BFF` and secondary lime `#AAFF2B`; secondary accents on the
+landing page.*

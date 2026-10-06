@@ -3,11 +3,13 @@
 /*
  * Kolab.id Design Tokens — DESIGN_SYSTEM.md §14 & §16.
  *
- * Yang masuk @theme: warna brand/semantik, easing, dan shadow (tidak punya
- * padanan bawaan Tailwind). Radius, spacing, dan durasi DIPAKAI via util
- * built-in sesuai mapping §16 (--radius-md -> rounded-xl, --space-6 -> p-6,
- * --duration-fast -> duration-150, dst), jadi sengaja TIDAK di-@theme-kan
- * agar tidak membajak kelas bawaan (rounded-sm/lg, space-*, duration-*).
+ * Yang masuk @theme: warna brand/semantik, radius global, easing, dan
+ * shadow. Spacing dan durasi DIPAKAI via util built-in sesuai mapping
+ * §16, jadi sengaja TIDAK di-@theme-kan agar tidak membajak kelas
+ * bawaan (space-*, duration-*).
+ *
+ * Radius: SEMUA langkah rounded-* rectangular (sm--3xl) diseragamkan ke
+ * 10px secara global. `rounded-full` (pill) TIDAK tersentuh.
  *
  * Inter sengaja ditunda (design.md non-goal); font-head & font-body
  * memakai Plus Jakarta Sans yang sudah di-load via next/font.
@@ -19,17 +21,29 @@
 }
 
 @theme {
-  /* Brand — Primary */
-  --color-primary-50: #f1f4ff;
-  --color-primary-100: #e2e8ff;
-  --color-primary-200: #c5d0f5;
-  --color-primary-300: #9eafe6;
-  --color-primary-400: #657cc2;
-  --color-primary-500: #394f9d;
-  --color-primary-600: #30458c;
-  --color-primary-700: #273a78;
-  --color-primary-800: #1f2f61;
-  --color-primary-900: #172449;
+  /* Brand — Primary (#812BFF) */
+  --color-primary-50: #f7f2ff;
+  --color-primary-100: #f0e6ff;
+  --color-primary-200: #e0caff;
+  --color-primary-300: #c6a0ff;
+  --color-primary-400: #a76bff;
+  --color-primary-500: #812bff;
+  --color-primary-600: #7226e0;
+  --color-primary-700: #6120bf;
+  --color-primary-800: #4d1a99;
+  --color-primary-900: #3a1373;
+
+  /* Brand — Secondary (#AAFF2B) */
+  --color-secondary-50: #fafff2;
+  --color-secondary-100: #f5ffe6;
+  --color-secondary-200: #eaffca;
+  --color-secondary-300: #d9ffa0;
+  --color-secondary-400: #c4ff6b;
+  --color-secondary-500: #aaff2b;
+  --color-secondary-600: #96e026;
+  --color-secondary-700: #80bf20;
+  --color-secondary-800: #66991a;
+  --color-secondary-900: #4c7313;
 
   /* Supporting — Success (semantik saja, bukan dekorasi) */
   --color-success-50: #e8fff2;
@@ -86,14 +100,27 @@
   --color-brand-primary: var(--color-primary-500);
   --color-brand-primary-hover: var(--color-primary-600);
   --color-brand-primary-pressed: var(--color-primary-700);
+  --color-brand-secondary: var(--color-secondary-500);
+  --color-brand-secondary-hover: var(--color-secondary-600);
+  --color-brand-secondary-pressed: var(--color-secondary-700);
   --color-success: var(--color-success-500);
   --color-error: var(--color-error-500);
   --color-warning: var(--color-warning-500);
   --color-info: var(--color-info-500);
 
+  /* Radius — global 10px untuk semua sudut rectangular.
+     rounded-full (pill/lingkaran) tidak tersentuh. */
+  --radius-sm: 10px;
+  --radius-md: 10px;
+  --radius-lg: 10px;
+  --radius-xl: 10px;
+  --radius-2xl: 10px;
+  --radius-3xl: 10px;
+
   /* Motion — easing (durasi pakai built-in, lihat §16) */
   --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
   --ease-emphasized: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 
   /* Shadow */
   --shadow-xs: 0 1px 2px rgba(29, 29, 26, 0.06);
@@ -228,12 +255,39 @@ body {
   animation: fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/* ===== Scroll reveal + stagger (landing marketing surfaces) =====
+   Dipicu sekali via IntersectionObserver (komponen Reveal) yang
+   memasang [data-visible]. Delay per item via --reveal-delay inline
+   (30–80ms antar item). Tidak memblokir interaksi. */
+.reveal-item {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.reveal-item[data-visible] {
+  animation: reveal-in 300ms var(--ease-out) forwards;
+  animation-delay: var(--reveal-delay, 0ms);
+}
+
+@keyframes reveal-in {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Hormati pengguna yang mematikan animasi */
 @media (prefers-reduced-motion: reduce) {
   .animate-marquee,
   .animate-float,
   .animate-fade-up {
     animation: none;
+  }
+  .reveal-item,
+  .reveal-item[data-visible] {
+    animation: none;
+    opacity: 1;
+    transform: none;
   }
 }
 
