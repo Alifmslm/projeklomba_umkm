@@ -363,6 +363,7 @@ Motion should communicate feedback and hierarchy rather than decoration.
   --------------------- ---------------------------- --------------------------
   `--ease-standard`     `cubic-bezier(.2,.8,.2,1)`   General transition
   `--ease-emphasized`   `cubic-bezier(.16,1,.3,1)`   Enter / expand
+  `--ease-out`          `cubic-bezier(.23,1,.32,1)`  Scroll-reveal entrances
   `--duration-fast`     `150ms`                      Hover / press
   `--duration-normal`   `250ms`                      Component transitions
   `--duration-slow`     `400ms`                      Page / panel transitions
@@ -862,6 +863,7 @@ exception: all rectangular steps are overridden to a global 10px in
   /* Motion */
   --ease-standard: cubic-bezier(.2,.8,.2,1);
   --ease-emphasized: cubic-bezier(.16,1,.3,1);
+  --ease-out: cubic-bezier(.23,1,.32,1);
   --duration-fast: 150ms;
   --duration-normal: 250ms;
   --duration-slow: 400ms;
@@ -979,6 +981,7 @@ Layout constants: `--container-lg` (1024px) → `max-w-[1024px]`,
   `--duration-slow`     `duration-400`
   `--ease-standard`     `ease-standard`
   `--ease-emphasized`   `ease-emphasized`
+  `--ease-out`          `ease-out`
 
 ### Typography
 

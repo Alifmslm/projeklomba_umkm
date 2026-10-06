@@ -28,6 +28,7 @@ import {
 import { formatFollowers, formatRupiah } from "@/lib/format";
 import { CreatorCard } from "@/components/CreatorCard";
 import { Avatar } from "@/components/Avatar";
+import { Reveal } from "@/components/Reveal";
 
 export const dynamic = "force-dynamic";
 
@@ -296,11 +297,9 @@ export default function LandingPage() {
               note: "dari UMKM partner",
               color: "bg-secondary-100 text-secondary-800",
             },
-          ].map((s) => (
-            <div
-              key={s.label}
-              className="group rounded-3xl border border-neutral-200 bg-white p-6 shadow-xs transition-all hover:-translate-y-1 hover:shadow-sm hover:shadow-primary-500/10"
-            >
+          ].map((s, i) => (
+            <Reveal key={s.label} delayMs={i * 50}>
+              <div className="group h-full rounded-3xl border border-neutral-200 bg-white p-6 shadow-xs transition-all hover:-translate-y-1 hover:shadow-sm hover:shadow-primary-500/10">
               <div className="flex items-center justify-between">
                 <span
                   className={`grid h-11 w-11 place-items-center rounded-2xl ${s.color} transition-transform group-hover:scale-110`}
@@ -320,7 +319,8 @@ export default function LandingPage() {
               <p className="mt-1 text-sm font-medium text-neutral-500">
                 {s.label}
               </p>
-            </div>
+              </div>
+            </Reveal>
           ))}
         </div>
       </section>
@@ -330,10 +330,11 @@ export default function LandingPage() {
       ================================================================ */}
       <section className="border-y border-neutral-200 bg-white">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
-          <div className="max-w-2xl">
-            <p className="text-sm font-bold uppercase tracking-widest text-primary-600">
-              Masalahnya
-            </p>
+          <Reveal>
+            <div className="max-w-2xl">
+              <p className="text-sm font-bold uppercase tracking-widest text-primary-600">
+                Masalahnya
+              </p>
             <h2 className="font-head mt-2 text-3xl font-extrabold tracking-[-0.02em] text-neutral-900 sm:text-4xl">
               Pemasarannya mentok,{" "}
               <span className="text-neutral-500">bukan produknya yang jelek</span>
@@ -342,7 +343,8 @@ export default function LandingPage() {
               Banyak UMKM dengan produk berkualitas gagal berkembang karena satu
               hal: tidak dilihat orang.
             </p>
-          </div>
+            </div>
+          </Reveal>
 
           <div className="mt-10 grid gap-5 md:grid-cols-3">
             {[
@@ -364,11 +366,9 @@ export default function LandingPage() {
                 desc: "Nemu kreator dari DM sana-sini, harga ngambang, deal tidak jelas. Buang waktu, risiko ditipu tinggi.",
                 color: "bg-primary-50 text-primary-700",
               },
-            ].map((p) => (
-              <div
-                key={p.title}
-                className="group rounded-3xl border border-neutral-200 bg-neutral-50/60 p-7 transition-all hover:border-error-100 hover:bg-white hover:shadow-sm"
-              >
+            ].map((p, i) => (
+              <Reveal key={p.title} delayMs={i * 50}>
+                <div className="group h-full rounded-3xl border border-neutral-200 bg-neutral-50/60 p-7 transition-all hover:border-error-100 hover:bg-white hover:shadow-sm">
                 <span
                   className={`grid h-12 w-12 place-items-center rounded-2xl ${p.color} transition-transform group-hover:scale-110`}
                 >
@@ -380,12 +380,14 @@ export default function LandingPage() {
                 <p className="mt-2 text-sm leading-relaxed text-neutral-600">
                   {p.desc}
                 </p>
-              </div>
+                </div>
+              </Reveal>
             ))}
           </div>
 
           {/* Solusi */}
-          <div className="relative mt-10 overflow-hidden rounded-3xl bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 p-8 text-white sm:p-10">
+          <Reveal>
+            <div className="relative mt-10 overflow-hidden rounded-3xl bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 p-8 text-white sm:p-10">
             <div className="dot-pattern absolute inset-0 opacity-15" />
             <div className="relative flex flex-col items-start gap-6 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-start gap-4">
@@ -410,8 +412,9 @@ export default function LandingPage() {
                 Lihat Kreator
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
+              </div>
             </div>
-          </div>
+          </Reveal>
         </div>
       </section>
 
@@ -419,10 +422,11 @@ export default function LandingPage() {
           FITUR
       ================================================================ */}
       <section id="fitur" className="mx-auto max-w-6xl scroll-mt-16 px-4 py-16 sm:px-6 lg:py-24">
-        <div className="mx-auto max-w-2xl text-center">
-          <p className="text-sm font-bold uppercase tracking-widest text-primary-600">
-            Fitur
-          </p>
+        <Reveal>
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-sm font-bold uppercase tracking-widest text-primary-600">
+              Fitur
+            </p>
           <h2 className="font-head mt-2 text-3xl font-extrabold tracking-[-0.02em] text-neutral-900 sm:text-4xl">
             Satu platform, semua kebutuhan kolaborasi
           </h2>
@@ -430,7 +434,8 @@ export default function LandingPage() {
             Dari cari kreator sampai pantau hasil konten — semuanya transparan
             dan bisa diakses dari satu tempat.
           </p>
-        </div>
+          </div>
+        </Reveal>
 
         <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {[
@@ -470,11 +475,9 @@ export default function LandingPage() {
               desc: "Profil terverifikasi, riwayat rating, dan alur konfirmasi yang jelas. Kedua pihak tahu persis apa yang dikerjakan.",
               color: "from-error-500 to-error-700",
             },
-          ].map((f) => (
-            <div
-              key={f.title}
-              className="group relative overflow-hidden rounded-3xl border border-neutral-200 bg-white p-7 shadow-xs transition-all hover:-translate-y-1 hover:border-primary-200 hover:shadow-sm hover:shadow-primary-500/10"
-            >
+          ].map((f, i) => (
+            <Reveal key={f.title} delayMs={i * 50}>
+              <div className="group relative h-full overflow-hidden rounded-3xl border border-neutral-200 bg-white p-7 shadow-xs transition-all hover:-translate-y-1 hover:border-primary-200 hover:shadow-sm hover:shadow-primary-500/10">
               <div
                 className={`absolute -right-8 -top-8 h-24 w-24 rounded-full bg-gradient-to-br ${f.color} opacity-0 blur-2xl transition-opacity group-hover:opacity-20`}
               />
@@ -489,7 +492,8 @@ export default function LandingPage() {
               <p className="relative mt-2 text-sm leading-relaxed text-neutral-600">
                 {f.desc}
               </p>
-            </div>
+              </div>
+            </Reveal>
           ))}
         </div>
       </section>
@@ -499,14 +503,16 @@ export default function LandingPage() {
       ================================================================ */}
       <section id="cara-kerja" className="scroll-mt-16 border-y border-neutral-200 bg-white">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
-          <div className="mx-auto max-w-2xl text-center">
-            <p className="text-sm font-bold uppercase tracking-widest text-primary-600">
-              Cara kerja
-            </p>
-            <h2 className="font-head mt-2 text-3xl font-extrabold tracking-[-0.02em] text-neutral-900 sm:text-4xl">
-              Dari cari kreator ke konten tayang, cuma 3 langkah
-            </h2>
-          </div>
+          <Reveal>
+            <div className="mx-auto max-w-2xl text-center">
+              <p className="text-sm font-bold uppercase tracking-widest text-primary-600">
+                Cara kerja
+              </p>
+              <h2 className="font-head mt-2 text-3xl font-extrabold tracking-[-0.02em] text-neutral-900 sm:text-4xl">
+                Dari cari kreator ke konten tayang, cuma 3 langkah
+              </h2>
+            </div>
+          </Reveal>
 
           <div className="relative mt-14 grid gap-8 md:grid-cols-3 md:gap-6">
             {/* Garis penghubung */}
@@ -531,8 +537,9 @@ export default function LandingPage() {
                 title: "Kelola & menangkan",
                 desc: "Pantau status semua kolaborasi di dashboard. Konten tayang, toko ramai, dua-duanya dapat cuan.",
               },
-            ].map((s) => (
-              <div key={s.step} className="relative text-center md:px-4">
+            ].map((s, i) => (
+              <Reveal key={s.step} delayMs={i * 50}>
+                <div className="relative h-full text-center md:px-4">
                 <div className="relative z-10 mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-primary-600 to-primary-700 text-white shadow-sm shadow-primary-500/25 ring-4 ring-white">
                   <s.icon className="h-6 w-6" />
                 </div>
@@ -545,7 +552,8 @@ export default function LandingPage() {
                 <p className="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-neutral-600">
                   {s.desc}
                 </p>
-              </div>
+                </div>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -555,11 +563,12 @@ export default function LandingPage() {
           KATEGORI + KREATOR PILIHAN
       ================================================================ */}
       <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="text-sm font-bold uppercase tracking-widest text-primary-600">
-              Jelajahi
-            </p>
+        <Reveal>
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-sm font-bold uppercase tracking-widest text-primary-600">
+                Jelajahi
+              </p>
             <h2 className="font-head mt-2 text-3xl font-extrabold tracking-[-0.02em] text-neutral-900">
               Kreator per kategori
             </h2>
@@ -575,9 +584,11 @@ export default function LandingPage() {
             Semua kreator
             <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </Link>
-        </div>
+          </div>
+        </Reveal>
 
-        <div className="mt-8 flex flex-wrap gap-3">
+        <Reveal>
+          <div className="mt-8 flex flex-wrap gap-3">
           {niches.map((n) => (
             <Link
               key={n}
@@ -587,11 +598,14 @@ export default function LandingPage() {
               {n}
             </Link>
           ))}
-        </div>
+          </div>
+        </Reveal>
 
         <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {featured.map((inf) => (
-            <CreatorCard key={inf.id} influencer={inf} />
+          {featured.map((inf, i) => (
+            <Reveal key={inf.id} delayMs={i * 50}>
+              <CreatorCard influencer={inf} className="h-full" />
+            </Reveal>
           ))}
         </div>
       </section>
@@ -600,14 +614,16 @@ export default function LandingPage() {
           FAQ
       ================================================================ */}
       <section id="faq" className="mx-auto max-w-3xl scroll-mt-16 px-4 py-16 sm:px-6 lg:py-24">
-        <div className="text-center">
-          <p className="text-sm font-bold uppercase tracking-widest text-primary-600">
-            FAQ
-          </p>
-          <h2 className="font-head mt-2 text-3xl font-extrabold tracking-[-0.02em] text-neutral-900 sm:text-4xl">
-            Pertanyaan yang sering ditanya
-          </h2>
-        </div>
+        <Reveal>
+          <div className="text-center">
+            <p className="text-sm font-bold uppercase tracking-widest text-primary-600">
+              FAQ
+            </p>
+            <h2 className="font-head mt-2 text-3xl font-extrabold tracking-[-0.02em] text-neutral-900 sm:text-4xl">
+              Pertanyaan yang sering ditanya
+            </h2>
+          </div>
+        </Reveal>
 
         <div className="mt-10 space-y-3">
           {[
@@ -632,11 +648,11 @@ export default function LandingPage() {
               a: "Aplikasi demo ini berjalan 100% lokal di komputermu — database, font, dan semua aset sudah dibundel, jadi cocok untuk demo tanpa khawatir koneksi.",
             },
           ].map((f, i) => (
-            <details
-              key={f.q}
-              className="group rounded-2xl border border-neutral-200 bg-white p-5 shadow-xs transition-shadow open:border-primary-200 open:shadow-sm"
-              open={i === 0}
-            >
+            <Reveal key={f.q} delayMs={i * 50}>
+              <details
+                className="group rounded-2xl border border-neutral-200 bg-white p-5 shadow-xs transition-shadow open:border-primary-200 open:shadow-sm"
+                open={i === 0}
+              >
               <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-head text-sm font-bold text-neutral-900">
                 {f.q}
                 <ChevronDown className="h-5 w-5 shrink-0 text-neutral-400 transition-transform group-open:rotate-180" />
@@ -644,7 +660,8 @@ export default function LandingPage() {
               <p className="mt-3 text-sm leading-relaxed text-neutral-600">
                 {f.a}
               </p>
-            </details>
+              </details>
+            </Reveal>
           ))}
         </div>
       </section>
@@ -653,7 +670,8 @@ export default function LandingPage() {
           CTA FINAL
       ================================================================ */}
       <section className="mx-auto max-w-6xl px-4 pb-20 sm:px-6">
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800 px-6 py-16 text-center text-white sm:px-12 lg:py-20">
+        <Reveal>
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800 px-6 py-16 text-center text-white sm:px-12 lg:py-20">
           <div className="dot-pattern absolute inset-0 opacity-15" />
           <div className="bg-grid absolute inset-0 opacity-20" />
 
@@ -694,7 +712,8 @@ export default function LandingPage() {
               </span>
             </div>
           </div>
-        </div>
+          </div>
+        </Reveal>
       </section>
     </div>
   );
