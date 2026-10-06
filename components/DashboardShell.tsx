@@ -91,7 +91,7 @@ export function DashboardShell({
   return (
     <div className="min-h-screen bg-neutral-50">
       {/* Desktop sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 border-r border-neutral-200 bg-neutral-0 lg:block">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 border-r border-neutral-200 bg-neutral-0 lg:block">
         <Sidebar
           role={role}
           unreadChatCount={unreadChatCount}
@@ -99,7 +99,7 @@ export function DashboardShell({
         />
       </aside>
 
-      <div className="lg:pl-64">
+      <div className="lg:pl-60">
         <DashboardHeader
           title={title}
           userName={userName}
@@ -113,8 +113,10 @@ export function DashboardShell({
         />
 
         {/* Content */}
-        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:py-10">
-          {children}
+        <div className="flex justify-center">
+          <div className="mx-6 flex-1 py-6 lg:py-8">
+            {children}
+          </div>
         </div>
       </div>
 

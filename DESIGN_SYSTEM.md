@@ -146,7 +146,7 @@ only. Do not use it as a generic decorative color.
   Token             Hex         Role
   ----------------- ----------- -----------------------------
   `--neutral-0`     `#FFFFFF`   Pure white
-  `--neutral-50`    `#FAFAF8`   App background
+  `--neutral-50`    `#F9FAFB`   App background
   `--neutral-100`   `#F5F5F2`   Secondary background
   `--neutral-200`   `#E8E8E3`   Borders / dividers
   `--neutral-300`   `#D5D5CF`   Disabled borders
@@ -675,7 +675,7 @@ more categories.
 
 # 12. Illustration & Brand Usage
 
-The identity is single-hue: Kolab Blue supported by warm off-white
+The identity is single-hue: Kolab Blue supported by near-white gray
 surfaces, hand-drawn / organic supporting shapes, and high-energy blue
 color blocks. Green appears only for success feedback, never as
 decoration.
@@ -789,7 +789,7 @@ exception: all rectangular steps are overridden to a global 10px in
 
   /* Neutral */
   --neutral-0: #FFFFFF;
-  --neutral-50: #FAFAF8;
+  --neutral-50: #F9FAFB;
   --neutral-100: #F5F5F2;
   --neutral-200: #E8E8E3;
   --neutral-300: #D5D5CF;
@@ -893,7 +893,7 @@ exception: all rectangular steps are overridden to a global 10px in
   Typography                Plus Jakarta Sans + Inter
   Buttons                   Moderately rounded, 10px
   Cards                     Soft 10px radius
-  Surfaces                  Warm off-white + white
+  Surfaces                  Near-white gray + white
   Primary action            Blue
   Highlight                 Blue tint / strong blue
   Success                   Green
