@@ -63,7 +63,7 @@ export default function LandingPage() {
           {/* ---- Kiri: pesan utama ---- */}
           <div>
             <span className="animate-fade-up inline-flex items-center gap-2 rounded-full border border-primary-200 bg-white/80 px-3 py-1 text-xs font-semibold text-primary-700 shadow-sm backdrop-blur">
-              <Sparkles className="h-3.5 w-3.5" />
+              <Sparkles className="h-3.5 w-3.5 text-secondary-600" />
               Platform kolaborasi UMKM × Kreator
             </span>
 
@@ -72,7 +72,7 @@ export default function LandingPage() {
               style={{ animationDelay: "80ms" }}
             >
               UMKM naik kelas,{" "}
-              <span className="text-gradient-brand">kreator naik cuan</span>
+              <span className="inline-block rounded-lg bg-secondary-400 px-3 py-0.5 text-primary-800 [box-decoration-break:clone]">kreator naik cuan</span>
             </h1>
 
             <p
@@ -294,7 +294,7 @@ export default function LandingPage() {
               value: `${stats.avgRating.toFixed(1)}`,
               suffix: "/5",
               note: "dari UMKM partner",
-              color: "bg-warning-50 text-warning-700",
+              color: "bg-secondary-100 text-secondary-800",
             },
           ].map((s) => (
             <div
@@ -405,7 +405,7 @@ export default function LandingPage() {
               </div>
               <Link
                 href="/influencers"
-                className="group inline-flex shrink-0 items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-primary-700 shadow-sm transition-transform hover:scale-105"
+                className="group inline-flex shrink-0 items-center gap-2 rounded-xl bg-secondary-500 px-5 py-3 text-sm font-bold text-neutral-900 shadow-sm transition-all hover:scale-105 hover:bg-secondary-400"
               >
                 Lihat Kreator
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
@@ -510,7 +510,7 @@ export default function LandingPage() {
 
           <div className="relative mt-14 grid gap-8 md:grid-cols-3 md:gap-6">
             {/* Garis penghubung */}
-            <div className="absolute left-[16%] right-[16%] top-7 hidden h-0.5 bg-gradient-to-r from-primary-200 via-primary-300 to-primary-200 md:block" />
+            <div className="absolute left-[16%] right-[16%] top-7 hidden h-0.5 bg-gradient-to-r from-primary-200 via-secondary-400 to-primary-200 md:block" />
 
             {[
               {
@@ -658,8 +658,8 @@ export default function LandingPage() {
           <div className="bg-grid absolute inset-0 opacity-20" />
 
           <div className="relative mx-auto max-w-2xl">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-semibold backdrop-blur">
-              <Zap className="h-3.5 w-3.5" />
+            <span className="inline-flex items-center gap-2 rounded-full border border-secondary-300/50 bg-secondary-500/15 px-3 py-1 text-xs font-semibold backdrop-blur">
+              <Zap className="h-3.5 w-3.5 text-secondary-300" />
               Gratis untuk memulai
             </span>
             <h2 className="font-head mt-5 text-3xl font-extrabold tracking-[-0.02em] sm:text-4xl lg:text-5xl">
