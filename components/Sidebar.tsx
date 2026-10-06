@@ -107,18 +107,23 @@ export function Sidebar({
     role === "umkm" ? "/dashboard" : role === "influencer" ? "/dashboard/influencer" : "/admin";
 
   return (
-    <div className="flex h-full flex-col px-5 py-6">
-      <Link href={logoHref} onClick={onNavigate} aria-label="Kolab.id - Dashboard">
+    <div className="flex h-full flex-col px-3 pb-3">
+      <Link
+        href={logoHref}
+        onClick={onNavigate}
+        aria-label="Kolab.id - Dashboard"
+        className="flex h-16 shrink-0 items-center px-2"
+      >
         <Logo />
       </Link>
 
-      <nav className="mt-8 space-y-6" aria-label="Navigasi utama">
+      <nav className="flex flex-1 flex-col gap-6 pt-2" aria-label="Navigasi utama">
         {GROUPS[role].map((group) => (
           <div key={group.title}>
-            <p className="mb-1 px-5 text-[11px] font-bold tracking-widest text-neutral-400 uppercase">
+            <p className="pb-1 text-[11px] font-bold tracking-widest text-neutral-400 uppercase">
               {group.title}
             </p>
-            <div className="space-y-1">
+            <div className="flex flex-col gap-1">
               {group.hrefs.map((href) => {
                 const item = items.find((i) => i.href === href);
                 if (!item) return null;
@@ -160,7 +165,7 @@ export function Sidebar({
         ))}
       </nav>
 
-      <div className="mt-auto pt-6">
+      <div className="pt-6">
         <form action={logout}>
           <button
             type="submit"

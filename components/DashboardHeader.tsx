@@ -35,8 +35,8 @@ export function DashboardHeader({
   onOpenMenu?: () => void;
 }) {
   return (
-    <header className="sticky top-0 z-40 border-b border-neutral-200 bg-neutral-0/90 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4 sm:px-6">
+    <header className="sticky top-0 z-40 flex justify-center border-b border-neutral-200 bg-neutral-0/90 backdrop-blur-md">
+      <div className="mx-6 flex h-16 flex-1 items-center gap-3">
         {onOpenMenu && (
           <button
             type="button"
@@ -57,7 +57,7 @@ export function DashboardHeader({
         <h1 className="hidden min-w-0 flex-1 truncate font-head text-lg font-bold tracking-[-0.02em] text-neutral-900 lg:block">
           {title}
         </h1>
-        <div className="ml-auto flex shrink-0 items-center gap-2.5">
+        <div className="flex shrink-0 items-center gap-2.5">
           <NotificationBell
             items={notifications}
             attentionCount={attentionCount}

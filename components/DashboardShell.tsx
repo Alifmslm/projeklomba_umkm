@@ -113,8 +113,10 @@ export function DashboardShell({
         />
 
         {/* Content */}
-        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:py-10">
-          {children}
+        <div className="flex justify-center">
+          <div className="mx-6 flex-1 py-6 lg:py-8">
+            {children}
+          </div>
         </div>
       </div>
 
