@@ -3,12 +3,13 @@ import { LogOut, LayoutDashboard } from "lucide-react";
 import { getSession } from "@/lib/auth";
 import { logout } from "@/app/actions";
 import { Logo } from "./Logo";
+import { NavbarLinks } from "./NavbarLinks";
 
 const links = [
-  { href: "/", label: "Beranda" },
-  { href: "/influencers", label: "Cari Kreator" },
-  { href: "/insights", label: "Wawasan" },
+  { href: "/#beranda", label: "Beranda" },
+  { href: "/#fitur", label: "Fitur" },
   { href: "/#cara-kerja", label: "Cara Kerja" },
+  { href: "/#faq", label: "FAQ" },
 ];
 
 export async function Navbar() {
@@ -27,17 +28,7 @@ export async function Navbar() {
           <Logo />
         </Link>
 
-        <nav className="hidden items-center gap-7 md:flex">
-          {links.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              className="text-sm font-medium text-neutral-600 transition-colors hover:text-primary-700"
-            >
-              {l.label}
-            </Link>
-          ))}
-        </nav>
+        <NavbarLinks links={links} />
 
         <div className="hidden items-center gap-3 md:flex">
           {session ? (

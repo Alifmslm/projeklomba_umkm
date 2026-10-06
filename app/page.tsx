@@ -11,7 +11,6 @@ import {
   LayoutDashboard,
   MapPin,
   Megaphone,
-  Quote,
   Search,
   ShieldCheck,
   Sparkles,
@@ -59,7 +58,7 @@ export default function LandingPage() {
       {/* ================================================================
           HERO — pengenalan pertama
       ================================================================ */}
-      <section className="hero-glow bg-grid relative overflow-hidden">
+      <section id="beranda" className="hero-glow bg-grid relative scroll-mt-16 overflow-hidden">
         <div className="mx-auto grid max-w-6xl items-center gap-14 px-4 pb-20 pt-14 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:pb-28 lg:pt-20">
           {/* ---- Kiri: pesan utama ---- */}
           <div>
@@ -419,7 +418,7 @@ export default function LandingPage() {
       {/* ================================================================
           FITUR
       ================================================================ */}
-      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
+      <section id="fitur" className="mx-auto max-w-6xl scroll-mt-16 px-4 py-16 sm:px-6 lg:py-24">
         <div className="mx-auto max-w-2xl text-center">
           <p className="text-sm font-bold uppercase tracking-widest text-primary-600">
             Fitur
@@ -498,7 +497,7 @@ export default function LandingPage() {
       {/* ================================================================
           CARA KERJA
       ================================================================ */}
-      <section id="cara-kerja" className="border-y border-neutral-200 bg-white">
+      <section id="cara-kerja" className="scroll-mt-16 border-y border-neutral-200 bg-white">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
           <div className="mx-auto max-w-2xl text-center">
             <p className="text-sm font-bold uppercase tracking-widest text-primary-600">
@@ -598,83 +597,9 @@ export default function LandingPage() {
       </section>
 
       {/* ================================================================
-          TESTIMONI
-      ================================================================ */}
-      <section className="border-y border-neutral-200 bg-white">
-        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
-          <div className="mx-auto max-w-2xl text-center">
-            <p className="text-sm font-bold uppercase tracking-widest text-primary-600">
-              Kata mereka
-            </p>
-            <h2 className="font-head mt-2 text-3xl font-extrabold tracking-[-0.02em] text-neutral-900 sm:text-4xl">
-              Dua sisi, satu kemenangan
-            </h2>
-            <p className="mt-4 text-neutral-600">
-              UMKM dan kreator yang sudah merasakan langsung kolaborasi lewat
-              Kolab.id.
-            </p>
-          </div>
-
-          <div className="mt-12 grid gap-5 md:grid-cols-3">
-            {[
-              {
-                quote:
-                  "Sebulan pakai Kolab.id, followers toko naik 2× lipat. Dulu muterin iklan di grup, sekarang orderan ngalir terus.",
-                name: "Budi Santoso",
-                role: "Warung Kopi Senja, Bandung",
-                color: "from-warning-500 to-warning-700",
-                tag: "UMKM · Kuliner",
-              },
-              {
-                quote:
-                  "Aku nggak perlu repot cari klien. Brief jelas, harga transparan, pembayaran aman. Fokus aku tinggal bikin konten.",
-                name: "Rara Nadia",
-                role: "Kreator Kuliner, @raranadia",
-                color: "from-error-500 to-warning-500",
-                tag: "Kreator · Kuliner",
-              },
-              {
-                quote:
-                  "Batik kami pernah ditolak beberapa platform karena budget. Di sini ketemu kreator fashion lokal yang pas. Engagement naik drastis.",
-                name: "Siti Rahma",
-                role: "Batik Nusantara, Yogyakarta",
-                color: "from-primary-500 to-primary-700",
-                tag: "UMKM · Fashion",
-              },
-            ].map((t) => (
-              <figure
-                key={t.name}
-                className="relative flex flex-col rounded-3xl border border-neutral-200 bg-neutral-50/50 p-7 transition-all hover:-translate-y-1 hover:bg-white hover:shadow-sm hover:shadow-primary-500/10"
-              >
-                <Quote className="h-7 w-7 text-primary-300" />
-                <blockquote className="mt-3 flex-1 text-sm leading-relaxed text-neutral-600">
-                  “{t.quote}”
-                </blockquote>
-                <figcaption className="mt-6 flex items-center gap-3 border-t border-neutral-100 pt-5">
-                  <Avatar name={t.name} color={t.color} size="sm" />
-                  <div className="min-w-0">
-                    <p className="truncate font-head text-sm font-bold text-neutral-900">
-                      {t.name}
-                    </p>
-                    <p className="truncate text-xs text-neutral-500">
-                      {t.role}
-                    </p>
-                  </div>
-                  <span className="ml-auto inline-flex shrink-0 items-center gap-1 rounded-full bg-warning-50 px-2.5 py-1 text-[11px] font-bold text-warning-700 ring-1 ring-inset ring-warning-100">
-                    <Star className="h-3 w-3 fill-warning-500 text-warning-500" />
-                    5.0
-                  </span>
-                </figcaption>
-              </figure>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ================================================================
           FAQ
       ================================================================ */}
-      <section className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:py-24">
+      <section id="faq" className="mx-auto max-w-3xl scroll-mt-16 px-4 py-16 sm:px-6 lg:py-24">
         <div className="text-center">
           <p className="text-sm font-bold uppercase tracking-widest text-primary-600">
             FAQ
