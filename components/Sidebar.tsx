@@ -56,6 +56,23 @@ const NAV: Record<SidebarRole, NavItem[]> = {
   ],
 };
 
+/** Pengelompokan nav per role (label seksi + urutan href). */
+const GROUPS: Record<SidebarRole, { title: string; hrefs: string[] }[]> = {
+  umkm: [
+    { title: "Menu", hrefs: ["/dashboard", "/influencers"] },
+    { title: "Aktivitas", hrefs: ["/dashboard/riwayat", "/dashboard/chat"] },
+  ],
+  influencer: [
+    { title: "Menu", hrefs: ["/dashboard/influencer"] },
+    { title: "Toko", hrefs: ["/dashboard/influencer/paket"] },
+    {
+      title: "Aktivitas",
+      hrefs: ["/dashboard/influencer/riwayat", "/dashboard/influencer/chat"],
+    },
+  ],
+  admin: [{ title: "Menu", hrefs: ["/admin", "/admin/kasus"] }],
+};
+
 /** Item aktif = prefix terpanjang yang cocok (biar /dashboard/riwayat/[id]
  *  tetap menyorot "Riwayat Kolaborasi", bukan "Dashboard"). */
 function activeHref(pathname: string, items: NavItem[]): string | null {
@@ -95,39 +112,59 @@ export function Sidebar({
         <Logo />
       </Link>
 
-      <nav className="mt-8 space-y-1" aria-label="Navigasi utama">
-        {items.map((item) => {
-          const isActive = active === item.href;
-          const count = item.badge === "chat" ? unreadChatCount : openCasesCount;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={onNavigate}
-              aria-current={isActive ? "page" : undefined}
-              className={`flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors duration-150 ease-standard ${
-                isActive
-                  ? "bg-primary-50 text-primary-700"
-                  : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900"
-              }`}
-            >
-              <item.icon className="h-4.5 w-4.5 shrink-0" />
-              <span className="min-w-0 flex-1 truncate">{item.label}</span>
-              {count > 0 && (
-                <span className="grid h-5 min-w-5 place-items-center rounded-full bg-error-500 px-1 text-[10px] font-bold text-neutral-0">
-                  {count > 9 ? "9+" : count}
-                </span>
-              )}
-            </Link>
-          );
-        })}
+      <nav className="mt-8 space-y-6" aria-label="Navigasi utama">
+        {GROUPS[role].map((group) => (
+          <div key={group.title}>
+            <p className="mb-1 px-5 text-[11px] font-bold tracking-widest text-neutral-400 uppercase">
+              {group.title}
+            </p>
+            <div className="space-y-1">
+              {group.hrefs.map((href) => {
+                const item = items.find((i) => i.href === href);
+                if (!item) return null;
+                const isActive = active === item.href;
+                const count =
+                  item.badge === "chat" ? unreadChatCount : openCasesCount;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={onNavigate}
+                    aria-current={isActive ? "page" : undefined}
+                    className={`relative flex w-full items-center gap-3 rounded-lg px-2 py-2 text-[13px] transition-colors duration-150 ${
+                      isActive
+                        ? "bg-primary-100 font-bold text-primary-700"
+                        : "font-medium text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900"
+                    }`}
+                  >
+                    {isActive && (
+                      <span
+                        aria-hidden="true"
+                        className="absolute top-1/2 left-0 h-5 w-1 -translate-y-1/2 rounded-full bg-primary-700"
+                      />
+                    )}
+                    <item.icon className="h-4.5 w-4.5 shrink-0" />
+                    <span className="min-w-0 flex-1 truncate text-left">
+                      {item.label}
+                    </span>
+                    {count > 0 && (
+                      <span className="grid h-5 min-w-5 place-items-center rounded-full bg-error-500 px-1 text-[10px] font-bold text-neutral-0">
+                        {count > 9 ? "9+" : count}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
       <div className="mt-auto pt-6">
         <form action={logout}>
           <button
             type="submit"
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-neutral-900 px-4 py-2.5 text-sm font-semibold text-neutral-0 transition-colors hover:bg-error-600"
+            className="flex w-full items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-semibold text-neutral-600 transition-colors hover:bg-neutral-50 hover:text-neutral-900"
           >
             <LogOut className="h-4 w-4" />
             Logout
