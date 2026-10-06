@@ -45,6 +45,8 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   const hideSiteChrome =
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/admin") ||
+    // THROWAWAY PROTOTYPE: hide chrome on /prototype-* preview routes.
+    pathname.startsWith("/prototype-") ||
     isUmkmBrowsingCreators;
 
   return (
