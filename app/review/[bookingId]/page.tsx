@@ -1,3 +1,5 @@
+import { getInfluencerById, getUmkmById } from "@/lib/data/catalog";
+import { getBookingById, getReviewForBookingRole } from "@/lib/data/bookings";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -8,13 +10,8 @@ import {
   Star,
   Store,
 } from "lucide-react";
-import { getSession } from "@/lib/auth";
-import {
-  getBookingById,
-  getInfluencerById,
-  getReviewForBookingRole,
-  getUmkmById,
-} from "@/lib/data";
+import { requireParty } from "@/lib/auth";
+
 import { formatDate, formatRupiah } from "@/lib/format";
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
@@ -32,35 +29,35 @@ export const metadata: Metadata = {
 export default async function ReviewPage(
   props: PageProps<"/review/[bookingId]">,
 ) {
-  const session = await getSession();
-  if (!session) redirect("/login");
+  const account = await requireParty();
 
   const { bookingId } = await props.params;
   const searchParams = await props.searchParams;
   const gagal = searchParams.gagal === "1";
 
-  const isUmkm = session.role === "umkm";
-  const booking = getBookingById(Number(bookingId));
-  if (!booking || booking.status !== "DONE") {
-    redirect(isUmkm ? "/dashboard" : "/dashboard/influencer");
+  const isUmkm = account.role === "umkm";
+  const dashHref = isUmkm ? "/dashboard" : "/dashboard/influencer";
+
+  const booking = await getBookingById(Number(bookingId));
+  if (!booking || booking.status !== "COMPLETED") {
+    redirect(dashHref);
   }
 
   // Hanya pihak yang terlibat dalam booking yang boleh menilai
-  if (isUmkm && booking.umkmId !== session.subjectId) redirect("/dashboard");
-  if (!isUmkm && booking.influencerId !== session.subjectId) {
-    redirect("/dashboard/influencer");
-  }
+  const isParty = isUmkm
+    ? booking.umkmId === account.umkmId
+    : booking.influencerId === account.influencerId;
+  if (!isParty) redirect(dashHref);
 
   const counterpart = isUmkm
-    ? getInfluencerById(booking.influencerId)
-    : getUmkmById(booking.umkmId);
+    ? await getInfluencerById(booking.influencerId)
+    : await getUmkmById(booking.umkmId);
   if (!counterpart) {
-    redirect(isUmkm ? "/dashboard" : "/dashboard/influencer");
+    redirect(dashHref);
   }
 
   // Satu kolaborasi dinilai sekali per sisi — kalau sudah, tampilkan hasilnya
-  const existing = getReviewForBookingRole(booking.id, session.role);
-  const dashHref = isUmkm ? "/dashboard" : "/dashboard/influencer";
+  const existing = await getReviewForBookingRole(booking.id, account.role);
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
@@ -85,11 +82,7 @@ export default async function ReviewPage(
         <div className="flex flex-wrap items-center gap-4">
           <Avatar
             name={counterpart.name}
-            color={
-              "color" in counterpart
-                ? counterpart.color
-                : "from-neutral-500 to-neutral-700"
-            }
+            category={counterpart.categorySlug}
             size="lg"
           />
           <div className="min-w-0 flex-1">
@@ -102,7 +95,7 @@ export default async function ReviewPage(
             <p className="flex items-center gap-1 truncate text-sm text-neutral-500">
               {"handle" in counterpart ? (
                 <>
-                  {counterpart.handle} · {counterpart.niche} · {counterpart.city}
+                  {counterpart.handle} · {counterpart.category} · {counterpart.city}
                 </>
               ) : (
                 <>
@@ -155,7 +148,9 @@ export default async function ReviewPage(
           </div>
           <div className="mt-4 flex items-center gap-3 rounded-2xl bg-neutral-0 p-4">
             <StarRating rating={existing.rating} size="h-6 w-6" />
-            <p className="text-sm text-neutral-600">“{existing.comment}”</p>
+            {existing.comment && (
+              <p className="text-sm text-neutral-600">“{existing.comment}”</p>
+            )}
           </div>
           <Button href={dashHref} variant="secondary" className="mt-5">
             <Star className="h-4 w-4" /> Kembali ke Dashboard

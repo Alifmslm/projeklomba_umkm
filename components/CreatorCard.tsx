@@ -29,7 +29,7 @@ export function CreatorCard({
       className={`group flex flex-col rounded-2xl border border-neutral-200 bg-neutral-0 p-6 shadow-xs transition-all duration-150 ease-standard hover:-translate-y-1 hover:border-primary-200 hover:shadow-sm ${className}`}
     >
       <div className="flex items-start gap-3">
-        <Avatar name={inf.name} color={inf.color} size="lg" />
+        <Avatar name={inf.name} category={inf.categorySlug} size="lg" />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
             <h3 className="truncate font-head text-base font-bold tracking-[-0.02em] text-neutral-900 group-hover:text-primary-700">
@@ -42,7 +42,7 @@ export function CreatorCard({
           <p className="truncate text-sm text-neutral-500">{inf.handle}</p>
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
             <span className="rounded-full bg-primary-50 px-2 py-0.5 text-[11px] font-semibold text-primary-700">
-              {inf.niche}
+              {inf.category}
             </span>
             <span className="inline-flex items-center gap-0.5 text-[11px] text-neutral-500">
               <MapPin className="h-3 w-3" /> {inf.city}
@@ -62,8 +62,16 @@ export function CreatorCard({
         </div>
         <div>
           <p className="flex items-center justify-center gap-1 text-sm font-bold text-neutral-900">
-            <Star className="h-3.5 w-3.5 fill-warning-500 text-warning-500" />
-            {inf.rating.toFixed(1)}
+            {inf.reviewCount > 0 ? (
+              <>
+                <Star className="h-3.5 w-3.5 fill-warning-500 text-warning-500" />
+                {inf.rating.toFixed(1)}
+              </>
+            ) : (
+              // A creator with no reviews has no rating to show. Rendering the
+              // column default (0.0) would read as "reviewed, and bad".
+              <span className="text-neutral-400">—</span>
+            )}
           </p>
           <p className="text-[10px] uppercase tracking-wide text-neutral-500">
             Rating
@@ -83,7 +91,7 @@ export function CreatorCard({
       </p>
 
       <div className="mt-4 flex items-end justify-between gap-3 border-t border-neutral-100 pt-4">
-        <PriceDisplay price={inf.basePrice} size="sm" />
+        <PriceDisplay price={inf.startingPrice} size="sm" />
         <div className="flex shrink-0 gap-2">
           <Button href={`/influencers/${inf.id}`} variant="secondary" size="sm">
             Lihat Profil

@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
-import type { UmkmNotification } from "@/lib/data";
+import type { UmkmNotification } from "@/lib/types";
 import { DashboardHeader } from "./DashboardHeader";
 import { Sidebar, type SidebarRole } from "./Sidebar";
 

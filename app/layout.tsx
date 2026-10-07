@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { getSession } from "@/lib/auth";
+import { getUserContext } from "@/lib/auth";
 
 const jakarta = localFont({
   src: [
@@ -39,9 +39,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   // - "/influencers*" when logged in as UMKM (renders inside UmkmShell instead)
   // All other routes — including the landing page "/" — keep Navbar + Footer.
   const pathname = (await headers()).get("x-pathname") ?? "";
-  const session = await getSession();
+  const account = await getUserContext();
   const isUmkmBrowsingCreators =
-    session?.role === "umkm" && pathname.startsWith("/influencers");
+    account?.role === "umkm" && pathname.startsWith("/influencers");
   const hideSiteChrome =
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/admin") ||

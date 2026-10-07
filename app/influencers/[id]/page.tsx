@@ -1,3 +1,4 @@
+import { getInfluencerById, getPackagesByInfluencer, getRelatedInfluencers, getReviewsForInfluencer } from "@/lib/data/catalog";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -12,12 +13,7 @@ import {
   Radar,
   TrendingUp,
 } from "lucide-react";
-import {
-  getInfluencerById,
-  getPackagesByInfluencer,
-  getRelatedInfluencers,
-  getReviewsForInfluencer,
-} from "@/lib/data";
+
 import { formatFollowers, formatRupiah } from "@/lib/format";
 import {
   estimateReach,
@@ -29,7 +25,7 @@ import { Avatar } from "@/components/Avatar";
 import { CreatorCard } from "@/components/CreatorCard";
 import { PackageCard } from "@/components/PackageCard";
 import { ReviewCard } from "@/components/ReviewCard";
-import { getSession } from "@/lib/auth";
+import { getUserContext } from "@/lib/auth";
 import { UmkmShell } from "@/components/UmkmShell";
 
 export const dynamic = "force-dynamic";
@@ -38,9 +34,9 @@ export async function generateMetadata(
   props: PageProps<"/influencers/[id]">,
 ): Promise<Metadata> {
   const { id } = await props.params;
-  const inf = getInfluencerById(Number(id));
+  const inf = await getInfluencerById(Number(id));
   return {
-    title: inf ? `${inf.name} · ${inf.niche}` : "Kreator",
+    title: inf ? `${inf.name} · ${inf.category}` : "Kreator",
     description: inf?.bio,
   };
 }
@@ -49,16 +45,16 @@ export default async function InfluencerDetailPage(
   props: PageProps<"/influencers/[id]">,
 ) {
   const { id } = await props.params;
-  const inf = getInfluencerById(Number(id));
+  const inf = await getInfluencerById(Number(id));
   if (!inf) notFound();
 
-  const session = await getSession();
-  const isUmkm = session?.role === "umkm";
+const account = await getUserContext();
+  const isUmkm = account?.role === "umkm";
 
-  const packages = getPackagesByInfluencer(inf.id);
+  const packages = await getPackagesByInfluencer(inf.id);
   const reachEstimate = estimateReach(inf.followers, inf.engagementRate);
-  const related = getRelatedInfluencers(inf.niche, inf.id);
-  const reviews = getReviewsForInfluencer(inf.id, 4);
+  const related = await getRelatedInfluencers(inf.categoryId, inf.id);
+  const reviews = await getReviewsForInfluencer(inf.id);
 
   // Same content renders in both contexts — UMKM sees it inside the
   // dashboard sidebar + header (UmkmShell provides the page container),
@@ -78,7 +74,7 @@ export default async function InfluencerDetailPage(
         <div>
           <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-xs sm:p-8">
             <div className="flex flex-wrap items-start gap-5">
-              <Avatar name={inf.name} color={inf.color} size="xl" />
+              <Avatar name={inf.name} category={inf.categorySlug} size="xl" />
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <h1 className="font-head text-2xl font-extrabold tracking-[-0.02em] text-neutral-900 sm:text-3xl">
@@ -95,7 +91,7 @@ export default async function InfluencerDetailPage(
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <span className="rounded-full bg-primary-50 px-3 py-1 text-xs font-bold text-primary-700">
-                    {inf.niche}
+                    {inf.category}
                   </span>
                   <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-3 py-1 text-xs font-semibold text-neutral-600">
                     <MapPin className="h-3 w-3" /> {inf.city}
@@ -113,8 +109,14 @@ export default async function InfluencerDetailPage(
                 },
                 {
                   icon: Star,
-                  value: `${inf.rating.toFixed(1)} / 5`,
-                  label: `${inf.reviewCount} ulasan`,
+                  // A creator with no reviews has no rating: its column default
+                  // (0.0) must not read as a real score.
+                  value:
+                    inf.reviewCount > 0 ? `${inf.rating.toFixed(1)} / 5` : "—",
+                  label:
+                    inf.reviewCount > 0
+                      ? `${inf.reviewCount} ulasan`
+                      : "Belum ada ulasan",
                 },
                 {
                   icon: MessageSquare,
@@ -154,8 +156,12 @@ export default async function InfluencerDetailPage(
               </h3>
               <ul className="mt-3 grid gap-2 sm:grid-cols-2">
                 {[
-                  `Audien ${inf.niche.toLowerCase()} yang aktif & engagement tinggi`,
-                  `Rating ${inf.rating.toFixed(1)} dari ${inf.reviewCount} kolaborasi terdahulu`,
+                  `Audien ${inf.category.toLowerCase()} yang aktif & engagement tinggi`,
+                  ...(inf.reviewCount > 0
+                    ? [
+                        `Rating ${inf.rating.toFixed(1)} dari ${inf.reviewCount} kolaborasi terdahulu`,
+                      ]
+                    : []),
                   `Audiens mayoritas di ${inf.city} & sekitarnya`,
                   "Komunikasi cepat dan jadwal tayang jelas",
                 ].map((d) => (
@@ -230,31 +236,44 @@ export default async function InfluencerDetailPage(
       </div>
 
       {/* Ulasan dari UMKM partner */}
-      {reviews.length > 0 && (
-        <section className="mt-16">
-          <div className="flex items-end justify-between gap-4">
-            <div>
-              <h2 className="font-head text-xl font-extrabold tracking-[-0.02em] text-neutral-900 sm:text-2xl">
-                Ulasan dari UMKM partner
-              </h2>
-              <p className="mt-1 text-sm text-neutral-500">
-                Rating dua arah — begini pengalaman UMKM yang sudah
-                berkolaborasi dengan {inf.name.split(" ")[0]}.
-              </p>
-            </div>
+      <section className="mt-16">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <h2 className="font-head text-xl font-extrabold tracking-[-0.02em] text-neutral-900 sm:text-2xl">
+              Ulasan dari UMKM partner
+            </h2>
+            <p className="mt-1 text-sm text-neutral-500">
+              Rating dua arah — begini pengalaman UMKM yang sudah
+              berkolaborasi dengan {inf.name.split(" ")[0]}.
+            </p>
+          </div>
+          {inf.reviewCount > 0 ? (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-warning-50 px-3 py-1.5 text-sm font-bold text-warning-700 ring-1 ring-inset ring-warning-100">
               <Star className="h-4 w-4 fill-warning-500 text-warning-500" />
               {inf.rating.toFixed(1)} · {inf.reviewCount} ulasan
             </span>
-          </div>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-neutral-100 px-3 py-1.5 text-sm font-bold text-neutral-500">
+              Belum ada ulasan
+            </span>
+          )}
+        </div>
 
+        {reviews.length > 0 ? (
           <div className="mt-6 grid gap-5 md:grid-cols-2">
             {reviews.map((r) => (
               <ReviewCard key={r.id} review={r} />
             ))}
           </div>
-        </section>
-      )}
+        ) : (
+          // An empty section reads as a broken page. Say plainly that there are
+          // no reviews yet instead.
+          <p className="mt-6 rounded-2xl border border-dashed border-neutral-200 bg-neutral-50 p-6 text-sm text-neutral-500">
+            {inf.name.split(" ")[0]} belum menerima ulasan. Ulasan muncul
+            setelah kolaborasi pertama selesai dan dinilai oleh UMKM.
+          </p>
+        )}
+      </section>
 
       {/* Kreator serupa */}
       {related.length > 0 && (
@@ -262,14 +281,14 @@ export default async function InfluencerDetailPage(
           <div className="flex items-end justify-between gap-4">
             <div>
               <h2 className="font-head text-xl font-extrabold tracking-[-0.02em] text-neutral-900 sm:text-2xl">
-                Kreator {inf.niche} lainnya
+                Kreator {inf.category} lainnya
               </h2>
               <p className="mt-1 text-sm text-neutral-500">
                 Masih ragu? Bandingkan dulu sebelum kolaborasi.
               </p>
             </div>
             <Link
-              href={`/influencers?niche=${encodeURIComponent(inf.niche)}`}
+              href={`/influencers?niche=${encodeURIComponent(inf.category)}`}
               className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-primary-600 hover:text-primary-800"
             >
               Lihat semua <ArrowRight className="h-4 w-4" />

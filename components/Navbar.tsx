@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { LogOut, LayoutDashboard } from "lucide-react";
-import { getSession } from "@/lib/auth";
-import { logout } from "@/app/actions";
+import { DASHBOARD_BY_ROLE, getUserContext } from "@/lib/auth";
+import { signOut } from "@/app/actions";
 import { Logo } from "./Logo";
 import { NavbarLinks } from "./NavbarLinks";
 
@@ -13,9 +13,7 @@ const links = [
 ];
 
 export async function Navbar() {
-  const session = await getSession();
-  const dashHref =
-    session?.role === "umkm" ? "/dashboard" : "/dashboard/influencer";
+  const account = await getUserContext();
 
   return (
     <header className="sticky top-0 z-50 border-b border-neutral-200/70 bg-neutral-0/85 backdrop-blur-md">
@@ -31,16 +29,16 @@ export async function Navbar() {
         <NavbarLinks links={links} />
 
         <div className="hidden items-center gap-3 md:flex">
-          {session ? (
+          {account ? (
             <>
               <Link
-                href={dashHref}
+                href={DASHBOARD_BY_ROLE[account.role]}
                 className="inline-flex items-center gap-1.5 rounded-xl border border-neutral-200 bg-neutral-0 px-3.5 py-2 text-sm font-semibold text-neutral-700 transition-colors hover:border-primary-200 hover:text-primary-700"
               >
                 <LayoutDashboard className="h-4 w-4" />
-                {session.name}
+                {account.fullName}
               </Link>
-              <form action={logout}>
+              <form action={signOut}>
                 <button
                   type="submit"
                   className="inline-flex items-center gap-1.5 rounded-xl bg-neutral-900 px-3.5 py-2 text-sm font-semibold text-neutral-0 transition-colors hover:bg-error-600"

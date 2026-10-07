@@ -11,7 +11,7 @@ export function ReviewCard({ review }: { review: ReviewWithAuthor }) {
   return (
     <div className="rounded-2xl border border-neutral-200 bg-neutral-0 p-6 shadow-xs">
       <div className="flex items-start gap-3">
-        <Avatar name={review.authorName} color={review.authorColor} size="sm" />
+        <Avatar name={review.authorName} category={review.authorCategorySlug} size="sm" />
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-bold text-neutral-900">
             {review.authorName}
@@ -22,9 +22,11 @@ export function ReviewCard({ review }: { review: ReviewWithAuthor }) {
         </div>
         <StarRating rating={review.rating} />
       </div>
-      <p className="mt-3 text-sm leading-relaxed text-neutral-700">
-        {review.comment}
-      </p>
+      {review.comment && (
+        <p className="mt-3 text-sm leading-relaxed text-neutral-700">
+          {review.comment}
+        </p>
+      )}
       <p className="mt-3 text-xs text-neutral-400">
         untuk paket{" "}
         <span className="font-semibold text-neutral-600">

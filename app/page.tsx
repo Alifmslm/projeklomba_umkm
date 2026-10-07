@@ -1,3 +1,4 @@
+import { getCategories, getFeaturedInfluencers, getLandingStats } from "@/lib/data/catalog";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -19,11 +20,7 @@ import {
   Wallet,
   Zap,
 } from "lucide-react";
-import {
-  getFeaturedInfluencers,
-  getLandingStats,
-  getNiches,
-} from "@/lib/data";
+
 import { formatFollowers, formatRupiah } from "@/lib/format";
 import { CreatorCard } from "@/components/CreatorCard";
 import { Avatar } from "@/components/Avatar";
@@ -48,10 +45,10 @@ const marqueeItems = [
   "Otomotif",
 ];
 
-export default function LandingPage() {
-  const stats = getLandingStats();
-  const featured = getFeaturedInfluencers(4);
-  const niches = getNiches();
+export default async function LandingPage() {
+  const stats = await getLandingStats();
+  const featured = await getFeaturedInfluencers(4);
+  const categories = await getCategories();
 
   return (
     <div>
@@ -149,7 +146,7 @@ export default function LandingPage() {
                     href={`/influencers/${inf.id}`}
                     className="flex items-center gap-3 rounded-2xl border border-neutral-100 bg-white p-3 transition-all hover:border-primary-200 hover:shadow-md"
                   >
-                    <Avatar name={inf.name} color={inf.color} size="sm" />
+                    <Avatar name={inf.name} category={inf.categorySlug} size="sm" />
                     <div className="min-w-0 flex-1">
                       <p className="flex items-center gap-1 truncate font-head text-sm font-bold text-neutral-900">
                         {inf.name}
@@ -158,11 +155,11 @@ export default function LandingPage() {
                         )}
                       </p>
                       <p className="truncate text-[11px] text-neutral-500">
-                        {inf.niche} · {formatFollowers(inf.followers)} followers
+                        {inf.category} · {formatFollowers(inf.followers)} followers
                       </p>
                     </div>
                     <p className="shrink-0 text-sm font-extrabold text-primary-700">
-                      {formatRupiah(inf.basePrice)}
+                      {formatRupiah(inf.startingPrice)}
                     </p>
                   </Link>
                 ))}
@@ -259,7 +256,7 @@ export default function LandingPage() {
       </section>
 
       {/* ================================================================
-          MASALAH → SOLUSI
+MASALAH → SOLUSI
       ================================================================ */}
       <section className="border-y border-neutral-200 bg-white">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
@@ -492,15 +489,15 @@ export default function LandingPage() {
           </div>
         </Reveal>
 
-        <Reveal>
+<Reveal>
           <div className="mt-8 flex flex-wrap gap-3">
-          {niches.map((n) => (
+          {categories.map((n) => (
             <Link
-              key={n}
-              href={`/influencers?niche=${encodeURIComponent(n)}`}
+              key={n.slug}
+              href={`/influencers?niche=${encodeURIComponent(n.slug)}`}
               className="rounded-full border border-neutral-200 bg-white px-4 py-2 text-sm font-semibold text-neutral-700 shadow-xs transition-all hover:-translate-y-0.5 hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 hover:shadow-sm"
             >
-              {n}
+              {n.name}
             </Link>
           ))}
           </div>
@@ -516,6 +513,7 @@ export default function LandingPage() {
       </section>
 
       {/* ================================================================
+
           FAQ
       ================================================================ */}
       <section id="faq" className="mx-auto max-w-3xl scroll-mt-16 px-4 py-16 sm:px-6 lg:py-24">
@@ -612,7 +610,7 @@ export default function LandingPage() {
                 <MapPin className="h-3.5 w-3.5" /> 6+ kota di Indonesia
               </span>
               <span className="flex items-center gap-1.5">
-                <Handshake className="h-3.5 w-3.5" /> {stats.doneCount}+
+                <Handshake className="h-3.5 w-3.5" /> {stats.completedCount}+
                 kolaborasi selesai
               </span>
             </div>

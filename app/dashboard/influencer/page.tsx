@@ -1,3 +1,5 @@
+import { getInfluencerById } from "@/lib/data/catalog";
+import { getBookingsByInfluencer, getReviewForBookingRole } from "@/lib/data/bookings";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -12,14 +14,10 @@ import {
   Store,
   Wallet,
 } from "lucide-react";
-import { getSession } from "@/lib/auth";
-import {
-  getBookingsByInfluencer,
-  getInfluencerById,
-  getReviewForBookingRole,
-} from "@/lib/data";
+import { requireInfluencer } from "@/lib/auth";
+
 import { formatDate, formatRupiah } from "@/lib/format";
-import { setBookingStatus } from "@/app/actions";
+import { acceptBooking, declineBooking } from "@/app/actions";
 import { KpiCard } from "@/components/KpiCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Avatar } from "@/components/Avatar";
@@ -36,44 +34,51 @@ export const metadata: Metadata = {
 
 const STATUS_PRIORITY: Record<string, number> = {
   PENDING: 0,
-  APPROVED: 1,
-  DONE: 2,
-  REJECTED: 3,
+  ACCEPTED: 1,
+  FUNDED: 2,
+  SUBMITTED: 3,
+  REVISION: 4,
+  COMPLETED: 5,
+  REJECTED: 6,
+  CANCELLED: 7,
 };
 
 export default async function InfluencerDashboardPage(
   props: PageProps<"/dashboard/influencer">,
 ) {
-  const session = await getSession();
-  if (!session) redirect("/login");
-  if (session.role !== "influencer") redirect("/dashboard");
+  const account = await requireInfluencer();
 
-  const profile = getInfluencerById(session.subjectId);
+  const profile = await getInfluencerById(account.influencerId);
   if (!profile) redirect("/");
 
-  const bookings = getBookingsByInfluencer(session.subjectId);
+  const bookings = await getBookingsByInfluencer(account.influencerId);
 
   const searchParams = await props.searchParams;
   const reviewSent = searchParams.review === "1";
 
-  // Ulasan yang sudah kreator ini berikan (untuk booking DONE)
+  // Ulasan yang sudah kreator ini berikan (untuk booking selesai)
   const myReviews = new Map<number, number>();
   for (const b of bookings) {
-    if (b.status === "DONE") {
-      const review = getReviewForBookingRole(b.id, "influencer");
+    if (b.status === "COMPLETED") {
+      const review = await getReviewForBookingRole(b.id, "influencer");
       if (review) myReviews.set(b.id, review.rating);
     }
   }
 
   // KPI kreator per ARCHITECTURE §4.4 (5 kartu)
   const permintaanMasuk = bookings.filter((b) => b.status === "PENDING").length;
-  const berjalan = bookings.filter((b) => b.status === "APPROVED").length;
-  const selesai = bookings.filter((b) => b.status === "DONE").length;
+  const berjalan = bookings.filter((b) =>
+    ["ACCEPTED", "FUNDED", "SUBMITTED", "REVISION"].includes(b.status),
+  ).length;
+  const selesai = bookings.filter((b) => b.status === "COMPLETED").length;
+  // Held and earned amounts are derived from the payment records, not from the
+  // status: a cancelled booking keeps its held payment, and that money is still
+  // held rather than gone (escrow-payments).
   const danaDitahan = bookings
-    .filter((b) => b.status === "APPROVED")
+    .filter((b) => b.paymentStatus === "HELD")
     .reduce((sum, b) => sum + b.amount, 0);
   const pemasukan = bookings
-    .filter((b) => b.status === "DONE")
+    .filter((b) => b.paymentStatus === "RELEASED")
     .reduce((sum, b) => sum + b.amount, 0);
 
   // Ringkasan riwayat: butuh aksi (Menunggu) paling atas, lalu sisanya
@@ -99,7 +104,7 @@ export default async function InfluencerDashboardPage(
 
       {/* Profil singkat */}
       <div className="mt-6 flex flex-wrap items-center gap-4 rounded-2xl border border-neutral-200 bg-neutral-0 p-4 shadow-xs sm:p-5">
-        <Avatar name={profile.name} color={profile.color} size="md" />
+        <Avatar name={profile.name} category={profile.categorySlug} size="md" />
         <div className="min-w-0 flex-1">
           <p className="flex items-center gap-1.5 text-sm font-bold text-neutral-900">
             {profile.name}
@@ -108,7 +113,7 @@ export default async function InfluencerDashboardPage(
             )}
           </p>
           <p className="truncate text-xs text-neutral-500">
-            {profile.handle} · {profile.niche} · {profile.city}
+            {profile.handle} · {profile.category} · {profile.city}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-semibold text-neutral-600">
@@ -118,7 +123,7 @@ export default async function InfluencerDashboardPage(
           </span>
           <span className="inline-flex items-center gap-1">
             <Store className="h-3.5 w-3.5 text-primary-600" /> mulai{" "}
-            {formatRupiah(profile.basePrice)}/video
+            {formatRupiah(profile.startingPrice)}/video
           </span>
         </div>
         <Link
@@ -237,7 +242,7 @@ export default async function InfluencerDashboardPage(
                   <div className="flex min-w-0 gap-4">
                     <Avatar
                       name={b.umkmName}
-                      color="from-neutral-500 to-neutral-700"
+                      category={b.umkmCategorySlug}
                       size="md"
                     />
                     <div className="min-w-0">
@@ -251,7 +256,7 @@ export default async function InfluencerDashboardPage(
                         <span className="font-semibold text-neutral-700">
                           Brief:
                         </span>{" "}
-                        {b.message || "—"}
+                        {b.brief || "—"}
                       </p>
                       <p className="mt-2 text-xs text-neutral-400">
                         Paket{" "}
@@ -274,13 +279,17 @@ export default async function InfluencerDashboardPage(
                     {b.status === "PENDING" && (
                       <>
                         <div className="flex gap-2">
-                          <form action={setBookingStatus}>
+                          <form action={declineBooking}>
                             <input
                               type="hidden"
                               name="bookingId"
                               value={b.id}
                             />
-                            <input type="hidden" name="status" value="REJECTED" />
+                            <input
+                              type="hidden"
+                              name="next"
+                              value="/dashboard/influencer"
+                            />
                             <button
                               type="submit"
                               className="rounded-xl border border-error-200 bg-error-50 px-4 py-2 text-xs font-bold text-error-700 transition-colors hover:bg-error-100"
@@ -288,13 +297,17 @@ export default async function InfluencerDashboardPage(
                               Tolak
                             </button>
                           </form>
-                          <form action={setBookingStatus}>
+                          <form action={acceptBooking}>
                             <input
                               type="hidden"
                               name="bookingId"
                               value={b.id}
                             />
-                            <input type="hidden" name="status" value="APPROVED" />
+                            <input
+                              type="hidden"
+                              name="next"
+                              value="/dashboard/influencer"
+                            />
                             <Button type="submit" size="sm">
                               Setujui
                             </Button>
@@ -309,15 +322,13 @@ export default async function InfluencerDashboardPage(
                       </>
                     )}
 
-                    {b.status === "APPROVED" && (
+                    {(b.status === "FUNDED" ||
+                      b.status === "SUBMITTED" ||
+                      b.status === "REVISION") && (
                       <>
-                        <form action={setBookingStatus}>
-                          <input type="hidden" name="bookingId" value={b.id} />
-                          <input type="hidden" name="status" value="DONE" />
-                          <Button type="submit" size="sm" variant="secondary">
-                            Tandai Konten Sudah Tayang
-                          </Button>
-                        </form>
+                        <p className="text-xs text-neutral-400">
+                          Kolaborasi sedang berjalan.
+                        </p>
                         <Link
                           href="/dashboard/influencer/chat"
                           className="inline-flex items-center gap-1 text-xs font-semibold text-neutral-500 hover:text-primary-700"
@@ -327,7 +338,7 @@ export default async function InfluencerDashboardPage(
                       </>
                     )}
 
-                    {b.status === "DONE" && (
+                    {b.status === "COMPLETED" && (
                       <>
                         {myReviews.get(b.id) ? (
                           <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-50 px-2.5 py-1 text-[11px] font-semibold text-primary-700 ring-1 ring-inset ring-primary-200">

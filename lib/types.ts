@@ -1,20 +1,61 @@
+/**
+ * Domain types.
+ *
+ * These shapes are what Postgres returns after `catalog-and-booking`, not what the
+ * SQLite prototype happened to hold. Three differences are load-bearing and are
+ * worth naming, because they look like regressions if you meet them without the
+ * story:
+ *
+ *  - `niche` is gone. SQLite stored it as free text; Postgres has
+ *    `influencers.category_id` referencing `categories`. So a creator carries both
+ *    `categorySlug` (for palette and filters) and `category` (the display name),
+ *    read from the embedded category row. There is no free-text niche to fall back
+ *    to, which is the point: two spellings of one category used to be two
+ *    different filters.
+ *  - `basePrice` is now `startingPrice`, the database column's real name. It is
+ *    maintained by the `maintain_starting_price` trigger, and **0 means the creator
+ *    has no active package** rather than being free. Anything that treats it as a
+ *    number has to exclude it explicitly.
+ *  - `BookingStatus` carries all nine states of the `booking_status` enum, not the
+ *    four the prototype invented. The prototype's `APPROVED`/`DONE` do not exist in
+ *    the database, so a status literal that is not in this union cannot be stored.
+ */
+
+/** A catalog category. `slug` is the stable key; `name` is what the UI shows. */
+export type Category = {
+  id: number;
+  slug: string;
+  name: string;
+};
+
 export type Influencer = {
   id: number;
   name: string;
+  /** Stored with the leading `@`, as `@raranadia`. */
   handle: string;
-  niche: string;
+  categoryId: number;
+  categorySlug: string;
+  /** Category display name, from the embedded `categories` row. */
+  category: string;
   city: string;
   followers: number;
   /** rasio interaksi untuk estimasi jangkauan (0.03 = 3%) */
   engagementRate: number;
-  /** harga terendah per video (Rp) */
-  basePrice: number;
+  /**
+   * Cheapest active package, in rupiah. **0 means there is no active package.**
+   * Kept in sync by the `maintain_starting_price` trigger, never written by hand.
+   */
+  startingPrice: number;
   rating: number;
   reviewCount: number;
   verified: boolean;
   bio: string;
-  /** gradient classes untuk avatar, contoh: "from-violet-500 to-fuchsia-500" */
-  color: string;
+  /**
+   * Every package, active or not. The embed is unfiltered so the package
+   * management screen can show a deactivated package; public pages filter on
+   * `isActive` themselves rather than receiving a pre-filtered list.
+   */
+  packages: Package[];
 };
 
 export type Package = {
@@ -25,51 +66,186 @@ export type Package = {
   /** ringkasan deliverable, contoh: "1 video 30-60 detik" */
   summary: string;
   includes: string[];
+  revisionQuota: number;
+  estimatedDays: number;
+  isActive: boolean;
 };
 
 export type Umkm = {
   id: number;
   name: string;
   owner: string;
+  categoryId: number;
+  categorySlug: string;
   category: string;
   city: string;
 };
 
-export type BookingStatus = "PENDING" | "APPROVED" | "DONE" | "REJECTED";
+/** Every state of the `booking_status` enum. Nothing outside this union is storable. */
+export type BookingStatus =
+  | "PENDING"
+  | "ACCEPTED"
+  | "FUNDED"
+  | "SUBMITTED"
+  | "REVISION"
+  | "DISPUTED"
+  | "COMPLETED"
+  | "REJECTED"
+  | "CANCELLED";
+
+/** States a booking can still be acted on in, for the transition map. */
+export const TERMINAL_STATUSES: readonly BookingStatus[] = [
+  "COMPLETED",
+  "REJECTED",
+  "CANCELLED",
+];
+
+/** Who made a change. `system` is reserved for a future clock; nothing writes it here. */
+export type ActorRole = "umkm" | "influencer" | "admin" | "system";
+
+/** The two sides of a booking. `disputes.opened_by` is narrower than `actor_role`. */
+export type PartyRole = "umkm" | "influencer";
+
+/** Every state of the `payment_status` enum. */
+export type PaymentStatus =
+  | "UNPAID"
+  | "HELD"
+  | "RELEASED"
+  | "REFUNDED"
+  | "SPLIT";
+
+/**
+ * Accepted brief length, in characters. Shared so the form's hint, the client
+ * attribute, and the Server Action's refusal all quote the same bounds instead
+ * of three numbers that drift.
+ */
+export const BRIEF_MIN = 20;
+export const BRIEF_MAX = 500;
 
 export type Booking = {
   id: number;
   code: string;
-  influencerId: number;
   umkmId: number;
+  influencerId: number;
+  packageId: number;
+  /**
+   * Snapshotted from the package at submission time. Deliberately a copy rather
+   * than a join: a creator renaming or repricing a package must not rewrite what a
+   * signed booking agreed to.
+   */
   packageName: string;
+  /** Snapshotted alongside the name: what the package included at submission. */
+  packageIncludes: string[];
   amount: number;
-  message: string;
+  revisionQuota: number;
+  estimatedDays: number;
+  /** The request text. Named `brief` in the database. */
+  brief: string;
   status: BookingStatus;
+  revisionsUsed: number;
+  reviewExtended: boolean;
+  createdAt: string;
+  /**
+   * Milestone timestamps, one per move that records one. Null until that move
+   * happens. `paymentDueAt`, `deadlineAt`, and `reviewDueAt` are displayed only:
+   * nothing in the app reads them to change a state (booking-lifecycle decision 9).
+   */
+  briefLockedAt: string | null;
+  acceptedAt: string | null;
+  paymentDueAt: string | null;
+  fundedAt: string | null;
+  deadlineAt: string | null;
+  submittedAt: string | null;
+  reviewDueAt: string | null;
+  completedAt: string | null;
+  cancelledAt: string | null;
+  /**
+   * The payment's state, carried on the list row so a dashboard can derive
+   * earnings and held amounts from payment records rather than guessing from
+   * `status` (escrow-payments). Null for a request that was never accepted, so
+   * no payment record exists. The full record is on `BookingDetail`.
+   */
+  paymentStatus: PaymentStatus | null;
+};
+
+/** Exactly one payment record per booking; `payments.booking_id` is unique. */
+export type Payment = {
+  id: number;
+  bookingId: number;
+  totalAmount: number;
+  /** Zero until release, and the full total at release. */
+  creatorAmount: number;
+  umkmRefundAmount: number;
+  status: PaymentStatus;
+  heldAt: string | null;
+  settledAt: string | null;
+};
+
+/** One version the creator submitted. `contentUrl` is required; the note is not. */
+export type Delivery = {
+  id: number;
+  bookingId: number;
+  round: number;
+  contentUrl: string;
+  note: string | null;
+  submittedAt: string;
+};
+
+/**
+ * One revision request, naming one delivered round and one section.
+ * `deliveryId` is unique, so each round can be asked about once.
+ */
+export type RevisionRequest = {
+  id: number;
+  bookingId: number;
+  deliveryId: number;
+  round: number;
+  section: string;
+  note: string;
+  /** A request outside the brief is recorded but does not consume quota. */
+  withinBrief: boolean;
   createdAt: string;
 };
 
-/** Booking yang sudah di-join dengan data influencer (untuk dashboard UMKM) */
+/** One entry on a booking's timeline. Written only by the transition function. */
+export type BookingEvent = {
+  id: number;
+  fromStatus: BookingStatus | null;
+  toStatus: BookingStatus;
+  actorRole: ActorRole;
+  actorId: string | null;
+  note: string | null;
+  createdAt: string;
+};
+
+/**
+ * Everything the detail page reads for one booking: the row, its payment, the
+ * delivered rounds, the revision requests, and the timeline. Assembled from
+ * party-scoped reads, so a caller who is not a party gets null instead.
+ */
+export type BookingDetail = Booking & {
+  payment: Payment | null;
+  deliveries: Delivery[];
+  revisions: RevisionRequest[];
+  events: BookingEvent[];
+};
+
+/** Booking joined with the creator, for the UMKM dashboard. */
 export type BookingWithInfluencer = Booking & {
   influencerName: string;
   influencerHandle: string;
-  influencerColor: string;
+  influencerCategorySlug: string;
   influencerCity: string;
-  niche: string;
+  influencerCategory: string;
 };
 
-/** Booking yang sudah di-join dengan data UMKM (untuk dashboard influencer) */
+/** Booking joined with the business, for the creator dashboard. */
 export type BookingWithUmkm = Booking & {
   umkmName: string;
   umkmOwner: string;
   umkmCity: string;
   umkmCategory: string;
-};
-
-export type Session = {
-  role: "umkm" | "influencer";
-  subjectId: number;
-  name: string;
+  umkmCategorySlug: string;
 };
 
 /* ------------------------------------------------------------------ */
@@ -79,28 +255,35 @@ export type Session = {
 export type Review = {
   id: number;
   bookingId: number;
-  /** siapa yang menulis ulasan */
-  reviewerRole: "umkm" | "influencer";
-  reviewerId: number;
-  /** siapa yang dinilai */
-  revieweeType: "influencer" | "umkm";
-  revieweeId: number;
   rating: number;
   comment: string;
   createdAt: string;
+  reviewerRole: "umkm" | "influencer";
+  /** Exactly one of these two is set - `reviews_reviewee_chk` guarantees it. */
+  revieweeUmkmId: number | null;
+  revieweeInfluencerId: number | null;
 };
 
-/** Review yang sudah digabung dengan data penulis untuk ditampilkan */
+/**
+ * Review with its author attached.
+ *
+ * The author's category slug is carried rather than a colour class, so the palette
+ * is looked up from `lib/data/palette.ts` at render time. See that file for why a
+ * class string cannot come from the database.
+ */
 export type ReviewWithAuthor = Review & {
   authorName: string;
-  authorColor: string;
   authorHandle: string;
+  authorCategorySlug: string;
   packageName: string;
 };
 
-/** Statistik harga per niche untuk halaman Wawasan Harga */
+/** Statistik harga per kategori untuk halaman Wawasan Harga */
 export type PriceStat = {
-  niche: string;
+  categoryId: number;
+  categorySlug: string;
+  category: string;
+  /** Creators in this category that actually have an active package. */
   count: number;
   minPrice: number;
   avgPrice: number;
@@ -112,3 +295,21 @@ export type RecommendedInfluencer = Influencer & {
   score: number;
   matchReasons: string[];
 };
+
+/* ------------------------------------------------------------------ */
+/* Notifikasi UMKM (diturunkan dari status booking, tanpa tabel baru)  */
+/* ------------------------------------------------------------------ */
+
+export type UmkmNotificationKind =
+  | "pending"
+  | "accepted"
+  | "rejected"
+  | "review";
+
+export interface UmkmNotification {
+  key: string;
+  kind: UmkmNotificationKind;
+  title: string;
+  desc: string;
+  href: string;
+}

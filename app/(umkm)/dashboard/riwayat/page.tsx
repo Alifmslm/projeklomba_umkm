@@ -1,7 +1,6 @@
+import { getBookingsByUmkm, getReviewForBookingRole } from "@/lib/data/bookings";
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
-import { getSession } from "@/lib/auth";
-import { getBookingsByUmkm, getReviewForBookingRole } from "@/lib/data";
+import { requireUmkm } from "@/lib/auth";
 import { RiwayatClient } from "./riwayat-client";
 
 export const dynamic = "force-dynamic";
@@ -14,21 +13,19 @@ export const metadata: Metadata = {
 export default async function RiwayatPage(
   props: PageProps<"/dashboard/riwayat">,
 ) {
-  const session = await getSession();
-  if (!session) redirect("/login");
-  if (session.role !== "umkm") redirect("/dashboard/influencer");
+  const account = await requireUmkm();
 
   const searchParams = await props.searchParams;
   const filter =
     typeof searchParams.filter === "string" ? searchParams.filter : "semua";
 
-  const bookings = getBookingsByUmkm(session.subjectId);
+  const bookings = await getBookingsByUmkm(account.umkmId);
 
   // Ulasan yang sudah diberikan UMKM ini (untuk kolom aksi "Beri Ulasan")
   const reviewRatings: Record<number, number> = {};
   for (const b of bookings) {
-    if (b.status === "DONE") {
-      const review = getReviewForBookingRole(b.id, "umkm");
+    if (b.status === "COMPLETED") {
+      const review = await getReviewForBookingRole(b.id, "umkm");
       if (review) reviewRatings[b.id] = review.rating;
     }
   }

@@ -1,7 +1,7 @@
+import { getBookingsByInfluencer, getReviewForBookingRole } from "@/lib/data/bookings";
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
-import { getSession } from "@/lib/auth";
-import { getBookingsByInfluencer, getReviewForBookingRole } from "@/lib/data";
+import { requireInfluencer } from "@/lib/auth";
+
 import { InfluencerShell } from "@/components/InfluencerShell";
 import { RiwayatClient } from "./riwayat-client";
 
@@ -15,22 +15,20 @@ export const metadata: Metadata = {
 export default async function InfluencerRiwayatPage(
   props: PageProps<"/dashboard/influencer/riwayat">,
 ) {
-  const session = await getSession();
-  if (!session) redirect("/login");
-  if (session.role !== "influencer") redirect("/dashboard");
+  const account = await requireInfluencer();
 
   const searchParams = await props.searchParams;
   // Default `menunggu` agar permintaan baru tidak pernah terlewat (§4.6)
   const filter =
     typeof searchParams.filter === "string" ? searchParams.filter : "menunggu";
 
-  const bookings = getBookingsByInfluencer(session.subjectId);
+  const bookings = await getBookingsByInfluencer(account.influencerId);
 
   // Ulasan yang sudah diberikan kreator ini (untuk kolom aksi)
   const reviewRatings: Record<number, number> = {};
   for (const b of bookings) {
-    if (b.status === "DONE") {
-      const review = getReviewForBookingRole(b.id, "influencer");
+    if (b.status === "COMPLETED") {
+      const review = await getReviewForBookingRole(b.id, "influencer");
       if (review) reviewRatings[b.id] = review.rating;
     }
   }

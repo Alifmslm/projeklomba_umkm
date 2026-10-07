@@ -543,7 +543,7 @@ The table below summarizes the delta; the column-level SQL lives in DEVELOPMENT.
 | `profiles` | Add role `admin`. The current check requires exactly one of `umkm_id` / `influencer_id`, so it needs a branch where both are null for `admin` |
 | `packages` | Add `revision_quota` (1 to 5) and `estimated_days` |
 | `bookings` | Replace the status values with the nine in section 2.1. Add copies of `revision_quota`, `estimated_days`, and `revisions_used`. Add timestamps: `brief_locked_at`, `funded_at`, `submitted_at`, `review_due_at`. Add simulated payment fields: `payment_status` (`UNPAID`, `HELD`, `RELEASED`, `REFUNDED`, `SPLIT`), `creator_amount`, `umkm_refund_amount` |
-| `deliveries` (new) | Each content version the creator submits: booking, round number, content link or note, submitted time |
+| `deliveries` (new) | Each content version the creator submits: booking, round number, a required content link, an optional note, submitted time. A round without a link is refused |
 | `revision_requests` (new) | Each revision request: booking, round number, section, note, created time |
 | `resolution_offers` (new) | Extra revision, discount, or cancellation offers: booking, offered by, type, value, status (`PENDING`, `ACCEPTED`, `DECLINED`, `EXPIRED`), expiry |
 | `conversations`, `messages` (new) | One conversation per booking; messages with sender, text, time, read state. RLS limits access to the two parties, plus the admin for undecided disputes |

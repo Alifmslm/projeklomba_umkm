@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Menu } from "lucide-react";
-import type { UmkmNotification } from "@/lib/data";
+import type { UmkmNotification } from "@/lib/types";
 import { Logo } from "./Logo";
 import { NotificationBell } from "./NotificationBell";
 import { ProfileMenu } from "./ProfileMenu";

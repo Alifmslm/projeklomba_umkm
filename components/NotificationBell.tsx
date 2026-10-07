@@ -9,11 +9,11 @@ import {
   Star,
   XCircle,
 } from "lucide-react";
-import type { UmkmNotification } from "@/lib/data";
+import type { UmkmNotification } from "@/lib/types";
 
 const KIND_STYLE = {
   pending: { icon: Clock, className: "bg-warning-50 text-warning-600" },
-  approved: { icon: CheckCircle2, className: "bg-success-50 text-success-600" },
+  accepted: { icon: CheckCircle2, className: "bg-success-50 text-success-600" },
   rejected: { icon: XCircle, className: "bg-error-50 text-error-600" },
   review: { icon: Star, className: "bg-primary-50 text-primary-600" },
 } as const;

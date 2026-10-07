@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/Button";
 import { OfferCard, type OfferStatus } from "@/components/booking";
+import type { BookingStatus } from "@/lib/types";
 
 /**
  * Aksi per status (ARCHITECTURE §3.5) + tawaran kreator. Client wrapper
@@ -22,14 +23,14 @@ export function DetailActions({
   bookingId,
   hasReviewed,
 }: {
-  status: "PENDING" | "APPROVED" | "DONE" | "REJECTED";
+  status: BookingStatus;
   bookingId: number;
   hasReviewed: boolean;
 }) {
   const [paid, setPaid] = useState(false);
   const [offer, setOffer] = useState<OfferStatus>("PENDING");
 
-  const showOffer = status === "PENDING" || status === "APPROVED";
+  const showOffer = status === "PENDING" || status === "ACCEPTED";
 
   return (
     <div className="space-y-5">
@@ -46,7 +47,7 @@ export function DetailActions({
       )}
 
       {/* Action rows per §3.5 */}
-      {status === "APPROVED" && (
+      {status === "ACCEPTED" && (
         <div className="flex flex-wrap items-center gap-2">
           {paid ? (
             <span className="inline-flex items-center gap-1.5 rounded-xl bg-success-50 px-3.5 py-2 text-sm font-semibold text-success-700 ring-1 ring-inset ring-success-200">
@@ -78,7 +79,7 @@ export function DetailActions({
         </div>
       )}
 
-      {status === "DONE" && (
+      {status === "COMPLETED" && (
         <div className="flex flex-wrap items-center gap-2">
           {hasReviewed ? (
             <Button variant="secondary" href={`/review/${bookingId}`}>

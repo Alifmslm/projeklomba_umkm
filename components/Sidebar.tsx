@@ -11,7 +11,7 @@ import {
   Scale,
   Search,
 } from "lucide-react";
-import { logout } from "@/app/actions";
+import { signOut } from "@/app/actions";
 import { Logo } from "./Logo";
 
 export type SidebarRole = "umkm" | "influencer" | "admin";
@@ -165,8 +165,8 @@ export function Sidebar({
         ))}
       </nav>
 
-      <div className="pt-6">
-        <form action={logout}>
+<div className="mt-auto pt-6">
+        <form action={signOut}>
           <button
             type="submit"
             className="flex w-full items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-semibold text-neutral-600 transition-colors hover:bg-neutral-50 hover:text-neutral-900"

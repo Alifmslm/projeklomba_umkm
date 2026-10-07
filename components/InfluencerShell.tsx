@@ -1,24 +1,20 @@
-import { redirect } from "next/navigation";
+import { getBookingsByInfluencer, getReviewForBookingRole } from "@/lib/data/bookings";
 import type { ReactNode } from "react";
-import { getSession } from "@/lib/auth";
-import {
-  getBookingsByInfluencer,
-  getReviewForBookingRole,
-  type UmkmNotification,
-} from "@/lib/data";
+import { requireInfluencer } from "@/lib/auth";
+
 import { formatRupiah } from "@/lib/format";
-import type { BookingWithUmkm } from "@/lib/types";
+import type { BookingWithUmkm, UmkmNotification } from "@/lib/types";
 import { DashboardShell } from "./DashboardShell";
 
 /**
  * Notifikasi kreator — diturunkan langsung dari status booking (mirip
- * getUmkmNotifications, tapi page-local di shell agar lib/data.ts tetap
+ * getUmkmNotifications, tapi page-local di shell agar data layer booking tetap
  * utuh). Kinds memakai 4 mapping ikon yang sama dengan bell UMKM.
  */
-function getInfluencerNotifications(
+async function getInfluencerNotifications(
   bookings: BookingWithUmkm[],
   limit = 5,
-): { items: UmkmNotification[]; attentionCount: number } {
+): Promise<{ items: UmkmNotification[]; attentionCount: number }> {
   const items: UmkmNotification[] = [];
   let attentionCount = 0;
 
@@ -35,18 +31,18 @@ function getInfluencerNotifications(
           href: "/dashboard/influencer/riwayat",
         });
       }
-    } else if (b.status === "APPROVED") {
+    } else if (b.status === "ACCEPTED") {
       if (items.length < limit) {
         items.push({
           key: `paid-${b.id}`,
-          kind: "approved",
+          kind: "accepted",
           title: `${b.umkmName} sudah membayar. Dana ditahan, silakan mulai`,
           desc,
           href: "/dashboard/influencer/riwayat",
         });
       }
-    } else if (b.status === "DONE") {
-      if (!getReviewForBookingRole(b.id, "influencer")) {
+    } else if (b.status === "COMPLETED") {
+      if (!(await getReviewForBookingRole(b.id, "influencer"))) {
         attentionCount++;
         if (items.length < limit) {
           items.push({
@@ -70,24 +66,22 @@ function getInfluencerNotifications(
  * ke profil publik kreator — belum ada halaman pengaturan kreator di MVP.
  */
 export async function InfluencerShell({ children }: { children: ReactNode }) {
-  const session = await getSession();
-  if (!session) redirect("/login");
-  if (session.role !== "influencer") redirect("/dashboard");
+  const account = await requireInfluencer();
 
-  const bookings = getBookingsByInfluencer(session.subjectId);
-  const { items, attentionCount } = getInfluencerNotifications(bookings);
+  const bookings = await getBookingsByInfluencer(account.influencerId);
+  const { items, attentionCount } = await getInfluencerNotifications(bookings);
   const unreadChatCount = bookings.filter(
-    (b) => b.status === "PENDING" || b.status === "APPROVED",
+    (b) => b.status === "PENDING" || b.status === "ACCEPTED",
   ).length;
 
   return (
     <DashboardShell
       role="influencer"
-      userName={session.name}
+      userName={account.fullName}
       notifications={items}
       attentionCount={attentionCount}
       unreadChatCount={unreadChatCount}
-      profileHref={`/influencers/${session.subjectId}`}
+      profileHref={`/influencers/${account.influencerId}`}
       notificationHref="/dashboard/influencer/riwayat"
     >
       {children}

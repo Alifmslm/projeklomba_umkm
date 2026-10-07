@@ -22,9 +22,9 @@ export type BookingRow = BookingWithInfluencer;
 const FILTER_MAP: Record<string, StatusKey[]> = {
   semua: [],
   menunggu: ["PENDING"],
-  berjalan: ["APPROVED"],
+  berjalan: ["ACCEPTED", "FUNDED", "SUBMITTED", "REVISION"],
   sengketa: ["DISPUTED"],
-  selesai: ["DONE"],
+  selesai: ["COMPLETED"],
   batal: ["REJECTED", "CANCELLED"],
 };
 
@@ -76,7 +76,7 @@ export function RiwayatClient({
       header: "Kreator",
       cell: (b) => (
         <div className="flex min-w-0 items-center gap-3">
-          <Avatar name={b.influencerName} color={b.influencerColor} size="sm" />
+          <Avatar name={b.influencerName} category={b.influencerCategorySlug} size="sm" />
           <div className="min-w-0">
             <Link
               href={`/influencers/${b.influencerId}`}
@@ -85,7 +85,7 @@ export function RiwayatClient({
               {b.influencerName}
             </Link>
             <p className="truncate text-xs text-neutral-500">
-              {b.influencerHandle} · {b.niche}
+              {b.influencerHandle} · {b.influencerCategory}
             </p>
           </div>
         </div>
@@ -125,7 +125,7 @@ export function RiwayatClient({
       cellClassName: "text-right",
       cell: (b) => (
         <div className="flex items-center justify-end gap-2">
-          {b.status === "DONE" && reviewRatings[b.id] === undefined && (
+          {b.status === "COMPLETED" && reviewRatings[b.id] === undefined && (
             <Link
               href={`/review/${b.id}`}
               className="inline-flex items-center gap-1 text-xs font-semibold text-primary-700 hover:text-primary-800"
