@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/Button";
+import { OfferComposer } from "./OfferComposer";
 import {
   extendReviewWindow,
   openDispute,
@@ -29,6 +30,7 @@ import type { BookingDetail } from "@/lib/types";
  */
 export function UmkmActions({ booking }: { booking: BookingDetail }) {
   const next = `/dashboard/riwayat/${booking.id}`;
+  const composer = <OfferComposer booking={booking} role="umkm" />;
   const quotaUsedUp = booking.revisionsUsed >= booking.revisionQuota;
   const lastDelivery = booking.deliveries.at(-1) ?? null;
 
@@ -64,6 +66,7 @@ export function UmkmActions({ booking }: { booking: BookingDetail }) {
             Kreator menerima. Bayar untuk menahan dana di platform dan memulai
             pengerjaan.
           </p>
+          {composer}
           <div className="flex flex-wrap gap-2">
             <form action={payBooking}>
               <input type="hidden" name="bookingId" value={booking.id} />
@@ -84,6 +87,7 @@ export function UmkmActions({ booking }: { booking: BookingDetail }) {
             <CheckCircle2 className="h-4 w-4 text-success-500" />
             Dana sudah ditahan. Menunggu kreator mengirim konten.
           </p>
+          {composer}
           {cancelForm}
         </div>
       );
@@ -94,6 +98,7 @@ export function UmkmActions({ booking }: { booking: BookingDetail }) {
           <p className="text-sm text-neutral-600">
             Konten terbaru menunggu keputusanmu.
           </p>
+          {composer}
           <div className="flex flex-wrap gap-2">
             <form action={approveBooking}>
               <input type="hidden" name="bookingId" value={booking.id} />
@@ -218,6 +223,7 @@ export function UmkmActions({ booking }: { booking: BookingDetail }) {
             Revisi diminta. Menunggu kreator mengirim ulang.
           </p>
           {cancelForm}
+          {composer}
         </div>
       );
 

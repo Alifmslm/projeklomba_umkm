@@ -166,6 +166,14 @@ export type Booking = {
    * no payment record exists. The full record is on `BookingDetail`.
    */
   paymentStatus: PaymentStatus | null;
+  /**
+   * The amounts from that same payment stub. `paymentCreatorAmount` is the full
+   * total once `RELEASED`, the negotiated creator share when `SPLIT`, and zero
+   * before settlement; `paymentUmkmRefundAmount` is the refunded share when
+   * `SPLIT`/`REFUNDED`. Both are zero when there is no payment row.
+   */
+  paymentCreatorAmount: number;
+  paymentUmkmRefundAmount: number;
 };
 
 /** Exactly one payment record per booking; `payments.booking_id` is unique. */
@@ -179,6 +187,32 @@ export type Payment = {
   status: PaymentStatus;
   heldAt: string | null;
   settledAt: string | null;
+};
+
+/** The three settlement steps of the ladder an offer can carry (ARCHITECTURE §2.6). */
+export type OfferType = "EXTRA_REVISION" | "DISCOUNT" | "CANCELLATION";
+
+/** Every state of the `offer_status` enum. `EXPIRED` is also derived lazily on read. */
+export type OfferStatus = "PENDING" | "ACCEPTED" | "DECLINED" | "EXPIRED";
+
+/**
+ * One settlement offer on a booking. At most one is `PENDING` at a time (partial
+ * unique index); `value` is type-dependent: a count for `EXTRA_REVISION`, the
+ * creator's accepted amount for `DISCOUNT`, the refund for `CANCELLATION`.
+ */
+export type Offer = {
+  id: number;
+  bookingId: number;
+  offeredBy: PartyRole;
+  type: OfferType;
+  value: number;
+  fee: number;
+  note: string | null;
+  status: OfferStatus;
+  expiresAt: string;
+  respondedAt: string | null;
+  escalatedAt: string | null;
+  createdAt: string;
 };
 
 /** One version the creator submitted. `contentUrl` is required; the note is not. */
@@ -228,6 +262,8 @@ export type BookingDetail = Booking & {
   deliveries: Delivery[];
   revisions: RevisionRequest[];
   events: BookingEvent[];
+  /** Every offer on this booking, newest first. At most one is `PENDING`. */
+  offers: Offer[];
 };
 
 /** Booking joined with the creator, for the UMKM dashboard. */

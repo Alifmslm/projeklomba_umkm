@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/Button";
+import { OfferComposer } from "./OfferComposer";
 import {
   acceptBooking,
   declineBooking,
@@ -25,6 +26,8 @@ import type { BookingDetail } from "@/lib/types";
  */
 export function CreatorActions({ booking }: { booking: BookingDetail }) {
   const next = `/dashboard/influencer/riwayat/${booking.id}`;
+
+  const composer = <OfferComposer booking={booking} role="influencer" />;
 
   const cancelForm = (
     <form action={cancelBooking}>
@@ -115,6 +118,7 @@ export function CreatorActions({ booking }: { booking: BookingDetail }) {
             Sudah diterima. Menunggu UMKM menahan dana sebelum mulai bekerja.
           </p>
           {cancelForm}
+          {composer}
         </div>
       );
 
@@ -126,6 +130,7 @@ export function CreatorActions({ booking }: { booking: BookingDetail }) {
           </p>
           {deliveryForm}
           {cancelForm}
+          {composer}
         </div>
       );
 
@@ -138,6 +143,7 @@ export function CreatorActions({ booking }: { booking: BookingDetail }) {
           </p>
           {deliveryForm}
           {cancelForm}
+          {composer}
         </div>
       );
 
@@ -149,6 +155,7 @@ export function CreatorActions({ booking }: { booking: BookingDetail }) {
             Konten terkirim dan menunggu keputusan UMKM.
           </p>
           {cancelForm}
+          {composer}
         </div>
       );
 

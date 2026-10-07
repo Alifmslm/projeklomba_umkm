@@ -468,12 +468,14 @@ a name with **no `NEXT_PUBLIC_` prefix**. That prefix is what makes Next inline 
 value into the browser bundle; dropping it from this one variable is deliberate,
 not a naming inconsistency, so do not "fix" it by adding the prefix.
 
-**Six tables are deliberately policy-less:** `conversations`, `messages`,
-`disputes`, `dispute_infos`, `resolution_offers`, `notifications`. They belong to
-capabilities that are out of scope for now. RLS is enabled with no policy, so they
-return an empty result rather than an error. In particular **a dispute can be
-opened but not read back** — it is recorded as awaiting a decision. Each gains its
-policy when its capability lands; do not add one early.
+**Five tables are deliberately policy-less:** `conversations`, `messages`,
+`disputes`, `dispute_infos`, `notifications`. They belong to capabilities that are
+out of scope for now. RLS is enabled with no policy, so they return an empty result
+rather than an error. In particular **a dispute can be opened but not read back** —
+it is recorded as awaiting a decision. Each gains its policy when its capability
+lands; do not add one early. `resolution_offers` left this list when offers landed:
+it now carries `resolution_offers_party_read`, a party-scoped `SELECT` policy that
+resolves the caller through the booking exactly like `bookings_party_read`.
 
 Write model: **all writes go through Server Actions using a service-role client**
 (server-only, bypasses RLS). Service role is only ever used on rows the caller
@@ -497,6 +499,47 @@ records the implied timestamp, moves the `payments` row, and appends the
 forced failure leaves both the booking and its child row unchanged.
 `extend_review_window` is the one separate function. Do not add a direct
 `update ... set status` anywhere: it will be refused, and that is the point.
+
+**Settlement offers are the other database-owned flow.**
+`supabase/migrations/20261007130000_resolution_offers.sql` adds `create_offer` and
+`respond_to_offer`, the only writers of a `resolution_offers` row and the only path
+that moves a held payment to `SPLIT` or `REFUNDED`. `create_offer` locks the booking,
+refuses a finished booking or a non-party, enforces the per-type role/state table,
+checks the type-dependent `value`, clears any overdue sibling (`status = 'PENDING'`
+and `expires_at <= now()` become `EXPIRED`), and inserts a `PENDING` offer with
+`expires_at = now() + interval '48 hours'`. A partial unique index
+`resolution_offers_one_open on (booking_id) where status = 'PENDING'` makes a second
+open offer impossible. `fee` is always written as `0` (free extra revisions only,
+because the escrow total is immutable and there is no second charge path).
+
+`respond_to_offer` locks the offer, then: an overdue offer is recorded `EXPIRED` and
+returned without raising (raising would roll the record back); a decided offer, the
+offerer, and non-parties are refused; a decline records `DECLINED` with no other
+change. Accepting calls `apply_booking_transition` for the status move and settles
+`payments` in the same transaction — `EXTRA_REVISION` only raises `revision_quota`
+with no state change; `DISCOUNT` completes the booking then overwrites the release
+to `SPLIT` with `creator_amount = value`; `CANCELLATION` cancels the booking and
+writes `REFUNDED` (full) or `SPLIT` (partial), but only when the payment is `HELD`,
+so a mutual cancellation on an unpaid `ACCEPTED` request just ends with no money
+recorded as moved.
+
+The `value` column is type-dependent: `EXTRA_REVISION` is a count (`>= 1`);
+`DISCOUNT` is the creator's accepted amount (`0 < value < amount`); `CANCELLATION`
+is the amount refunded to the business (`0 < value <= amount`). Expiry is lazy —
+there is no scheduler, so an overdue `PENDING` offer is marked `EXPIRED` when a
+sibling is created or a decision is attempted, and reads show it expired in
+between. A direct cancellation still settles nothing; the cancellation *offer* is
+the negotiated, money-settling path.
+
+**Settlement states flow through the app as amounts, not just labels.** A booking
+list row carries a payment stub (`status`, `creator_amount`, `umkm_refund_amount`),
+so a dashboard derives money from the payment record rather than guessing from the
+booking status. The creator dashboard counts a `RELEASED` payment's full total and a
+`SPLIT` payment's `creator_amount` as earnings, keeps a `HELD` payment in "Dana
+Ditahan", and counts nothing for `REFUNDED` or `UNPAID`. The booking detail renders
+each state honestly: `SPLIT` shows both shares ("Dana dibagi"), `REFUNDED` shows the
+amount returned to the business. Only `resolution_offers` writes `SPLIT`/`REFUNDED`;
+`apply_booking_transition` writes `RELEASED`.
 
 The Server Action side is unchanged and mandatory: it **fetches the booking
 through the caller's own session first** (`getBookingById`, user-scoped client),

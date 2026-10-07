@@ -13,7 +13,8 @@
     "db:types": "supabase gen types typescript --local > utils/supabase/database.types.ts",
     "verify:auth": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-auth.ps1",
     "verify:rls": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-rls.ps1",
-    "verify": "npm run verify:auth && npm run verify:rls"
+    "verify:offers": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-offers.ps1",
+    "verify": "npm run verify:auth && npm run verify:rls && npm run verify:offers"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

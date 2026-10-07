@@ -15,7 +15,7 @@ import { getBookingById, hasReviewed } from "@/lib/data/bookings";
 import type { AuthFormState } from "@/lib/form-state";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { createClient } from "@/utils/supabase/server";
-import type { Booking, PartyRole } from "@/lib/types";
+import type { Booking, OfferType, PartyRole } from "@/lib/types";
 import { BRIEF_MAX, BRIEF_MIN } from "@/lib/types";
 
 /* ------------------------------------------------------------------ */
@@ -920,6 +920,91 @@ export async function openDispute(formData: FormData): Promise<void> {
   });
   revalidateBooking(booking.id, booking.influencerId);
   redirect(error ? `${back}?gagal=${reasonFor(error)}` : `${back}?ok=sengketa`);
+}
+
+/* ---------- kedua pihak: tawaran penyelesaian (langkah 3-5) ---------- */
+
+const OFFER_TYPES: readonly OfferType[] = [
+  "EXTRA_REVISION",
+  "DISCOUNT",
+  "CANCELLATION",
+];
+
+export async function createOffer(formData: FormData): Promise<void> {
+  const account = await requireParty();
+  const role = partyRole(account.role);
+  if (!role) redirect("/dashboard");
+
+  const booking = await fetchOwned(formData);
+  const isParty =
+    booking &&
+    (role === "umkm"
+      ? booking.umkmId === account.umkmId
+      : booking.influencerId === account.influencerId);
+  if (!isParty) redirect(`${DASHBOARD_BY_ROLE[account.role]}?gagal=akses`);
+
+  const base = role === "umkm" ? UMKM_RIWAYAT : CREATOR_RIWAYAT;
+  const back = backTo(formData, `${base}/${booking.id}`);
+
+  const type = String(formData.get("type") ?? "") as OfferType;
+  if (!OFFER_TYPES.includes(type)) redirect(`${back}?gagal=tawaran`);
+
+  // The per-type bounds (count >= 1, amounts in (0, amount]) live in the database
+  // function; this only rejects a non-positive integer before the round trip.
+  const value = Number(formData.get("value"));
+  if (!Number.isInteger(value) || value < 1) redirect(`${back}?gagal=nilai`);
+
+  const note = String(formData.get("note") ?? "").trim().slice(0, 300);
+
+  const { error } = await createAdminClient().rpc("create_offer", {
+    p_booking_id: booking.id,
+    p_actor_role: role,
+    p_type: type,
+    p_value: value,
+    p_note: note || undefined,
+  });
+  revalidateBooking(booking.id, booking.influencerId);
+  redirect(error ? `${back}?gagal=${reasonFor(error)}` : `${back}?ok=tawaran`);
+}
+
+export async function respondToOffer(formData: FormData): Promise<void> {
+  const account = await requireParty();
+  const role = partyRole(account.role);
+  if (!role) redirect("/dashboard");
+
+  const booking = await fetchOwned(formData);
+  const isParty =
+    booking &&
+    (role === "umkm"
+      ? booking.umkmId === account.umkmId
+      : booking.influencerId === account.influencerId);
+  if (!isParty) redirect(`${DASHBOARD_BY_ROLE[account.role]}?gagal=akses`);
+
+  const base = role === "umkm" ? UMKM_RIWAYAT : CREATOR_RIWAYAT;
+  const back = backTo(formData, `${base}/${booking.id}`);
+
+  const offerId = Number(formData.get("offerId"));
+  if (!Number.isInteger(offerId) || offerId < 1) {
+    redirect(`${back}?gagal=tawaran`);
+  }
+  const accept = formData.get("accept") === "1";
+
+  const { data, error } = await createAdminClient().rpc("respond_to_offer", {
+    p_offer_id: offerId,
+    p_actor_role: role,
+    p_accept: accept,
+  });
+  revalidateBooking(booking.id, booking.influencerId);
+  if (error) redirect(`${back}?gagal=${reasonFor(error)}`);
+
+  // An overdue offer is returned as EXPIRED rather than raising, so its returned
+  // status is the refusal the page reports.
+  if ((data as { status?: string } | null)?.status === "EXPIRED") {
+    redirect(`${back}?gagal=kedaluwarsa`);
+  }
+  redirect(
+    `${back}?ok=${accept ? "tawaran-diterima" : "tawaran-ditolak"}`,
+  );
 }
 
 /* ------------------------------------------------------------------ */

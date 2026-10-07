@@ -18,6 +18,9 @@ const OK_TEXT: Record<string, string> = {
   diperpanjang: "Waktu review diperpanjang 2 hari.",
   batal: "Kolaborasi dibatalkan.",
   sengketa: "Sengketa dibuka dan menunggu keputusan.",
+  tawaran: "Tawaran penyelesaian terkirim. Menunggu keputusan pihak lain.",
+  "tawaran-diterima": "Tawaran diterima. Perubahan sudah diterapkan.",
+  "tawaran-ditolak": "Tawaran ditolak.",
 };
 
 const GAGAL_TEXT: Record<string, string> = {
@@ -33,6 +36,9 @@ const GAGAL_TEXT: Record<string, string> = {
   catatan: "Catatan revisi wajib diisi.",
   alasan: "Alasan sengketa wajib diisi.",
   perpanjang: "Waktu review sudah pernah diperpanjang.",
+  tawaran: "Tawaran tidak valid untuk status kolaborasi ini.",
+  nilai: "Nilai tawaran harus berupa angka positif.",
+  kedaluwarsa: "Tawaran sudah kedaluwarsa.",
   gagal: "Terjadi kesalahan. Coba lagi sebentar.",
 };
 

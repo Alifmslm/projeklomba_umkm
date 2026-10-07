@@ -1,5 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
 import { mapIncludes } from "@/lib/data/catalog";
+import { getOffersForBooking } from "@/lib/data/offers";
 import { formatRupiah } from "@/lib/format";
 import type {
   Booking,
@@ -54,7 +55,11 @@ type UmkmJoin = {
   categories: CategoryRow | CategoryRow[] | null;
 };
 
-type PaymentStub = { status: PaymentStatus };
+type PaymentStub = {
+  status: PaymentStatus;
+  creator_amount: number;
+  umkm_refund_amount: number;
+};
 
 type BookingRow = {
   id: number;
@@ -97,6 +102,7 @@ function categoryOf(embed: CategoryRow | CategoryRow[] | null | undefined) {
 }
 
 function mapBooking(row: BookingRow): Booking {
+  const payment = one(row.payments);
   return {
     id: row.id,
     code: row.code,
@@ -124,7 +130,9 @@ function mapBooking(row: BookingRow): Booking {
     cancelledAt: row.cancelled_at,
     // At most one payment row exists per booking, and the embed is a stub, so
     // `one` unwraps the array an embed of a "many" side would produce.
-    paymentStatus: one(row.payments)?.status ?? null,
+    paymentStatus: payment?.status ?? null,
+    paymentCreatorAmount: payment?.creator_amount ?? 0,
+    paymentUmkmRefundAmount: payment?.umkm_refund_amount ?? 0,
   };
 }
 
@@ -161,7 +169,7 @@ const CREATOR_JOIN = "influencers(*, categories(*))";
 const BUSINESS_JOIN = "umkms(*, categories(*))";
 // A stub of the payment row; at most one exists per booking. The list and
 // dashboard derive held/earned amounts from this rather than from `status`.
-const PAYMENT_STUB = "payments(status)";
+const PAYMENT_STUB = "payments(status, creator_amount, umkm_refund_amount)";
 
 /* ------------------------------------------------------------------ */
 /* Reads                                                                */
@@ -233,7 +241,7 @@ export async function getBookingById(id: number): Promise<Booking | null> {
   const { data, error } = await supabase
     .from("bookings")
     .select(
-      "*, influencers(*, categories(*)), umkms(*, categories(*)), payments(status)",
+      "*, influencers(*, categories(*)), umkms(*, categories(*)), payments(status, creator_amount, umkm_refund_amount)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -373,14 +381,15 @@ export async function getBookingDetail(
   const booking = await getBookingById(id);
   if (!booking) return null;
 
-  const [payment, deliveries, revisions, events] = await Promise.all([
+  const [payment, deliveries, revisions, events, offers] = await Promise.all([
     getPaymentForBooking(id),
     getDeliveries(id),
     getRevisionRequests(id),
     getBookingTimeline(id),
+    getOffersForBooking(id),
   ]);
 
-  return { ...booking, payment, deliveries, revisions, events };
+  return { ...booking, payment, deliveries, revisions, events, offers };
 }
 
 /* ------------------------------------------------------------------ */

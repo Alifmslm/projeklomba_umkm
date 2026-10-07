@@ -73,13 +73,17 @@ export default async function InfluencerDashboardPage(
   const selesai = bookings.filter((b) => b.status === "COMPLETED").length;
   // Held and earned amounts are derived from the payment records, not from the
   // status: a cancelled booking keeps its held payment, and that money is still
-  // held rather than gone (escrow-payments).
+  // held rather than gone (escrow-payments). A RELEASED payment earns its full
+  // total; a SPLIT payment only the negotiated creator share; a REFUNDED or
+  // UNPAID payment earns nothing.
   const danaDitahan = bookings
     .filter((b) => b.paymentStatus === "HELD")
     .reduce((sum, b) => sum + b.amount, 0);
-  const pemasukan = bookings
-    .filter((b) => b.paymentStatus === "RELEASED")
-    .reduce((sum, b) => sum + b.amount, 0);
+  const pemasukan = bookings.reduce((sum, b) => {
+    if (b.paymentStatus === "RELEASED") return sum + b.amount;
+    if (b.paymentStatus === "SPLIT") return sum + b.paymentCreatorAmount;
+    return sum;
+  }, 0);
 
   // Ringkasan riwayat: butuh aksi (Menunggu) paling atas, lalu sisanya
   const summary = [...bookings].sort(

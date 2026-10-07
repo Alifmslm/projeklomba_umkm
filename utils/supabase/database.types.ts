@@ -446,6 +446,27 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"create_offer":
+{ Args: { "p_actor_role": Database["public"]['Enums']["actor_role"],"p_booking_id": number,"p_note"?: string,"p_type": Database["public"]['Enums']["offer_type"],"p_value": number }; Returns: {
+              "booking_id": number,
+"created_at": string,
+"escalated_at": string | null,
+"expires_at": string,
+"fee": number,
+"id": number,
+"note": string | null,
+"offered_by": Database["public"]['Enums']["party_role"],
+"responded_at": string | null,
+"status": Database["public"]['Enums']["offer_status"],
+"type": Database["public"]['Enums']["offer_type"],
+"value": number
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "resolution_offers"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "extend_review_window":
 { Args: { "p_booking_id": number }; Returns: {
               "accepted_at": string | null,
@@ -542,6 +563,27 @@ isOneToOne: false
                           SetofOptions: {
         from: "*"
         to: "bookings"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"respond_to_offer":
+{ Args: { "p_accept": boolean,"p_actor_role": Database["public"]['Enums']["actor_role"],"p_offer_id": number }; Returns: {
+              "booking_id": number,
+"created_at": string,
+"escalated_at": string | null,
+"expires_at": string,
+"fee": number,
+"id": number,
+"note": string | null,
+"offered_by": Database["public"]['Enums']["party_role"],
+"responded_at": string | null,
+"status": Database["public"]['Enums']["offer_status"],
+"type": Database["public"]['Enums']["offer_type"],
+"value": number
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "resolution_offers"
         isOneToOne: true
         isSetofReturn: false
       } },

@@ -6,6 +6,7 @@ import {
   Clock,
   FileCheck2,
   Film,
+  Handshake,
   Lock,
   Package,
   Repeat2,
@@ -15,6 +16,7 @@ import {
 
 import { Avatar } from "@/components/Avatar";
 import {
+  OfferCard,
   RevisionCounter,
   SectionCard,
   Timeline,
@@ -76,6 +78,9 @@ export function BookingDetailView({
   children?: ReactNode;
 }) {
   const iAmBusiness = perspective === "umkm";
+  const offerNext = iAmBusiness
+    ? `/dashboard/riwayat/${booking.id}`
+    : `/dashboard/influencer/riwayat/${booking.id}`;
   const revisionByDelivery = new Map(
     booking.revisions.map((r) => [r.deliveryId, r]),
   );
@@ -191,6 +196,21 @@ export function BookingDetailView({
 
         <PaymentSummary booking={booking} />
       </SectionCard>
+
+      {booking.offers.length > 0 && (
+        <SectionCard title="Tawaran Penyelesaian" icon={Handshake}>
+          <div className="space-y-3">
+            {booking.offers.map((offer) => (
+              <OfferCard
+                key={offer.id}
+                offer={offer}
+                canRespond={offer.offeredBy !== perspective}
+                next={offerNext}
+              />
+            ))}
+          </div>
+        </SectionCard>
+      )}
 
       <SectionCard title="Konten Terkirim" icon={Film}>
         {booking.deliveries.length === 0 ? (
@@ -330,6 +350,35 @@ function PaymentLine({
       <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-neutral-800">
         <Banknote className="h-4 w-4 text-success-600" />
         {formatRupiah(payment.creatorAmount)} dirilis ke kreator
+        {payment.settledAt && (
+          <span className="text-xs text-neutral-500">
+            · {formatDateTime(payment.settledAt)}
+          </span>
+        )}
+      </p>
+    );
+  }
+
+  if (payment.status === "SPLIT") {
+    return (
+      <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-neutral-800">
+        <Banknote className="h-4 w-4 text-success-600" />
+        Dana dibagi — {formatRupiah(payment.creatorAmount)} ke kreator,{" "}
+        {formatRupiah(payment.umkmRefundAmount)} dikembalikan ke UMKM
+        {payment.settledAt && (
+          <span className="text-xs text-neutral-500">
+            · {formatDateTime(payment.settledAt)}
+          </span>
+        )}
+      </p>
+    );
+  }
+
+  if (payment.status === "REFUNDED") {
+    return (
+      <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-neutral-800">
+        <Banknote className="h-4 w-4 text-warning-600" />
+        {formatRupiah(payment.umkmRefundAmount)} dikembalikan ke UMKM
         {payment.settledAt && (
           <span className="text-xs text-neutral-500">
             · {formatDateTime(payment.settledAt)}

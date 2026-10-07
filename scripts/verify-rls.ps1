@@ -65,14 +65,14 @@ foreach ($t in @('categories', 'umkms', 'influencers', 'packages', 'reviews')) {
 
 Write-Output ""
 Write-Output "=== anonymous reads: everything scoped is closed ==="
-foreach ($t in @('bookings', 'payments', 'deliveries', 'booking_events', 'revision_requests', 'profiles')) {
+foreach ($t in @('bookings', 'payments', 'deliveries', 'booking_events', 'revision_requests', 'resolution_offers', 'profiles')) {
   $n = Count-Rows $t $null
   Check "anon gets nothing from $t" ($n -eq 0) "$n rows"
 }
 
 Write-Output ""
-Write-Output "=== anonymous reads: tables with no policy deny by default ==="
-foreach ($t in @('conversations', 'messages', 'notifications', 'disputes', 'dispute_infos', 'resolution_offers')) {
+Write-Output "=== anon reads: policy-less tables deny by default, and so do party reads ==="
+foreach ($t in @('conversations', 'messages', 'notifications', 'disputes', 'dispute_infos')) {
   $n = Count-Rows $t $null
   Check "anon gets nothing from $t" ($n -eq 0) "$n rows"
 }
