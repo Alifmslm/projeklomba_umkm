@@ -1058,20 +1058,23 @@ Layout constants: `--container-lg` (1024px) → `max-w-[1024px]`,
 ### Typography
 
 Type roles resolve to `--type-*-{size,weight,tracking}` tokens (§4).
-In Tailwind v4 use the paren shorthand, e.g. for body copy:
+Prefer the helper classes in `app/globals.css` (one per role) and add
+color + family utilities alongside:
 
-  `text-(--type-body-size) font-(--type-body-weight) tracking-(--type-body-tracking)`
-
-  Role          Example classes
+  Role          Helper + color/family example
   ------------- ------------------------------------------------------------------
-  Display       `text-(--type-display-size) font-(--type-display-weight)`
-  H1 / H2       `text-(--type-h1-size) font-(--type-h1-weight)`
-  Body / Lead   `text-(--type-body-size)` (+ `font-head` for headings)
-  Page title    `text-(--type-page-title-size) font-(--type-page-title-weight)`
-  Metric        `text-(--type-metric-size) font-(--type-metric-weight)`
-  Table / head  `text-(--type-table-size)` / `text-(--type-table-head-size) uppercase`
-  Caption       `text-(--type-caption-size)`
-  Badge         `text-(--type-badge-size) uppercase`
+  Display       `type-display font-head text-neutral-900`
+  H1 / H2       `type-h1 font-head text-neutral-900`
+  Body / Lead   `type-body text-neutral-600`
+  Page title    `type-page-title font-head text-neutral-900`
+  Metric        `type-metric font-head text-neutral-900`
+  Table / head  `type-table text-neutral-700` / `type-table-head uppercase text-neutral-500`
+  Caption       `type-caption text-neutral-500`
+  Badge         `type-badge uppercase text-neutral-600`
+
+Raw Tailwind equivalent (when a helper doesn't fit):
+`text-(--type-body-size) font-(--type-body-weight)
+tracking-(--type-body-tracking)`.
 
 Headings use `font-head` (Plus Jakarta Sans); body uses the default
 sans (Inter). Tracking comes from each role's `--type-*-tracking`.

@@ -164,8 +164,8 @@ export function PaketClient({ packages }: { packages: PackageType[] }) {
   return (
     <div className="space-y-6">
       {/* Pengingat regulasi harga (ARCHITECTURE §4.6) */}
-      <div className="rounded-2xl border border-info-200 bg-info-50 p-4 text-sm text-info-700">
-        <p className="flex items-center gap-2 font-bold">
+      <div className="rounded-2xl border border-info-200 bg-info-50 p-4 type-table text-info-700">
+        <p className="flex items-center gap-2 type-label">
           <Info className="h-4 w-4" /> Harga & kuota revisi bersifat publik
         </p>
         <p className="mt-1 leading-relaxed">
@@ -175,7 +175,7 @@ export function PaketClient({ packages }: { packages: PackageType[] }) {
       </div>
 
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <p className="flex items-center gap-2 rounded-2xl border border-neutral-200 bg-neutral-0 px-4 py-3 text-sm text-neutral-600">
+        <p className="flex items-center gap-2 rounded-2xl border border-neutral-200 bg-neutral-0 px-4 py-3 type-table text-neutral-600">
           <RefreshCcw className="h-4 w-4 shrink-0 text-primary-600" />
           Perubahan hanya berlaku untuk <strong>permintaan baru</strong>.
           Kolaborasi yang sudah masuk tetap memakai nama, harga, kuota revisi,
@@ -193,7 +193,7 @@ export function PaketClient({ packages }: { packages: PackageType[] }) {
           className="rounded-2xl border border-primary-200 bg-neutral-0 p-5 shadow-xs sm:p-6"
         >
           <div className="flex items-center justify-between gap-3">
-            <h2 className="font-head text-lg font-bold tracking-[-0.02em] text-neutral-900">
+            <h2 className="type-section-title font-head text-neutral-900">
               {formMode === "edit" ? "Edit Paket" : "Paket Baru"}
             </h2>
             <button
@@ -231,7 +231,7 @@ export function PaketClient({ packages }: { packages: PackageType[] }) {
               }
             />
             <label className="sm:col-span-2">
-              <span className="mb-1.5 block text-sm font-semibold leading-5 text-neutral-700">
+              <span className="mb-1.5 block type-label leading-5 text-neutral-700">
                 Ringkasan
               </span>
               <textarea
@@ -246,7 +246,7 @@ export function PaketClient({ packages }: { packages: PackageType[] }) {
               />
             </label>
             <label className="sm:col-span-2">
-              <span className="mb-1.5 block text-sm font-semibold leading-5 text-neutral-700">
+              <span className="mb-1.5 block type-label leading-5 text-neutral-700">
                 Termasuk
               </span>
               <textarea
@@ -259,12 +259,12 @@ export function PaketClient({ packages }: { packages: PackageType[] }) {
                 placeholder="Pisahkan dengan koma, mis. 1 video 30–60 detik, Tayang 7 hari di feed"
                 className={`${FIELD} border-neutral-200 focus:border-primary-500 focus:ring-primary-200`}
               />
-              <p className="mt-1.5 text-xs text-neutral-500">
+              <p className="mt-1.5 type-caption text-neutral-500">
                 Tampil sebagai daftar centang di halaman booking.
               </p>
             </label>
             <label>
-              <span className="mb-1.5 block text-sm font-semibold leading-5 text-neutral-700">
+              <span className="mb-1.5 block type-label leading-5 text-neutral-700">
                 Jumlah Revisi
               </span>
               <select
@@ -281,7 +281,7 @@ export function PaketClient({ packages }: { packages: PackageType[] }) {
                   </option>
                 ))}
               </select>
-              <p className="mt-1.5 text-xs text-neutral-500">
+              <p className="mt-1.5 type-caption text-neutral-500">
                 Kuota revisi per kolaborasi (1–5).
               </p>
             </label>
@@ -301,7 +301,7 @@ export function PaketClient({ packages }: { packages: PackageType[] }) {
           </div>
 
           {formError && (
-            <p className="mt-4 flex items-center gap-1.5 text-sm font-semibold text-error-700">
+            <p className="mt-4 flex items-center gap-1.5 type-label text-error-700">
               <AlertTriangle className="h-4 w-4" /> {formError}
             </p>
           )}
@@ -346,10 +346,10 @@ export function PaketClient({ packages }: { packages: PackageType[] }) {
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <h3 className="font-head text-base font-bold tracking-[-0.02em] text-neutral-900">
+                  <h3 className="type-card-title font-head text-neutral-900">
                     {row.name}
                   </h3>
-                  <p className="mt-0.5 text-sm text-neutral-500">
+                  <p className="mt-0.5 type-table text-neutral-500">
                     {row.summary}
                   </p>
                 </div>
@@ -363,7 +363,7 @@ export function PaketClient({ packages }: { packages: PackageType[] }) {
                   {row.includes.map((inc) => (
                     <li
                       key={inc}
-                      className="flex items-start gap-1.5 text-xs text-neutral-600"
+                      className="flex items-start gap-1.5 type-caption text-neutral-600"
                     >
                       <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-success-500" />
                       {inc}
@@ -373,10 +373,10 @@ export function PaketClient({ packages }: { packages: PackageType[] }) {
               )}
 
               <div className="mt-4 flex flex-wrap gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-neutral-50 px-2.5 py-1 text-[11px] font-semibold text-neutral-700 ring-1 ring-inset ring-neutral-200">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-neutral-50 px-2.5 py-1 type-badge text-neutral-700 ring-1 ring-inset ring-neutral-200">
                   <RefreshCcw className="h-3 w-3" /> {row.quota} revisi
                 </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-neutral-50 px-2.5 py-1 text-[11px] font-semibold text-neutral-700 ring-1 ring-inset ring-neutral-200">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-neutral-50 px-2.5 py-1 type-badge text-neutral-700 ring-1 ring-inset ring-neutral-200">
                   <Clock className="h-3 w-3" /> Estimasi {row.days} hari
                 </span>
               </div>
@@ -402,7 +402,7 @@ export function PaketClient({ packages }: { packages: PackageType[] }) {
                     <button
                       type="button"
                       onClick={() => setConfirmId(null)}
-                      className="rounded-xl border border-neutral-200 bg-neutral-0 px-3 py-2 text-xs font-semibold text-neutral-600 transition-colors hover:bg-neutral-100"
+                      className="rounded-xl border border-neutral-200 bg-neutral-0 px-3 py-2 type-badge text-neutral-600 transition-colors hover:bg-neutral-100"
                     >
                       Batal
                     </button>
@@ -412,7 +412,7 @@ export function PaketClient({ packages }: { packages: PackageType[] }) {
                     type="button"
                     onClick={() => setConfirmId(row.id)}
                     disabled={formOpen}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-error-200 bg-error-50 px-3.5 py-2 text-xs font-bold text-error-700 transition-colors hover:bg-error-100 disabled:pointer-events-none disabled:bg-neutral-100 disabled:text-neutral-400"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-error-200 bg-error-50 px-3.5 py-2 type-badge text-error-700 transition-colors hover:bg-error-100 disabled:pointer-events-none disabled:bg-neutral-100 disabled:text-neutral-400"
                   >
                     <Trash2 className="h-3.5 w-3.5" /> Hapus
                   </button>
@@ -425,7 +425,7 @@ export function PaketClient({ packages }: { packages: PackageType[] }) {
 
       {/* Ringkasan nilai total (info publik kreasi) */}
       {rows.length > 0 && (
-        <p className="text-xs text-neutral-500">
+        <p className="type-caption text-neutral-500">
           {rows.length} paket aktif · total nilai penawaran{" "}
           <strong className="text-neutral-700">{formatRupiah(totalValue)}</strong>
         </p>

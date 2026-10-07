@@ -101,7 +101,7 @@ export default async function BookingDetailPage(
   return (
     <>
       <div>
-        <p className="flex flex-wrap items-center gap-2 text-sm font-bold uppercase tracking-widest text-primary-700">
+        <p className="flex flex-wrap items-center gap-2 type-table-head uppercase text-primary-700">
           <Link href="/dashboard/riwayat" className="hover:text-primary-800">
             Riwayat
           </Link>
@@ -111,7 +111,7 @@ export default async function BookingDetailPage(
           </span>
         </p>
         <div className="mt-1 flex flex-wrap items-center gap-3">
-          <h1 className="font-head text-3xl font-extrabold tracking-[-0.02em] text-neutral-900">
+          <h1 className="font-head type-page-title text-neutral-900">
             Detail Kolaborasi
           </h1>
           <StatusBadge status={TOKEN[booking.status]} />
@@ -127,16 +127,16 @@ export default async function BookingDetailPage(
           <div className="flex flex-col gap-4 rounded-2xl border border-neutral-200 bg-neutral-0 p-6 shadow-xs sm:flex-row sm:items-center">
             <Avatar name={influencer.name} color={influencer.color} size="lg" />
             <div className="min-w-0 flex-1">
-              <p className="font-head text-lg font-extrabold tracking-[-0.02em] text-neutral-900">
+              <p className="font-head type-section-title text-neutral-900">
                 {influencer.name}
               </p>
-              <p className="truncate text-sm text-neutral-500">
+              <p className="truncate type-table text-neutral-500">
                 {influencer.handle} · {influencer.niche} · {influencer.city}
               </p>
             </div>
             <Link
               href={`/influencers/${influencer.id}`}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-primary-300 bg-neutral-0 px-4 py-2 text-sm font-semibold text-primary-700 transition-colors duration-150 ease-standard hover:border-primary-400 hover:bg-primary-50"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-primary-300 bg-neutral-0 px-4 py-2 type-label text-primary-700 transition-colors duration-150 ease-standard hover:border-primary-400 hover:bg-primary-50"
             >
               <Users className="h-4 w-4" /> Lihat Profil
             </Link>
@@ -150,13 +150,13 @@ export default async function BookingDetailPage(
               <FileCheck2 className="h-5 w-5" />
             </span>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+              <p className="type-table-head uppercase text-neutral-500">
                 Pesan dari UMKM
               </p>
-              <p className="mt-1 text-sm leading-relaxed text-neutral-800">
+              <p className="mt-1 type-table leading-relaxed text-neutral-800">
                 {booking.message}
               </p>
-              <p className="mt-2 text-xs text-neutral-400">
+              <p className="mt-2 type-caption text-neutral-400">
                 Terkunci saat pengajuan — tidak bisa diubah setelah dikirim.
               </p>
             </div>
@@ -167,20 +167,20 @@ export default async function BookingDetailPage(
         <SectionCard title="Paket & Harga" icon={Package}>
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <p className="text-sm font-bold text-neutral-900">
+              <p className="type-card-title text-neutral-900">
                 {booking.packageName}
               </p>
-              <p className="mt-0.5 text-xs text-neutral-500">
+              <p className="mt-0.5 type-caption text-neutral-500">
                 Diajukan {formatDate(booking.createdAt)}
               </p>
             </div>
-            <p className="font-head text-2xl font-extrabold tracking-[-0.02em] text-primary-700">
+            <p className="font-head type-metric text-primary-700">
               {formatRupiah(booking.amount)}
             </p>
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-neutral-100 pt-4">
             <RevisionCounter used={revisionUsed} total={revisionTotal} />
-            <span className="inline-flex items-center gap-1.5 text-xs text-neutral-500">
+            <span className="inline-flex items-center gap-1.5 type-caption text-neutral-500">
               <Timer className="h-4 w-4" /> Estimasi 3–7 hari kerja
             </span>
           </div>
@@ -199,7 +199,7 @@ export default async function BookingDetailPage(
                     <Film className="h-4.5 w-4.5" />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-bold text-neutral-900">{d.name}</p>
+                    <p className="type-card-title text-neutral-900">{d.name}</p>
                     <p className="truncate text-xs text-neutral-500">{d.note}</p>
                   </div>
                   <span className="rounded-full bg-success-50 px-2.5 py-1 text-[11px] font-semibold text-success-700 ring-1 ring-inset ring-success-200">
