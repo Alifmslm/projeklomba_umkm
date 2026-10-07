@@ -101,7 +101,7 @@ const COLUMNS: TableColumn<Kasus>[] = [
       <span className="inline-flex items-center gap-2">
         <StatusBadge status={k.status} />
         {k.terlambat && k.status !== "RESOLVED" && (
-          <span className="inline-flex items-center rounded-full bg-error-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-error-700">
+          <span className="inline-flex items-center rounded-full bg-error-100 px-2 py-1 type-badge uppercase text-error-700">
             Terlambat
           </span>
         )}
@@ -133,10 +133,10 @@ export default async function AdminKasusPage(
   return (
     <AdminShell>
       <div>
-        <h2 className="font-head text-2xl font-extrabold tracking-[-0.02em] text-neutral-900">
+        <h2 className="font-head type-page-title text-neutral-900">
           Antrian Kasus
         </h2>
-        <p className="mt-1 text-sm text-neutral-600">
+        <p className="mt-1 type-table text-neutral-600">
           Urut berdasarkan batas keputusan terdekat — kasus{" "}
           <span className="font-semibold text-error-700">Terlambat</span>{" "}
           ditandai dan paling butuh perhatian.
