@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
-import { getSession } from "@/lib/auth";
-import { getPackagesByInfluencer } from "@/lib/data";
+import { getAllPackagesByInfluencer } from "@/lib/data/catalog";
+import { requireInfluencer } from "@/lib/auth";
 import { InfluencerShell } from "@/components/InfluencerShell";
 import { PaketClient } from "./paket-client";
 
@@ -12,14 +11,32 @@ export const metadata: Metadata = {
   description: "Kelola paket, harga, dan kuota revisi kreator di Kolab.id.",
 };
 
-export default async function InfluencerPaketPage() {
-  const session = await getSession();
-  if (!session) redirect("/login");
-  if (session.role !== "influencer") redirect("/dashboard");
+/**
+ * The creator's package manager.
+ *
+ * Reads every package including deactivated ones: this is the one screen whose
+ * job is to show them and offer reactivation, so it passes the unfiltered embed
+ * while public pages filter on `isActive` themselves.
+ */
+export default async function InfluencerPaketPage(props: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const account = await requireInfluencer();
+  const searchParams = await props.searchParams;
 
-  // CRUD paket bersifat prototipe (state lokal di client) — data layer
-  // mock tidak diubah. Paket asli dipakai sebagai seed awal.
-  const packages = getPackagesByInfluencer(session.subjectId);
+  const packages = await getAllPackagesByInfluencer(account.influencerId);
+
+  // `setPackageActive` reports through a redirect, so its failures arrive as a
+  // query parameter. `saveInfluencerPackage` returns its errors inline instead.
+  const gagal = typeof searchParams.gagal === "string" ? searchParams.gagal : "";
+  const errorMessage =
+    gagal === "terakhir"
+      ? "Itu paket aktif terakhirmu. Tambahkan atau aktifkan paket lain dulu."
+      : gagal === "akses"
+        ? "Paket itu bukan milikmu."
+        : gagal
+          ? "Gagal memperbarui paket. Coba lagi."
+          : null;
 
   return (
     <InfluencerShell>
@@ -35,6 +52,12 @@ export default async function InfluencerPaketPage() {
           saat memilih kamu.
         </p>
       </div>
+
+      {errorMessage && (
+        <p className="mt-6 rounded-2xl border border-error-200 bg-error-50 px-4 py-3 text-sm font-semibold text-error-700">
+          {errorMessage}
+        </p>
+      )}
 
       <div className="mt-8">
         <PaketClient packages={packages} />

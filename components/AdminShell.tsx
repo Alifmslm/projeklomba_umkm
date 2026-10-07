@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { requireAdmin } from "./admin-session";
+import { requireRole } from "@/lib/auth";
 import {
   adminNotifications,
   ADMIN_ATTENTION_COUNT,
@@ -13,12 +13,12 @@ import { DashboardShell } from "./DashboardShell";
  * Profil mengarah ke /admin/profile (Profile Saya + Logout).
  */
 export async function AdminShell({ children }: { children: ReactNode }) {
-  const admin = await requireAdmin();
+  const admin = await requireRole("admin");
 
   return (
     <DashboardShell
       role="admin"
-      userName={admin.name}
+      userName={admin.fullName}
       notifications={adminNotifications}
       attentionCount={ADMIN_ATTENTION_COUNT}
       openCasesCount={jumlahKasusTerbuka()}

@@ -1,6 +1,7 @@
+import { getRecommendedInfluencers, getUmkmById } from "@/lib/data/catalog";
+import { getBookingsByUmkm, getReviewForBookingRole } from "@/lib/data/bookings";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import {
   ArrowRight,
   BadgeCheck,
@@ -11,15 +12,9 @@ import {
   Sparkles,
   Star,
 } from "lucide-react";
-import { getSession } from "@/lib/auth";
-import {
-  getBookingsByUmkm,
-  getRecommendedInfluencers,
-  getReviewForBookingRole,
-  getUmkmById,
-} from "@/lib/data";
+import { requireUmkm } from "@/lib/auth";
+
 import { formatRupiah } from "@/lib/format";
-import type { Review } from "@/lib/types";
 import { KpiCard } from "@/components/KpiCard";
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
@@ -35,31 +30,32 @@ export const metadata: Metadata = {
 export default async function UmkmDashboardPage(
   props: PageProps<"/dashboard">,
 ) {
-  const session = await getSession();
-  if (!session) redirect("/login");
-  if (session.role !== "umkm") redirect("/dashboard/influencer");
+  const account = await requireUmkm();
 
   const searchParams = await props.searchParams;
   const baru = searchParams.status === "baru";
   const reviewSent = searchParams.review === "1";
-  const bookings = getBookingsByUmkm(session.subjectId);
+  const bookings = await getBookingsByUmkm(account.umkmId);
 
-  const umkm = getUmkmById(session.subjectId);
-  const recommended = umkm ? getRecommendedInfluencers(umkm, 3) : [];
+  const umkm = await getUmkmById(account.umkmId);
+  const recommended = umkm ? await getRecommendedInfluencers(umkm, 3) : [];
 
   // Ulasan yang sudah diberikan UMKM ini untuk booking yang DONE
-  const myReviews = new Map<number, Review>();
+  // Ulasan yang sudah diberikan UMKM ini untuk booking yang selesai
+  const myReviews = new Map<number, number>();
   for (const b of bookings) {
-    if (b.status === "DONE") {
-      const review = getReviewForBookingRole(b.id, "umkm");
-      if (review) myReviews.set(b.id, review);
+    if (b.status === "COMPLETED") {
+      const review = await getReviewForBookingRole(b.id, "umkm");
+      if (review) myReviews.set(b.id, review.rating);
     }
   }
 
   const total = bookings.length;
   const menunggu = bookings.filter((b) => b.status === "PENDING").length;
-  const berjalan = bookings.filter((b) => b.status === "APPROVED").length;
-  const selesai = bookings.filter((b) => b.status === "DONE").length;
+  const berjalan = bookings.filter((b) =>
+    ["ACCEPTED", "FUNDED", "SUBMITTED", "REVISION"].includes(b.status),
+  ).length;
+  const selesai = bookings.filter((b) => b.status === "COMPLETED").length;
 
   return (
     <>
@@ -69,7 +65,7 @@ export default async function UmkmDashboardPage(
           Dashboard
         </p>
         <h1 className="mt-1 font-head type-page-title text-neutral-900">
-          Halo, {session.name}!
+          Halo, {account.fullName}!
         </h1>
         <p className="mt-1.5 text-neutral-600">
           Ini ringkasan semua kolaborasi dengan kreator.
@@ -149,7 +145,7 @@ export default async function UmkmDashboardPage(
                 <Sparkles className="h-4 w-4" /> Rekomendasi untukmu
               </p>
               <h2 className="mt-1 font-head type-section-title text-neutral-900">
-                Kreator yang cocok dengan {session.name}
+                Kreator yang cocok dengan {account.fullName}
               </h2>
               <p className="mt-1 type-table text-neutral-500">
                 Dicocokkan otomatis dari kategori usaha, kota, dan budget-mu.
@@ -173,7 +169,7 @@ export default async function UmkmDashboardPage(
                   href={`/influencers/${rec.id}`}
                   className="group flex items-center gap-3"
                 >
-                  <Avatar name={rec.name} color={rec.color} size="lg" />
+                  <Avatar name={rec.name} category={rec.categorySlug} size="lg" />
                   <div className="min-w-0 flex-1">
                     <p className="flex items-center gap-1.5 truncate type-card-title text-neutral-900 group-hover:text-primary-700">
                       {rec.name}
@@ -182,7 +178,7 @@ export default async function UmkmDashboardPage(
                       )}
                     </p>
                     <p className="truncate type-caption text-neutral-500">
-                      {rec.handle} · {rec.niche} · {rec.city}
+                      {rec.handle} · {rec.category} · {rec.city}
                     </p>
                     <p className="mt-0.5 flex items-center gap-1 type-caption text-neutral-400">
                       <Star className="h-3 w-3 fill-warning-500 text-warning-500" />
@@ -206,7 +202,7 @@ export default async function UmkmDashboardPage(
                   <div>
                     <p className="type-caption text-neutral-500">Mulai dari</p>
                     <p className="font-head type-card-title text-primary-700">
-                      {formatRupiah(rec.basePrice)}{" "}
+                      {formatRupiah(rec.startingPrice)}{" "}
                       <span className="type-caption text-neutral-500">
                         / video
                       </span>

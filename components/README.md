@@ -89,12 +89,16 @@ State chat: `open` (PENDING–DISPUTED), `readonly` (COMPLETED/CANCELLED),
 | `SectionCard` | `booking/SectionCard.tsx` | `title`, `icon?`, `action?`, `children` |
 | `RevisionCounter` | `booking/RevisionCounter.tsx` | `used`, `total` → "Revisi 1 dari 2" |
 | `Timeline` | `booking/Timeline.tsx` | `items: { label, time, tone? }[]` |
-| `OfferCard` | `booking/OfferCard.tsx` | `title`, `description`, `amount?`, `status?: "PENDING"\|"ACCEPTED"\|"DECLINED"\|"EXPIRED"`, `onAccept?`, `onReject?` |
+| `OfferCard` | `booking/OfferCard.tsx` | `offer: Offer`, `canRespond: boolean`, `next: string` — status hasil dari `Offer.status`; `Terima/Tolak` hanya dirender bila `canRespond` |
+| `OfferComposer` | `booking/OfferComposer.tsx` | `booking: BookingDetail`, `role: "umkm"\|"influencer"` — merender form tawaran yang legal untuk peran + status; `null` bila tidak ada |
 
 ```tsx
 <SectionCard title="Brief Terkunci">…</SectionCard>
 <RevisionCounter used={1} total={2} />
 <Timeline items={[{ label: "Diajukan", time: "1 Okt, 09:00", tone: "primary" }]} />
-<OfferCard title="Tawarkan Revisi Tambahan" description="1x revisi tambahan gratis"
-  status="PENDING" onAccept={terima} onReject={tolak} />
+<OfferCard offer={tawaran} canRespond={tawaran.offeredBy !== "umkm"} next="/dashboard/riwayat/12" />
+<OfferComposer booking={booking} role="umkm" />
 ```
+
+`OfferCard`/`OfferComposer` mengirim ke Server Actions `respondToOffer`/`createOffer`,
+jadi keduanya komponen server dan tidak lagi memakai callback `onAccept`/`onReject`.

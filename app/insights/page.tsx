@@ -1,3 +1,4 @@
+import { getLandingStats, getPriceStats } from "@/lib/data/catalog";
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
@@ -9,7 +10,7 @@ import {
   Tag,
   TrendingDown,
 } from "lucide-react";
-import { getLandingStats, getPriceStats } from "@/lib/data";
+
 import { formatRupiah } from "@/lib/format";
 import type { PriceStat } from "@/lib/types";
 
@@ -22,8 +23,9 @@ export const metadata: Metadata = {
 };
 
 export default async function InsightsPage() {
-  const stats = getPriceStats();
-  const landing = getLandingStats();
+  const stats = await getPriceStats();
+  const landing = await getLandingStats();
+  const hasData = stats.length > 0;
   const maxAvg = Math.max(...stats.map((s) => s.avgPrice), 1);
   const minPrice = Math.min(...stats.map((s) => s.minPrice), 0);
 
@@ -41,7 +43,7 @@ export default async function InsightsPage() {
           <p className="mt-2 max-w-2xl text-neutral-600">
             Harga per video di Kolab.id transparan dan tidak bisa dimanipulasi.
             Ini gambaran pasar dari {landing.influencerCount} kreator di{" "}
-            {landing.nicheCount} kategori — biar UMKM tahu budget yang realistis.
+            {landing.categoryCount} kategori — biar UMKM tahu budget yang realistis.
           </p>
         </div>
         <Link
@@ -65,27 +67,28 @@ export default async function InsightsPage() {
           {
             icon: Tag,
             label: "Kategori terlayani",
-            value: String(landing.nicheCount),
-            note: "niche kreator berbeda",
+            value: String(landing.categoryCount),
+            note: "kategori kreator berbeda",
             color: "bg-primary-50 text-primary-700",
           },
           {
             icon: BarChart3,
             label: "Rata-rata harga/video",
-            value: formatRupiah(
-              Math.round(
-                stats.reduce((s, p) => s + p.avgPrice, 0) /
-                  (stats.length || 1),
-              ),
-            ),
-            note: "antar semua kategori",
+            value: hasData
+              ? formatRupiah(
+                  Math.round(
+                    stats.reduce((s, p) => s + p.avgPrice, 0) / stats.length,
+                  ),
+                )
+              : "—",
+            note: hasData ? "antar semua kategori" : "belum ada paket aktif",
             color: "bg-success-50 text-success-700",
           },
           {
             icon: TrendingDown,
             label: "Termurah di pasar",
-            value: formatRupiah(minPrice),
-            note: "mulai dari budget kecil",
+            value: hasData ? formatRupiah(minPrice) : "—",
+            note: hasData ? "mulai dari budget kecil" : "belum ada paket aktif",
             color: "bg-warning-50 text-warning-700",
           },
         ].map((s) => (
@@ -115,22 +118,34 @@ export default async function InsightsPage() {
           Harga per kategori
         </h2>
         <p className="mt-1 text-sm text-neutral-500">
-          Harga = paket Review Video (terjangkau) tiap kreator. Urut dari rata-rata
-          termurah.
+          Harga = paket aktif termurah tiap kreator. Urut dari rata-rata
+          termurah. Kreator tanpa paket aktif tidak dihitung.
         </p>
 
+        {!hasData && (
+          <div className="mt-6 rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 p-8 text-center">
+            <BarChart3 className="mx-auto h-8 w-8 text-neutral-400" />
+            <p className="mt-3 font-head text-base font-bold text-neutral-800">
+              Belum ada data harga
+            </p>
+            <p className="mx-auto mt-1 max-w-md text-sm text-neutral-500">
+              Belum ada kreator dengan paket aktif di kategori mana pun. Angka
+              pasar akan muncul begitu ada kreator memasang paket.
+            </p>
+          </div>
+        )}
         <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {stats.map((p: PriceStat) => {
             const width = Math.max(6, Math.round((p.avgPrice / maxAvg) * 100));
             return (
               <div
-                key={p.niche}
+                key={p.category}
                 className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-xs transition-all hover:-translate-y-1 hover:border-primary-200 hover:shadow-sm hover:shadow-primary-500/10"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <h3 className="font-head text-base font-bold tracking-[-0.02em] text-neutral-900">
-                      {p.niche}
+                      {p.category}
                     </h3>
                     <p className="mt-0.5 text-xs text-neutral-500">
                       {p.count} kreator tersedia
@@ -182,9 +197,9 @@ export default async function InsightsPage() {
           <p className="leading-relaxed">
             Di Kolab.id harga per video <strong>dikunci di server</strong> —
             UMKM tidak perlu nego di DM, dan kreator tidak perlu takut harga
-            dipangkas seenaknya. Harga di atas adalah harga paket{" "}
-            <em>Review Video</em>; paket lain (Unboxing &amp; Story, Kampanye
-            Komplit) dihitung proporsional di profil kreator.
+            dipangkas seenaknya. Angka di atas adalah paket aktif{" "}
+            <em>termurah</em> tiap kreator; paket lain di profilnya memakai
+            harga masing-masing.
           </p>
         </div>
       </section>

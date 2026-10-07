@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { LogOut, Mail, ShieldCheck } from "lucide-react";
-import { logout } from "@/app/actions";
+import { signOut } from "@/app/actions";
 import { AdminShell } from "@/components/AdminShell";
-import { requireAdmin } from "@/components/admin-session";
+import { requireRole } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -12,8 +12,8 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminProfilePage() {
-  const admin = await requireAdmin();
-  const initial = admin.name.charAt(0).toUpperCase();
+  const admin = await requireRole("admin");
+  const initial = admin.fullName.charAt(0).toUpperCase();
 
   return (
     <AdminShell>
@@ -25,7 +25,7 @@ export default async function AdminProfilePage() {
             </span>
             <div className="min-w-0">
               <h2 className="truncate font-head text-xl font-extrabold tracking-[-0.02em] text-neutral-900">
-                {admin.name}
+                {admin.fullName}
               </h2>
               <p className="mt-0.5 flex items-center gap-1.5 text-sm text-neutral-500">
                 <ShieldCheck className="h-4 w-4 text-primary-600" /> Admin
@@ -51,7 +51,7 @@ export default async function AdminProfilePage() {
               </dd>
             </div>
           </dl>
-          <form action={logout} className="mt-6">
+          <form action={signOut} className="mt-6">
             <button
               type="submit"
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-neutral-900 px-4 py-2.5 text-sm font-semibold text-neutral-0 transition-colors hover:bg-error-600"

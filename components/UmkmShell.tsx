@@ -1,7 +1,7 @@
-import { redirect } from "next/navigation";
+import { getUmkmNotifications } from "@/lib/data/bookings";
 import type { ReactNode } from "react";
-import { getSession } from "@/lib/auth";
-import { getUmkmNotifications } from "@/lib/data";
+import { requireUmkm } from "@/lib/auth";
+
 import { DashboardShell } from "./DashboardShell";
 
 /**
@@ -9,16 +9,14 @@ import { DashboardShell } from "./DashboardShell";
  * dan merender frame sidebar + header di sekitar konten.
  */
 export async function UmkmShell({ children }: { children: ReactNode }) {
-  const session = await getSession();
-  if (!session) redirect("/login");
-  if (session.role !== "umkm") redirect("/dashboard/influencer");
+  const account = await requireUmkm();
 
-  const { items, attentionCount } = getUmkmNotifications(session.subjectId);
+  const { items, attentionCount } = await getUmkmNotifications(account.umkmId);
 
   return (
     <DashboardShell
       role="umkm"
-      userName={session.name}
+      userName={account.fullName}
       notifications={items}
       attentionCount={attentionCount}
     >

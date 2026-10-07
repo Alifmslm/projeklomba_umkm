@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ChevronDown, LogOut, User } from "lucide-react";
-import { logout } from "@/app/actions";
+import { signOut } from "@/app/actions";
 
 /**
  * ProfileMenu (ARCHITECTURE §1.2): entry profil dengan dropdown
@@ -60,7 +60,7 @@ export function ProfileMenu({
               <User className="h-4 w-4 text-neutral-500" />
               Profile Saya
             </Link>
-            <form action={logout}>
+            <form action={signOut}>
               <button
                 type="submit"
                 role="menuitem"

@@ -4,7 +4,7 @@ import { Avatar } from "./Avatar";
 import { StarRating } from "./StarRating";
 import { StatusBadge } from "./StatusBadge";
 import { formatDate, formatRupiah } from "@/lib/format";
-import type { BookingWithInfluencer, Review } from "@/lib/types";
+import type { BookingWithInfluencer } from "@/lib/types";
 
 /**
  * BookingHistoryList — ringkasan riwayat kolaborasi UMKM (dipakai
@@ -15,7 +15,7 @@ export function BookingHistoryList({
   reviews,
 }: {
   bookings: BookingWithInfluencer[];
-  reviews: Map<number, Review>;
+  reviews: Map<number, number>;
 }) {
   if (bookings.length === 0) {
     return (
@@ -53,7 +53,7 @@ export function BookingHistoryList({
           >
             <Avatar
               name={b.influencerName}
-              color={b.influencerColor}
+              category={b.influencerCategorySlug}
               size="md"
             />
             <div className="min-w-0">
@@ -62,7 +62,7 @@ export function BookingHistoryList({
                 <BadgeCheck className="h-4 w-4 shrink-0 text-neutral-400" />
               </p>
               <p className="truncate text-xs text-neutral-500">
-                {b.influencerHandle} · {b.influencerCity} · {b.niche}
+                {b.influencerHandle} · {b.influencerCity} · {b.influencerCategory}
               </p>
               <p className="mt-1 truncate text-xs text-neutral-400">
                 {b.packageName} · {formatDate(b.createdAt)}
@@ -75,10 +75,10 @@ export function BookingHistoryList({
               {formatRupiah(b.amount)}
             </p>
             <StatusBadge status={b.status} />
-            {b.status === "DONE" &&
+            {b.status === "COMPLETED" &&
               (reviews.get(b.id) ? (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-50 px-2.5 py-1 text-[11px] font-semibold text-primary-700 ring-1 ring-inset ring-primary-200">
-                  <StarRating rating={reviews.get(b.id)!.rating} size="h-3 w-3" />
+                  <StarRating rating={reviews.get(b.id)!} size="h-3 w-3" />
                   Sudah dinilai
                 </span>
               ) : (

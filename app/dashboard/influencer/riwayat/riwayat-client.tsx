@@ -3,20 +3,21 @@
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { MessageCircle, MessageSquareText, SearchX, Star } from "lucide-react";
+import { MessageSquareText, SearchX, Star } from "lucide-react";
 import { Avatar } from "@/components/Avatar";
 import { BOOKING_FILTER_TABS, FilterTabs } from "@/components/FilterTabs";
 import { DataTable, type TableColumn } from "@/components/DataTable";
 import { StatusBadge, type StatusKey } from "@/components/StatusBadge";
 import { Button } from "@/components/Button";
 import { formatDate, formatRupiah } from "@/lib/format";
-import { setBookingStatus } from "@/app/actions";
+import { acceptBooking, declineBooking } from "@/app/actions";
 import type { BookingWithUmkm } from "@/lib/types";
 
 /**
  * Client wrapper riwayat kolaborasi kreator (ARCHITECTURE §4.6): tab filter
  * Semua/Menunggu/Berjalan/Sengketa/Selesai/Batal dengan default `menunggu`,
- * plus aksi inline Setujui/Tolak lewat setBookingStatus. Filter client-side;
+ * plus aksi inline Setujui/Tolak lewat acceptBooking/declineBooking dan tautan
+ * Detail. Filter client-side;
  * data dikirim serializable dari server page.
  */
 type BookingRow = BookingWithUmkm;
@@ -24,9 +25,9 @@ type BookingRow = BookingWithUmkm;
 const FILTER_MAP: Record<string, StatusKey[]> = {
   semua: [],
   menunggu: ["PENDING"],
-  berjalan: ["APPROVED"],
+  berjalan: ["ACCEPTED", "FUNDED", "SUBMITTED", "REVISION"],
   sengketa: ["DISPUTED"],
-  selesai: ["DONE"],
+  selesai: ["COMPLETED"],
   batal: ["REJECTED", "CANCELLED"],
 };
 
@@ -80,7 +81,7 @@ export function RiwayatClient({
       header: "UMKM",
       cell: (b) => (
         <div className="flex min-w-0 items-center gap-3">
-          <Avatar name={b.umkmName} color="from-neutral-500 to-neutral-700" size="sm" />
+          <Avatar name={b.umkmName} category={b.umkmCategorySlug} size="sm" />
           <div className="min-w-0">
             <p className="truncate type-card-title text-neutral-900">
               {b.umkmName}
@@ -125,55 +126,40 @@ export function RiwayatClient({
       header: "Aksi",
       cellClassName: "text-right",
       cell: (b) => {
-        if (b.status === "PENDING") {
-          return (
-            <div className="flex items-center justify-end gap-2">
-              <form action={setBookingStatus}>
-                <input type="hidden" name="bookingId" value={b.id} />
-                <input type="hidden" name="status" value="REJECTED" />
-                <button
-                  type="submit"
-                  className="rounded-xl border border-error-200 bg-error-50 px-3 py-1.5 type-badge text-error-700 transition-colors hover:bg-error-100"
-                >
-                  Tolak
-                </button>
-              </form>
-              <form action={setBookingStatus}>
-                <input type="hidden" name="bookingId" value={b.id} />
-                <input type="hidden" name="status" value="APPROVED" />
-                <Button type="submit" size="sm">
-                  Setujui
-                </Button>
-              </form>
-            </div>
-          );
-        }
+        return (
+          <div className="flex items-center justify-end gap-2">
+            {b.status === "PENDING" && (
+              <>
+                <form action={declineBooking}>
+                  <input type="hidden" name="bookingId" value={b.id} />
+                  <input
+                    type="hidden"
+                    name="next"
+                    value="/dashboard/influencer/riwayat?filter=menunggu"
+                  />
+                  <button
+                    type="submit"
+                    className="rounded-xl border border-error-200 bg-error-50 px-3 py-1.5 type-badge text-error-700 transition-colors hover:bg-error-100"
+                  >
+                    Tolak
+                  </button>
+                </form>
+                <form action={acceptBooking}>
+                  <input type="hidden" name="bookingId" value={b.id} />
+                  <input
+                    type="hidden"
+                    name="next"
+                    value="/dashboard/influencer/riwayat?filter=menunggu"
+                  />
+                  <Button type="submit" size="sm">
+                    Setujui
+                  </Button>
+                </form>
+              </>
+            )}
 
-        if (b.status === "APPROVED") {
-          return (
-            <div className="flex items-center justify-end gap-2">
-              <Link
-                href="/dashboard/influencer/chat"
-                className="hidden items-center gap-1 rounded-lg px-2 py-1 type-badge text-neutral-500 transition-colors hover:text-primary-700 xl:inline-flex"
-                aria-label={`Buka chat dengan ${b.umkmName}`}
-              >
-                <MessageCircle className="h-3.5 w-3.5" /> Chat
-              </Link>
-              <form action={setBookingStatus}>
-                <input type="hidden" name="bookingId" value={b.id} />
-                <input type="hidden" name="status" value="DONE" />
-                <Button type="submit" size="sm" variant="secondary">
-                  Tandai Tayang
-                </Button>
-              </form>
-            </div>
-          );
-        }
-
-        if (b.status === "DONE") {
-          return (
-            <div className="flex items-center justify-end gap-2">
-              {reviewRatings[b.id] === undefined ? (
+            {b.status === "COMPLETED" &&
+              (reviewRatings[b.id] === undefined ? (
                 <Link
                   href={`/review/${b.id}`}
                   className="inline-flex items-center gap-1 type-badge text-primary-700 hover:text-primary-800"
@@ -184,19 +170,16 @@ export function RiwayatClient({
                 <span className="inline-flex items-center gap-1 rounded-full bg-primary-50 px-2.5 py-1 type-badge text-primary-700 ring-1 ring-inset ring-primary-200">
                   Ulasan terkirim
                 </span>
-              )}
-              <Link
-                href="/dashboard/influencer/chat"
-                className="hidden items-center gap-1 rounded-lg px-2 py-1 type-badge text-neutral-500 transition-colors hover:text-primary-700 xl:inline-flex"
-                aria-label={`Buka chat dengan ${b.umkmName}`}
-              >
-                <MessageCircle className="h-3.5 w-3.5" /> Chat
-              </Link>
-            </div>
-          );
-        }
+              ))}
 
-        return <span className="type-caption text-neutral-400">—</span>;
+            <Link
+              href={`/dashboard/influencer/riwayat/${b.id}`}
+              className="inline-flex items-center gap-1 rounded-xl border border-primary-300 bg-neutral-0 px-3 py-1.5 type-badge text-primary-700 transition-colors hover:border-primary-400 hover:bg-primary-50"
+            >
+              Detail
+            </Link>
+          </div>
+        );
       },
     },
   ];

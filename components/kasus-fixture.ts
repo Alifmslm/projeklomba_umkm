@@ -8,7 +8,7 @@
  * demo tidak bergantung pada tanggal berjalan.
  */
 
-import type { UmkmNotification } from "@/lib/data";
+import type { UmkmNotification } from "@/lib/types";
 
 export type KasusStatusKey = "OPEN" | "NEED_INFO" | "RESOLVED";
 
@@ -517,7 +517,7 @@ export const adminNotifications: UmkmNotification[] = [
   },
   {
     key: "kasus-2",
-    kind: "approved",
+    kind: "accepted",
     title: "Rara Nadia membalas permintaan info tambahan",
     desc: "Kasus CLB-2026-0004 diperbarui",
     href: "/admin/kasus/2",

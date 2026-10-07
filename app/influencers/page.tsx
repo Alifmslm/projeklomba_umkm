@@ -1,8 +1,8 @@
+import { getCategories, getCities, getInfluencers } from "@/lib/data/catalog";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SearchX, SlidersHorizontal } from "lucide-react";
-import { getCities, getInfluencers, getNiches } from "@/lib/data";
-import { getSession } from "@/lib/auth";
+import { getUserContext } from "@/lib/auth";
 import { UmkmShell } from "@/components/UmkmShell";
 import { CreatorCard } from "@/components/CreatorCard";
 import { EmptyState } from "@/components/EmptyState";
@@ -33,8 +33,8 @@ const SORTS = [
 ];
 
 export default async function InfluencersPage(props: PageProps<"/influencers">) {
-  const session = await getSession();
-  const isUmkm = session?.role === "umkm";
+  const account = await getUserContext();
+  const isUmkm = account?.role === "umkm";
 
   const params = await props.searchParams;
   const q = typeof params.q === "string" ? params.q.trim() : "";
@@ -47,16 +47,16 @@ export default async function InfluencersPage(props: PageProps<"/influencers">) 
   );
   const sort = typeof params.sort === "string" ? params.sort : "";
 
-  const influencers = getInfluencers({
+  const influencers = await getInfluencers({
     q: q || undefined,
-    niche: niche || undefined,
+    category: niche || undefined,
     city: city || undefined,
     maxPrice: maxPrice || undefined,
     sort: (sort as "terpopuler" | "termurah" | "rating") || undefined,
   });
 
-  const niches = getNiches();
-  const cities = getCities();
+  const niches = await getCategories();
+  const cities = await getCities();
 
   // Pertahankan filter lain saat chip niche di-toggle (semantik GET sama
   // dengan form; hanya mempermudah pemilihan kategori).
@@ -107,8 +107,8 @@ export default async function InfluencersPage(props: PageProps<"/influencers">) 
           Semua kategori
         </Link>
         {niches.map((n) => (
-          <Link key={n} href={chipHref(n)} className={chipCls(niche === n)}>
-            {n}
+          <Link key={n.slug} href={chipHref(n.slug)} className={chipCls(niche === n.slug)}>
+            {n.name}
           </Link>
         ))}
       </div>
@@ -132,8 +132,8 @@ export default async function InfluencersPage(props: PageProps<"/influencers">) 
           <Select name="niche" defaultValue={niche} label="Kategori">
             <option value="">Semua kategori</option>
             {niches.map((n) => (
-              <option key={n} value={n}>
-                {n}
+              <option key={n.slug} value={n.slug}>
+                {n.name}
               </option>
             ))}
           </Select>

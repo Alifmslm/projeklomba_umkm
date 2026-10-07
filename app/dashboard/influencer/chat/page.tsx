@@ -1,7 +1,7 @@
+import { getBookingsByInfluencer } from "@/lib/data/bookings";
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
-import { getSession } from "@/lib/auth";
-import { getBookingsByInfluencer } from "@/lib/data";
+import { requireInfluencer } from "@/lib/auth";
+
 import { formatDate, initials } from "@/lib/format";
 import { InfluencerShell } from "@/components/InfluencerShell";
 import type { ChatConversation, ChatMessage, ChatState } from "@/components/chat";
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 /** State chat per status booking (ARCHITECTURE §2.7). */
 function chatStateOf(status: string): ChatState {
   switch (status) {
-    case "DONE":
+    case "COMPLETED":
       return "readonly";
     case "REJECTED":
       return "closed";
@@ -27,11 +27,9 @@ function chatStateOf(status: string): ChatState {
 }
 
 export default async function InfluencerChatPage() {
-  const session = await getSession();
-  if (!session) redirect("/login");
-  if (session.role !== "influencer") redirect("/dashboard");
+  const account = await requireInfluencer();
 
-  const bookings = getBookingsByInfluencer(session.subjectId);
+  const bookings = await getBookingsByInfluencer(account.influencerId);
 
   // Satu percakapan per booking (§2.7) dengan pihak lawan = UMKM.
   // Pesan difixture deterministik dari brief; kirim pesan hanya
@@ -40,9 +38,9 @@ export default async function InfluencerChatPage() {
     id: `booking-${b.id}`,
     partnerName: b.umkmName,
     partnerInitial: initials(b.umkmName),
-    lastMessage: b.message,
+    lastMessage: b.brief,
     time: formatDate(b.createdAt),
-    unread: b.status === "PENDING" || b.status === "APPROVED" ? 1 : 0,
+    unread: b.status === "PENDING" || b.status === "ACCEPTED" ? 1 : 0,
     state: chatStateOf(b.status),
   }));
 
@@ -53,15 +51,15 @@ export default async function InfluencerChatPage() {
       id: `${id}-brief`,
       side: "other",
       senderName: b.umkmName,
-      text: b.message,
+      text: b.brief,
       time: formatDate(b.createdAt),
     };
     const reply: ChatMessage = {
       id: `${id}-reply`,
       side: "me",
-      senderName: session.name,
+      senderName: account.fullName,
       text:
-        b.status === "DONE"
+        b.status === "COMPLETED"
           ? "Konten sudah saya kirim — terima kasih atas kolaborasinya! 🙌"
           : b.status === "REJECTED"
             ? "Mohon maaf, jadwal saya penuh untuk periode ini."
@@ -89,7 +87,7 @@ export default async function InfluencerChatPage() {
         <ChatClient
           conversations={conversations}
           messages={messages}
-          userName={session.name}
+          userName={account.fullName}
         />
       </div>
     </InfluencerShell>

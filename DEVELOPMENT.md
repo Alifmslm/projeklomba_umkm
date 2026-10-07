@@ -2,7 +2,7 @@
 
 Technical documentation for developers working on Kolab.id. For the product overview see [README.md](./README.md); for information architecture and task flows see [ARCHITECTURE.md](./ARCHITECTURE.md); for design tokens and components see [DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md).
 
-> **Migration status:** the app code currently still uses local SQLite (`node:sqlite`) with mock cookie auth. This guide describes the **target stack (Supabase + Supabase Auth — decided)** implementing the product spec in ARCHITECTURE.md (escrow lifecycle, 3 dashboards). Code migration is pending work — see §6, §8, §9, and §12.
+> **Migration status:** the data layer has moved to Supabase/Postgres and Supabase Auth. `rls-access-control` and `auth-session` are applied and archived; the catalog/booking core loop is in progress. Where this guide still says "target" or "pending", treat §6, §8 and §9 as the current truth. No local SQLite, no mock cookie.
 
 ## 1. Tech Stack
 
@@ -73,9 +73,18 @@ Re-running `npm run db:seed` resets the demo data (truncate + re-insert).
 | `build` | `next build` — production build |
 | `start` | `next start` — serve the production build |
 | `lint` | `eslint` — lint the codebase |
+| `db:reset` | Drop, recreate and reseed the **local Postgres** stack (`supabase db reset`), running `supabase/seed.sql` |
 | `db:migrate` | Apply `supabase/migrations/*.sql` to the linked project (`supabase db push`) |
-| `db:seed` | Seed demo data into Supabase via `scripts/seed.ts` (service-role key, server-side only). Extend fixtures with escrow/dispute/chat/notification cases when implementing ARCHITECTURE.md §2–§5 |
-| `db:types` | Regenerate typed schema (`supabase gen types typescript --linked > lib/supabase/database.types.ts`) |
+| `db:seed` | Seed the retired **SQLite** mirror (`data.db`) from `lib/seed.ts`. The app no longer reads it — see §9 — but the historical verification scripts still compare the two stores |
+| `db:types` | Regenerate typed schema (`supabase gen types typescript --local > utils/supabase/database.types.ts`). Use `--linked` instead of `--local` once a remote project is linked |
+| `verify:auth` | End-to-end check of sign-up, onboarding, sign-in and sign-out, driven over HTTP (`scripts/verify-auth.ps1`) |
+| `verify:rls` | Check every RLS policy against PostgREST, anonymously and as four real accounts (`scripts/verify-rls.ps1`) |
+| `verify` | Both of the above |
+
+Two helpers back those checks and are usable on their own: `scripts/sign-in-as.ps1`
+signs in as any seeded account and replays the session cookie, which is how the role
+matrix is driven; `scripts/sqlite-query.mjs` runs one SQL statement against `data.db`
+and prints JSON.
 
 ## 5. Production Build
 
@@ -103,8 +112,9 @@ app/
       riwayat/            # Full UMKM collaboration history
       profile/            # UMKM business profile view + edit
       chat/               # Chat list (coming-soon stub → ARCHITECTURE.md §2.7)
-  actions.ts              # Server Actions: login/logout, submitBooking, setBookingStatus, submitReview,
-                          # updateProfile (+ future: offers, deliveries, disputes — see ARCHITECTURE.md)
+  actions.ts              # Server Actions: login/logout, submitBooking, submitReview,
+                          # booking-lifecycle (accept/decline/pay/submit/revision/approve/cancel/dispute),
+                          # updateProfile (+ future: offers, chat — see ARCHITECTURE.md)
   page.tsx                # Landing page
   influencers/            # Creator list + filters, creator detail (packages, reviews)
   booking/[influencerId]/ # Collaboration request form: creates PENDING booking + chat room (UMKM-only guard)
@@ -121,20 +131,22 @@ lib/
     client.ts             # Browser client (createBrowserClient) — "use client" only
     server.ts             # Server client (createServerClient + cookies) — Server Components/Actions
     database.types.ts     # Generated types (npm run db:types). Replaces hand-written types where applicable
-  data.ts                 # Query functions (incl. recommendations & price stats) — ported to Supabase client
+  data/                   # Postgres query modules — catalog.ts (public reads),
+                          # bookings.ts (party-scoped reads), palette.ts (category colours)
   auth.ts                 # Session/role helpers on top of supabase.auth.getUser() (replaces cookie mock)
   format.ts               # Rupiah / number / date formatting
   types.ts                # Shared TypeScript types
 middleware.ts             # Auth session refresh (updateSession) + route guards
 supabase/
-  migrations/             # Versioned SQL schema, e.g. 0001_init.sql (replaces CREATE TABLE in lib/db.ts)
-scripts/seed.ts           # CLI seeder using the SERVICE-ROLE key — never the publishable key
+  migrations/             # Versioned SQL schema. Postgres is the app's only store;
+                          # lib/db.ts + lib/seed.ts + scripts/seed.ts remain only to
+                          # keep the historical SQLite↔Postgres verification scripts runnable.
 ```
 
 Key client snippets (per current Supabase docs, `@supabase/ssr`):
 
 ```ts
-// lib/supabase/client.ts
+// utils/supabase/client.ts
 import { createBrowserClient } from "@supabase/ssr";
 
 export function createClient() {
@@ -146,7 +158,7 @@ export function createClient() {
 ```
 
 ```ts
-// lib/supabase/server.ts
+// utils/supabase/server.ts
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
@@ -176,7 +188,7 @@ export async function createClient() {
 ```ts
 // middleware.ts — refreshes the session cookie on every request.
 // Without this, users get randomly logged out.
-import { updateSession } from "@/lib/supabase/middleware";
+import { updateSession } from "@/utils/supabase/middleware";
 
 export async function middleware(request: Request) {
   return updateSession(request);
@@ -361,20 +373,24 @@ create table if not exists notifications (
 );
 
 create table if not exists reviews (
-  id            bigint generated always as identity primary key,
-  booking_id    bigint not null references bookings(id) on delete cascade,
-  reviewer_role text not null check (reviewer_role in ('umkm', 'influencer')),
-  reviewer_id   bigint not null,
-  reviewee_type text not null check (reviewee_type in ('influencer', 'umkm')),
-  reviewee_id   bigint not null,
-  rating        integer not null check (rating between 1 and 5),
-  comment       text not null default '',
-  created_at    timestamptz not null default now(),
-  unique (booking_id, reviewer_role)
+  id                     bigint generated always as identity primary key,
+  booking_id             bigint not null references bookings(id) on delete cascade,
+  reviewer_role          party_role not null,
+  reviewee_umkm_id       bigint references umkms(id) on delete restrict,
+  reviewee_influencer_id bigint references influencers(id) on delete restrict,
+  rating                 integer not null check (rating between 1 and 5),
+  comment                text,
+  created_at             timestamptz not null default now(),
+  unique (booking_id, reviewer_role),
+  check (num_nonnulls(reviewee_umkm_id, reviewee_influencer_id) = 1)
 );
 
--- Reviews open when the booking is COMPLETED, or after a dispute decision (any outcome).
--- Enforced in the review Server Action, not in the DB.
+-- The reviewer is one of the booking's two parties and the reviewee is the
+-- other, so both are derived from the booking and never taken from the request
+-- body. Reviews open once the booking is COMPLETED (a dispute decision would
+-- open them too, but that capability does not exist yet, so the only reachable
+-- path is COMPLETED). A review's rating and count live on `influencers` and are
+-- maintained by a database trigger; a recorded review is immutable.
 
 -- One login per UMKM / creator / admin. Links Supabase Auth users to domain rows.
 -- Admins are created manually (no signup/onboarding) with both FKs null.
@@ -402,32 +418,145 @@ Type differences from SQLite to be aware of when porting `lib/data.ts`:
 
 ### Row Level Security (RLS)
 
-Enable RLS on every table and start with this baseline (competition-friendly, tighten later):
+**Applied.** RLS is enabled on all 17 tables and the baseline policies ship in
+`supabase/migrations/20261003103000_rls_baseline.sql`. Do not re-run the
+`enable row level security` block below — the dump already enables it, and the
+`ensure_rls` event trigger in the dump turns it on for any table created later
+regardless.
 
-```sql
-alter table influencers         enable row level security;
-alter table packages            enable row level security;
-alter table umkms               enable row level security;
-alter table bookings            enable row level security;
-alter table reviews             enable row level security;
-alter table profiles            enable row level security;
-alter table deliveries          enable row level security;
-alter table revision_requests   enable row level security;
-alter table resolution_offers   enable row level security;
-alter table conversations       enable row level security;
-alter table messages            enable row level security;
-alter table disputes            enable row level security;
-alter table notifications       enable row level security;
+Read policies, all `for select` only:
 
--- Catalog tables: public read, no direct writes (writes go through Server Actions).
-create policy "public read" on influencers for select using (true);
-create policy "public read" on packages     for select using (true);
-create policy "public read" on umkms        for select using (true);
-```
+| Table | Policy | Who |
+| --- | --- | --- |
+| `categories`, `influencers`, `packages`, `umkms`, `reviews` | `*_public_read` using `(true)` | anyone, including signed out |
+| `profiles` | `profiles_own_read` using `user_id = auth.uid()` | the profile owner |
+| `bookings` | `bookings_party_read` | the UMKM or creator named on the row |
+| `deliveries`, `revision_requests`, `payments`, `booking_events` | `*_party_read` | the two parties of the parent booking |
 
-Recommended write model: **all writes go through Server Actions using a service-role client** (server-only, bypasses RLS). This keeps the demo simple and secure by default — the publishable key effectively becomes read-only for catalog data. This is mandatory for dispute decisions and payment status changes: they must never be writable from the browser. For production hardening, replace service-role writes with per-user RLS policies matching `auth.uid()` against `profiles` (e.g. a UMKM may insert bookings only for its own `umkm_id`, a creator may update only its own bookings).
+Party scope is a subquery against `profiles`, repeated in each child policy
+rather than factored into a helper, so authorizing a booking and forgetting its
+children would be a visible omission instead of a shared predicate that silently
+propagates the mistake.
 
-Chat access: conversation participants (the two parties of the booking) may read/write messages; `admin` may read a booking's chat **only** while its dispute is undecided (`OPEN` / `NEED_INFO`), e.g.:
+`reviews.reviewee_umkm_id` / `reviews.reviewee_influencer_id` exist so creator
+reviews are reachable without joining through `bookings`. Under the policy above
+that join is party-scoped, so a signed-out visitor on a public creator page would
+otherwise get zero reviews. Those columns say *which creator* was reviewed, but
+not *which business wrote the review* — that business is only recorded on
+`bookings`. `public.influencer_reviews` (a read-only, owner-rights view created by
+the reviews migration) resolves that link once and exposes only the public review
+fields plus the public business profile, which is what lets a signed-out visitor
+see the author's name. Public review reads go through the view, not `reviews`.
+
+**No write policy exists anywhere.** Writes go through Server Actions using a
+service-role client, which bypasses RLS and therefore authorizes in application
+code. The publishable key can read the catalog and nothing more.
+
+**The read/write split, in one rule:** reads run on the *user-scoped* server
+client (`utils/supabase/server.ts`), so the policy decides what comes back — a
+read for a booking that is not yours returns `200` with no rows, never a `403`.
+Writes run on the *service-role* client (`utils/supabase/admin.ts`), which
+bypasses RLS, so the Server Action must do the authorization the policy would
+have done: resolve the caller with `requireUmkm()` / `requireInfluencer()`, then
+scope the statement to an id the caller's session proved (for example
+`.eq("influencer_id", account.influencerId)`).
+
+`createAdminClient()` is **forbidden outside `app/actions.ts`**. It carries
+`import "server-only"`, so any page or Client Component that reaches it fails the
+build rather than shipping the key, and it reads `SUPABASE_SERVICE_ROLE_KEY` —
+a name with **no `NEXT_PUBLIC_` prefix**. That prefix is what makes Next inline a
+value into the browser bundle; dropping it from this one variable is deliberate,
+not a naming inconsistency, so do not "fix" it by adding the prefix.
+
+**Five tables are deliberately policy-less:** `conversations`, `messages`,
+`disputes`, `dispute_infos`, `notifications`. They belong to capabilities that are
+out of scope for now. RLS is enabled with no policy, so they return an empty result
+rather than an error. In particular **a dispute can be opened but not read back** —
+it is recorded as awaiting a decision. Each gains its policy when its capability
+lands; do not add one early. `resolution_offers` left this list when offers landed:
+it now carries `resolution_offers_party_read`, a party-scoped `SELECT` policy that
+resolves the caller through the booking exactly like `bookings_party_read`.
+
+Write model: **all writes go through Server Actions using a service-role client**
+(server-only, bypasses RLS). Service role is only ever used on rows the caller
+could already read through their own session, so it authorizes rather than
+bypasses. This is mandatory for dispute decisions and payment status changes: they
+must never be writable from the browser. For production hardening, replace
+service-role writes with per-user RLS policies matching `auth.uid()` against
+`profiles`.
+
+**Booking lifecycle writes go through database functions, not loose updates.**
+Every booking mutation — accept, decline, pay, submit content, request a revision,
+submit a revision, approve and release, cancel, open a dispute — is one call to a
+`plpgsql` function in `supabase/migrations/20261006120000_booking_lifecycle.sql`.
+`apply_booking_transition(p_booking_id, p_to, p_actor_role)` owns the transition
+matrix (which `(from, to, required_actor_role)` triples are legal) and is **the
+only writer of `bookings.status`**; a `BEFORE UPDATE` guard trigger raises when
+`status` changes without that function's transaction-local flag. The same call
+records the implied timestamp, moves the `payments` row, and appends the
+`booking_events` timeline entry. `submit_delivery`, `request_revision`, and
+`open_dispute` are thin wrappers that delegate to it in the same transaction, so a
+forced failure leaves both the booking and its child row unchanged.
+`extend_review_window` is the one separate function. Do not add a direct
+`update ... set status` anywhere: it will be refused, and that is the point.
+
+**Settlement offers are the other database-owned flow.**
+`supabase/migrations/20261007130000_resolution_offers.sql` adds `create_offer` and
+`respond_to_offer`, the only writers of a `resolution_offers` row and the only path
+that moves a held payment to `SPLIT` or `REFUNDED`. `create_offer` locks the booking,
+refuses a finished booking or a non-party, enforces the per-type role/state table,
+checks the type-dependent `value`, clears any overdue sibling (`status = 'PENDING'`
+and `expires_at <= now()` become `EXPIRED`), and inserts a `PENDING` offer with
+`expires_at = now() + interval '48 hours'`. A partial unique index
+`resolution_offers_one_open on (booking_id) where status = 'PENDING'` makes a second
+open offer impossible. `fee` is always written as `0` (free extra revisions only,
+because the escrow total is immutable and there is no second charge path).
+
+`respond_to_offer` locks the offer, then: an overdue offer is recorded `EXPIRED` and
+returned without raising (raising would roll the record back); a decided offer, the
+offerer, and non-parties are refused; a decline records `DECLINED` with no other
+change. Accepting calls `apply_booking_transition` for the status move and settles
+`payments` in the same transaction — `EXTRA_REVISION` only raises `revision_quota`
+with no state change; `DISCOUNT` completes the booking then overwrites the release
+to `SPLIT` with `creator_amount = value`; `CANCELLATION` cancels the booking and
+writes `REFUNDED` (full) or `SPLIT` (partial), but only when the payment is `HELD`,
+so a mutual cancellation on an unpaid `ACCEPTED` request just ends with no money
+recorded as moved.
+
+The `value` column is type-dependent: `EXTRA_REVISION` is a count (`>= 1`);
+`DISCOUNT` is the creator's accepted amount (`0 < value < amount`); `CANCELLATION`
+is the amount refunded to the business (`0 < value <= amount`). Expiry is lazy —
+there is no scheduler, so an overdue `PENDING` offer is marked `EXPIRED` when a
+sibling is created or a decision is attempted, and reads show it expired in
+between. A direct cancellation still settles nothing; the cancellation *offer* is
+the negotiated, money-settling path.
+
+**Settlement states flow through the app as amounts, not just labels.** A booking
+list row carries a payment stub (`status`, `creator_amount`, `umkm_refund_amount`),
+so a dashboard derives money from the payment record rather than guessing from the
+booking status. The creator dashboard counts a `RELEASED` payment's full total and a
+`SPLIT` payment's `creator_amount` as earnings, keeps a `HELD` payment in "Dana
+Ditahan", and counts nothing for `REFUNDED` or `UNPAID`. The booking detail renders
+each state honestly: `SPLIT` shows both shares ("Dana dibagi"), `REFUNDED` shows the
+amount returned to the business. Only `resolution_offers` writes `SPLIT`/`REFUNDED`;
+`apply_booking_transition` writes `RELEASED`.
+
+The Server Action side is unchanged and mandatory: it **fetches the booking
+through the caller's own session first** (`getBookingById`, user-scoped client),
+refuses when RLS returns nothing, and only then calls the function through the
+service-role client. Authorization is never delegated to the service role.
+
+**Four timestamps are displayed only; nothing reads them.**
+`bookings.payment_due_at`, `bookings.deadline_at`, `bookings.review_due_at`, and
+`disputes.due_at` are recorded and shown to the parties, but **no code reads them
+to change a state**. There is no cron, no scheduler, and no job that fires when a
+deadline passes; every transition is user-initiated. If you are looking for the
+job that acts on these columns, there isn't one and there is not meant to be one
+yet — do not add a background sweep without a product decision.
+
+Chat access, once the capability lands: conversation participants (the two parties
+of the booking) may read/write messages; `admin` may read a booking's chat **only**
+while its dispute is undecided (`OPEN` / `NEED_INFO`), e.g.:
 
 ```sql
 create policy "dispute chat read for admin" on messages
@@ -443,81 +572,170 @@ create policy "dispute chat read for admin" on messages
   );
 ```
 
-Influencer `rating` / `review_count` stay denormalized — update them in the same Server Action that inserts a UMKM review (or via a Postgres trigger).
+**A creator's rating and review count are maintained by a database trigger.**
+Influencer `rating` / `review_count` stay denormalized. `reviews_rollup`
+(`AFTER INSERT ON reviews`) recomputes both from the reviews naming that creator
+— `round(avg(rating), 1)`, not an increment — so the summary is a function of the
+rows rather than of the action that wrote them. `reviews_immutable`
+(`BEFORE UPDATE OR DELETE ON reviews`) raises for every update and delete: a
+recorded review is permanent, and with no update or delete path the recomputed
+number cannot drift. No application code writes `influencers.rating`.
+
+**Deleting a booking would leave the creator's rating high.** The `reviews`
+foreign key is `ON DELETE CASCADE`, so deleting a booking removes its reviews,
+and the rollup trigger reacts only to inserts — the rating would not be corrected.
+`reviews_immutable` is written to stand aside for that cascade (it raises only
+when the parent booking still exists), because a deletion path is where the
+correction belongs and there is no such path yet. No capability deletes a
+booking: completed, declined, and cancelled requests are terminal and keep their
+record. A future deletion path must correct the rollup in the same transaction
+(or the guard must be tightened to refuse the cascade too). The note names the
+cascade so that the first person to add deletion finds it.
+
+Reviewing is gated on `COMPLETED` only. The spec also allows reviews after a
+dispute decision, but no request can leave `DISPUTED` until the dispute
+capability exists, so a disputed request is refused by the review screen. That
+scenario is specified but not yet exercisable — recorded here so it is not read
+as untested behaviour.
 
 ## 9. Auth — Supabase Auth (decided)
 
 **Decision: Supabase Auth.** No extra vendor — it ships with the database, and its JWTs plug directly into RLS policies.
+
+This section describes what is built, not a plan. The mock session is gone; `components/admin-session.ts`, the `kolab_session` cookie reader and the mock login actions have all been deleted, and nothing reads a role from the browser any more.
 
 ### Methods
 
 | Method | Status | Notes |
 | --- | --- | --- |
 | Email + password | Primary | `signUp` / `signInWithPassword` in Server Actions. Zero config |
-| Google OAuth | Primary | `signInWithOAuth({ provider: "google" })` + `/auth/callback` code exchange |
+| Google OAuth | Primary | `signInWithOAuth({ provider: "google" })` + `/auth/callback` code exchange. **Implemented but unverified** — the local stack has no Google client, so only the code path was exercised |
+| Demo one-click sign-in | Development only | Two buttons on `/login` for the seeded business owner and the seeded creator. Refused in a production build |
 | Magic link / email OTP | Deferred | Revisit post-launch; depends on email deliverability |
 | Phone OTP (SMS) | Out of scope | Per-message SMS cost — unjustified for this project |
 
-### Data model: `profiles`
+### `lib/auth.ts` — the only answer to "who is asking"
 
-One login per UMKM / creator / admin. `profiles.user_id → auth.users(id)` carries the `role` plus exactly one of `umkm_id` / `influencer_id` — except `admin`, which has both null and is created manually (Supabase Dashboard → Auth → Users, then insert the `profiles` row with a service-role script). No signup or onboarding exists for admins. UMKM/creator rows are created by an **onboarding Server Action** (service-role client), never by the browser:
+Every page and action resolves identity through this file and nowhere else:
 
-1. User signs up / signs in (either method) → auth user exists, no profile yet.
-2. Middleware sees the missing profile → forces `/onboarding`.
-3. User picks a role and fills in business/creator details → Server Action inserts the `umkms`/`influencers` row, then the `profiles` row linking `auth.uid()`.
+| Function | Behaviour |
+| --- | --- |
+| `getUser()` | The session's `auth.uid`, or `null`. No redirect. |
+| `getUserContext()` | `{ userId, role, umkmId, influencerId }` from the session's `profiles` row, or `null` if the session has no profile yet. Wrapped in React `cache()`, so one request does one lookup no matter how many shells and layouts a route mounts. |
+| `requireUser()` | `getUserContext()` or a redirect: no session → `/login?next=…`, no profile → `/onboarding`, otherwise the context. |
+| `requireRole(...roles)` | `requireUser()` restricted to the listed roles; anything else goes to its own dashboard. |
+| `requireUmkm()` / `requireInfluencer()` | The two special cases of the above. |
+| `requireParty(bookingId)` | The session, resolved to the `umkm_id` or `influencer_id` that actually appears on that booking. Returns `null` for a non-party and for an admin. |
+
+`DASHBOARD_BY_ROLE` is the one place the role → landing path mapping is written down.
+
+Two rules the code follows so that no path can answer the question differently:
+
+- **The role is never taken from the request.** Not from a query string, not from a form field, not from a cookie. `role` is read from `profiles` and only then narrowed, and the narrowing helpers compare explicitly against both values so TypeScript can prove the type without a cast.
+- **The proxy and the DAL answer different questions.** `proxy.ts` only asks whether a session exists; `lib/auth.ts` asks who it belongs to. Duplicating the second question in the proxy would mean two answers to one question, so the proxy does not try.
+
+### Onboarding
+
+`/onboarding` collects the role choice plus the fields that differ between the two, then the `onboard` Server Action:
+
+1. Insert the domain row (`umkms` or `influencers`) with the service-role client.
+2. Insert the `profiles` row binding `auth.uid()` to that row's id, with compensating deletes if step 2 fails.
+3. While SQLite is still the read store, also mirror the row into it **under the same id**, so both stores agree until the catalog change removes the mirror.
 4. Redirect to the role dashboard.
 
-Baseline RLS — a user may read only their own profile (all writes go through Server Actions):
+`onboard` deliberately does **not** call `requireUser()`. `requireUser()` sends a profileless session to `/onboarding`, and `/onboarding` is the one page that cannot accept a redirect to itself — it would loop. `onboard` therefore uses `getUser()` plus a separate `getUserContext()` check for "does a profile already exist". This is the only page that reads the context without demanding one.
 
-```sql
-create policy "own profile read" on profiles
-  for select using (auth.uid() = user_id);
-```
+Validation happens before any insert: required fields, the category and city the catalog already knows, the price shape for a creator. A `handle` that is already taken is reported as a field error naming the reason, not as a generic failure. Only `umkm` and `influencer` are offered, and the rendered form contains no admin option.
 
-Phase-2 hardening (replace service-role writes with per-user policies), e.g. a UMKM inserts bookings only for itself:
+### Sign-in
 
-```sql
-create policy "umkm creates own bookings" on bookings
-  for insert with check (
-    umkm_id = (select umkm_id from profiles where user_id = auth.uid())
-  );
-```
+- `/login` posts to `signIn`, which reads `email`, `password` and an optional `next`.
+- **`next` is honoured only when it is a relative path.** `safeNext` rejects anything protocol-relative (`//evil.example/steal`) as well as absolute URLs, so a crafted `next` cannot bounce a freshly authenticated visitor off-site. A rejected `next` falls back to the role dashboard.
+- A wrong password returns `200` with a field error and no session. Server Actions report failure by *returning* state through `useActionState`; they do not throw, so a failed attempt renders instead of the error boundary.
+- The demo one-click buttons call `demoSignIn(role)`, which takes **no form input at all** — the credential is a constant in the module, so there is nothing for the browser to tamper with. The guard is `process.env.NODE_ENV === "production"`, evaluated before any credential is used, and the buttons themselves are gated on the same check so a production `/login` renders two forms instead of four.
 
-### Flows
+  The build does **not** remove the function: `app/actions.ts` is a `"use server"` module, so every export is a callable endpoint and cannot be tree-shaken. `kolab12345` and both demo addresses therefore remain in the server chunk of a production build — verified rather than assumed. That is not a leak, because they were never secrets: `supabase/seed.sql` commits the same values, the accounts exist only after a local `supabase db reset`, and no deployed database is seeded by this repository.
 
-- **Email signup** — `/signup` form (name, email, password) → Server Action `signUp` → confirm email (disabled in dev, enabled in prod) → `/onboarding` (no profile yet).
-- **Email login** — `/login` form → `signInWithPassword` → `revalidatePath("/", "layout")` → redirect by role (`/dashboard` for UMKM, `/dashboard/influencer` for creators, `/admin` for admins).
-- **Google OAuth** — button → `signInWithOAuth` with `redirectTo: <origin>/auth/callback` → callback route exchanges the code for a session → `/onboarding` or dashboard depending on profile presence.
-- **Logout** — Server Action `supabase.auth.signOut()` → redirect `/`.
-- **Role checks** — helper `requireRole("umkm" | "influencer" | "admin")` in `lib/auth.ts`: `getUser()` → read `profiles` row → scope every query by the linked `umkm_id`/`influencer_id` (admins skip scoping but are limited to dispute flows). Never trust a role sent from the client.
+### Route protection (`proxy.ts`)
 
-### Route protection (middleware)
+Next 16 renamed `middleware` to `proxy`: the file must export a single function named `proxy`, and `config.matcher` still selects paths.
 
 - Public: `/`, `/influencers*`, `/insights`, `/login`, `/signup`, `/auth/*`.
-- `updateSession` refresh runs on every non-static request.
-- Unauthenticated users are redirected away from `/dashboard*`, `/booking*`, `/review/[bookingId]`, `/onboarding`, `/admin/*`; authenticated users with a profile are redirected away from `/login`/`/signup`; authenticated users without one are forced to `/onboarding`. `/admin/*` additionally requires `requireRole("admin")` and redirects other roles to their own dashboard.
+- No session → redirected away from `/dashboard*`, `/booking*`, `/review/[bookingId]`, `/admin/*`, with `?next=` carrying the original destination for the form to return to.
+- A session → redirected away from `/login` and `/signup`.
+- `/onboarding` is **not** in the protected set. It is the one authenticated route a profileless session must be able to reach, and protecting it would be the same loop as above.
+- `/admin/*` additionally requires `requireRole("admin")`; any other role lands on its own dashboard. Because the proxy cannot know the role, `/login` and `/signup` send a signed-in visitor to `/dashboard`, which then resolves the role — one extra hop, and only one place that knows the mapping.
 
-### Supabase dashboard setup (auth)
+### Writes and the service-role key
 
-1. Authentication → Sign In/Up: enable the **Email** and **Google** providers. Dev project: "Confirm email" OFF; prod: ON.
-2. Google provider: create an OAuth client in Google Cloud Console, paste the client ID/secret into Supabase; allowlist `https://<project-ref>.supabase.co/auth/v1/callback` on the Google side.
-3. Authentication → URL Configuration: `SITE_URL` = deployed domain; Redirect URLs include `http://localhost:3000/**` (dev) and the prod domain (for `/auth/callback`).
-4. Translate the auth email templates to Bahasa Indonesia.
-5. Demo accounts: create `umkm-demo@kolab.id` / `kreator-demo@kolab.id` (linked to seeded rows via `profiles`) in the Dashboard or a service-role script. A one-click demo-login button is allowed in dev only. Admin accounts are always created manually the same way (user + `profiles` row with `role = 'admin'`), never via signup.
+The RLS baseline defines **SELECT policies only**. There is no INSERT, UPDATE or DELETE policy on any table, so a publishable key cannot write anything — not even its own `profiles` row, because `profiles_own_read` is a SELECT policy and an UPDATE with no policy matches zero rows and is discarded silently rather than refused.
 
-### Migrating off the mock
+Every write therefore goes through the service-role client in `utils/supabase/admin.ts`, inside a Server Action. That is the current design, not an oversight: phase-2 hardening replaces the service-role writes with per-user policies, starting with a UMKM being able to insert only its own bookings.
 
-1. Delete the `kolab_session` cookie logic in `lib/auth.ts`; rewrite helpers on `getUser()` + `profiles`.
-2. Replace the `/login` account picker with real login/signup forms plus `/onboarding` (role + details).
-3. Add `middleware.ts` (session refresh + guards) and the `/auth/callback` route.
-4. Remove the demo-login backdoor before any prod deploy.
+One consequence worth stating: because the party policies key on `umkm_id` / `influencer_id` and an admin's profile carries neither, **an admin currently reads zero bookings**. That is deliberate — admin visibility arrives with the dispute policies, not with the party ones.
+
+### Admin provisioning
+
+No signup or onboarding path creates an admin. `profiles_role_link_chk` requires an admin to carry neither `umkm_id` nor `influencer_id`, so the row is inserted by hand:
+
+1. Supabase Dashboard → Authentication → Users → **Add user**, with *Auto Confirm User* ticked. Copy the generated UUID.
+2. Bind it:
+
+```sql
+insert into public.profiles (user_id, full_name, role)
+values ('<the-uuid-from-step-1>', 'Operator Kolab', 'admin');
+```
+
+`umkm_id` and `influencer_id` are each `UNIQUE`, so this is also the only place an existing business owner or creator can be bound to an account.
+
+### Email confirmation
+
+`signUp` auto-confirms the address through the service role **only when `NODE_ENV !== "production"`**, so development does not need a mail server. In a production build the address is left unconfirmed and the account cannot sign in until it is confirmed. The local stack also sets `enable_confirmations = false`, so both paths are open locally; the unconfirmed-sign-in path is therefore reasoned about rather than exercised.
+
+### Seeding
+
+`supabase/seed.sql` creates an `auth.users` row plus an `auth.identities` row for all nine seeded accounts, so every seeded business owner and creator can sign in with the credentials the seed records. Three details are load-bearing and easy to get wrong: an identity row per user is required, the nullable `*_token` / `*_change` columns must be `''` and not NULL, and `actor_role` is an enum distinct from `party_role`.
+
+The seed ends by setting `influencers_id_seq` to 12 and `umkms_id_seq` to 4 — past `lib/seed.ts`'s maxima. Every id is `GENERATED ALWAYS AS IDENTITY` and rejects an explicit insert without `OVERRIDING SYSTEM VALUE`, so onboarding cannot choose its id; the sequences must instead start somewhere the SQLite mirror has not already used, or the mirror fails on a duplicate key. `setval` is used rather than `ALTER … RESTART WITH` because a restart stores its value nowhere queryable, which would make the one number the block exists to set impossible to assert.
+
+### Verification
+
+There is no test runner, so the checks that stand in for one are HTTP scripts. Both
+need a running dev server (`npm run dev`) and a seeded local stack (`npm run db:reset`).
+
+```bash
+npm run verify        # both suites
+npm run verify:auth   # sign-up -> onboarding -> sign-in -> sign-out, both stores
+npm run verify:rls    # 40 assertions against PostgREST
+```
+
+`verify-auth` drives the real Server Actions with a multipart POST carrying React's own
+`$ACTION_*` fields, so it reaches the cookie write, the redirects and the database
+writes that a GET cannot. It also creates accounts, and removes every row it created
+before it exits, so the seed's own assertions still hold afterwards.
+
+`verify-rls` asks the database rather than the page. That distinction matters: a page
+could refuse a cross-party request on its own logic while the policy would have handed
+the row over. Reading a row RLS hides returns an empty `200`, never a `403`, so the
+checks assert row counts; the insert checks are the ones that assert `42501`.
+
+Two traps when editing either script. A Server Action id changes on recompile, so the
+form fields must be re-harvested immediately before each POST. And PowerShell strips
+inner quotes from `node -e`, which is why every SQL string goes through a file.
+
+### Local development
+
+- Postgres is the app's only store. The catalog change deleted `lib/data.ts`, so nothing in the app import graph reaches `node:sqlite` and the app renders with `data.db` absent. `lib/db.ts` + `lib/seed.ts` + `scripts/seed.ts` + `npm run db:seed` survive **only** so the historical verification scripts (`verify-auth.ps1`) can keep comparing the old SQLite mirror against Postgres; they are not part of the app. `npm run db:reset` seeds Postgres.
+- Do not run `npm run build` while `npm run dev` is running. `tsconfig.json` includes `.next/dev/types/**/*.ts`, so the build type-checks files the dev server is actively rewriting; the two writers interleave and produce files that fail to parse.
+- Run `npx tsc --noEmit` *after* a build, not before one on a clean `.next`. `PageProps` and `LayoutProps` are generated into `.next/types` by the build, so a fresh checkout type-checks against globals that do not exist yet.
 
 ## 10. Rendering & Data Fetching Notes
 
 - Keep `export const dynamic = "force-dynamic"` on DB-backed pages initially — same as before. Add per-page caching deliberately later, not by accident.
-- Server Components and Server Actions must use the per-request server client (`lib/supabase/server.ts`), never a module-level singleton.
-- PostgREST returns `numeric` columns as strings — cast ratings/amounts with `Number()` at the boundary (e.g. in `lib/data.ts`).
+- Server Components and Server Actions must use the per-request server client (`utils/supabase/server.ts`), never a module-level singleton.
+- PostgREST returns `numeric` columns as strings — cast ratings/amounts with `Number()` at the boundary (`lib/data/catalog.ts`, `lib/data/bookings.ts`).
 - UI must use design-token utilities (`bg-primary-600`, `text-success-700`, `rounded-xl`, `shadow-sm`, ...) per DESIGN_SYSTEM.md §16 — never raw hex or arbitrary values. Custom values live in `@theme` in `app/globals.css`.
+- Category colours are looked up in **source**, not stored: `lib/data/palette.ts` maps a `categories.slug` to a static Tailwind gradient class, and `<Avatar category={slug} />` does the lookup. Tailwind v4 only emits classes it can see in the source; a gradient assembled from a database string is never compiled and disappears silently at runtime, which is why the slug — not the class — is the thing passed around. Unknown or missing slugs fall through to a fixed fallback.
 - Notification feed: the prototype derives it from bookings; the target reads the `notifications` table (unread = `read_at is null`) with badge counts, refreshed via revalidation. No realtime subscription in the prototype.
 - Currency formatting still uses `lib/format.ts` (IDR/Rupiah helpers).
 

@@ -1,8 +1,9 @@
+import { getUmkmById } from "@/lib/data/catalog";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AlertCircle, CheckCircle2, Store } from "lucide-react";
-import { getSession } from "@/lib/auth";
-import { getUmkmById } from "@/lib/data";
+import { requireUmkm } from "@/lib/auth";
+
 import { updateProfile } from "@/app/actions";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
@@ -17,11 +18,9 @@ export const metadata: Metadata = {
 export default async function ProfilePage(
   props: PageProps<"/dashboard/profile">,
 ) {
-  const session = await getSession();
-  if (!session) redirect("/login");
-  if (session.role !== "umkm") redirect("/dashboard/influencer");
+  const account = await requireUmkm();
 
-  const umkm = getUmkmById(session.subjectId);
+  const umkm = await getUmkmById(account.umkmId);
   if (!umkm) redirect("/dashboard");
 
   const searchParams = await props.searchParams;

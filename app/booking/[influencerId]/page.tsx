@@ -1,3 +1,4 @@
+import { getInfluencerById, getPackagesByInfluencer } from "@/lib/data/catalog";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -11,13 +12,13 @@ import {
   RefreshCcw,
   ShieldCheck,
 } from "lucide-react";
-import { getSession } from "@/lib/auth";
-import { getInfluencerById, getPackagesByInfluencer } from "@/lib/data";
+import { requireUmkm } from "@/lib/auth";
+
 import { formatRupiah } from "@/lib/format";
+import { BRIEF_MAX, BRIEF_MIN } from "@/lib/types";
 import { submitBooking } from "@/app/actions";
 import { Avatar } from "@/components/Avatar";
 import { Button } from "@/components/Button";
-import { packageMeta } from "@/components/PackageMeta";
 
 export const dynamic = "force-dynamic";
 
@@ -29,21 +30,30 @@ export const metadata: Metadata = {
 export default async function BookingPage(
   props: PageProps<"/booking/[influencerId]">,
 ) {
-  const session = await getSession();
-  if (!session) redirect("/login");
-  if (session.role !== "umkm") redirect("/dashboard/influencer");
+  const account = await requireUmkm();
 
   const { influencerId } = await props.params;
   const searchParams = await props.searchParams;
-  const inf = getInfluencerById(Number(influencerId));
+  const inf = await getInfluencerById(Number(influencerId));
   if (!inf) redirect("/influencers");
 
-  const packages = getPackagesByInfluencer(inf.id);
+  const packages = await getPackagesByInfluencer(inf.id);
   const preselect =
     typeof searchParams.paket === "string"
       ? packages.find((p) => String(p.id) === searchParams.paket) ?? packages[0]
       : packages[0];
-  const gagal = searchParams.gagal === "1";
+  const gagalCode =
+    typeof searchParams.gagal === "string" ? searchParams.gagal : "";
+  const gagalMessage =
+    gagalCode === "brief"
+      ? "Isi brief kolaborasi dulu."
+      : gagalCode === "singkat"
+        ? `Brief minimal ${BRIEF_MIN} karakter supaya kreator paham maksudmu.`
+        : gagalCode === "panjang"
+          ? `Brief maksimal ${BRIEF_MAX} karakter.`
+          : gagalCode
+            ? "Pengajuan gagal / dibatalkan. Pastikan sesi UMKM kamu aktif, lalu coba kirim ulang."
+            : null;
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
@@ -70,14 +80,12 @@ export default async function BookingPage(
         mengonfirmasi lewat dashboard.
       </p>
 
-      {gagal && (
+      {gagalMessage && (
         <div className="mt-5 flex items-start gap-3 rounded-2xl border border-error-200 bg-error-50 p-4 text-sm text-error-700">
           <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
           <div>
             <p className="font-bold">Pengajuan gagal / dibatalkan</p>
-            <p className="mt-0.5">
-              Pastikan sesi UMKM kamu aktif, lalu coba kirim ulang.
-            </p>
+            <p className="mt-0.5">{gagalMessage}</p>
           </div>
         </div>
       )}
@@ -97,7 +105,6 @@ export default async function BookingPage(
             <div className="mt-4 space-y-3">
               {packages.map((pkg) => {
                 const checked = preselect?.id === pkg.id;
-                const meta = packageMeta(pkg.name);
                 return (
                   <label
                     key={pkg.id}
@@ -140,11 +147,11 @@ export default async function BookingPage(
                       <span className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1 border-t border-neutral-100 pt-2.5 text-[11px] font-semibold text-neutral-500">
                         <span className="inline-flex items-center gap-1">
                           <RefreshCcw className="h-3 w-3 text-primary-600" />
-                          {meta.quota} revisi
+                          {pkg.revisionQuota} revisi
                         </span>
                         <span className="inline-flex items-center gap-1">
                           <Clock className="h-3 w-3 text-primary-600" />
-                          Estimasi {meta.days} hari
+                          Estimasi {pkg.estimatedDays} hari
                         </span>
                       </span>
                     </span>
@@ -160,12 +167,13 @@ export default async function BookingPage(
             </legend>
             <label className="mt-3 block">
               <span className="mb-1.5 block text-xs text-neutral-500">
-                Ceritakan produk/usahamu & target konten (maks 500 karakter)
+                Ceritakan produk/usahamu & target konten (min {BRIEF_MIN}, maks {BRIEF_MAX} karakter)
               </span>
               <textarea
                 name="message"
                 rows={5}
-                maxLength={500}
+                minLength={BRIEF_MIN}
+                maxLength={BRIEF_MAX}
                 required
                 placeholder="Contoh: kami mau review kopi single origin baru. Tone santai, target audiens pekerja muda di Bandung…"
                 className="w-full rounded-2xl border border-neutral-300 px-4 py-3 text-sm text-neutral-800 shadow-xs outline-none transition-colors focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
@@ -185,7 +193,7 @@ export default async function BookingPage(
               Kamu berkolaborasi dengan
             </p>
             <div className="mt-4 flex items-center gap-4">
-              <Avatar name={inf.name} color={inf.color} size="lg" />
+              <Avatar name={inf.name} category={inf.categorySlug} size="lg" />
               <div className="min-w-0">
                 <p className="flex items-center gap-1.5 truncate text-base font-bold text-neutral-900">
                   {inf.name}
@@ -195,7 +203,7 @@ export default async function BookingPage(
                 </p>
                 <p className="truncate text-sm text-neutral-500">{inf.handle}</p>
                 <p className="mt-1 inline-flex items-center gap-1 text-xs text-neutral-500">
-                  <MapPin className="h-3 w-3" /> {inf.city} · {inf.niche}
+                  <MapPin className="h-3 w-3" /> {inf.city} · {inf.category}
                 </p>
               </div>
             </div>
@@ -206,7 +214,7 @@ export default async function BookingPage(
               <Building2 className="h-4 w-4" /> Kamu masuk sebagai
             </p>
             <p className="mt-3 font-head text-lg font-extrabold tracking-[-0.02em] text-neutral-900">
-              {session.name}
+              {account.fullName}
             </p>
             <p className="text-sm text-neutral-500">Akun demo UMKM</p>
           </div>

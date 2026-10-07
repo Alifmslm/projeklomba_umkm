@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -14,21 +14,12 @@ import {
   X,
 } from "lucide-react";
 import type { Package as PackageType } from "@/lib/types";
-import { packageMeta } from "@/components/PackageMeta";
+import { idleFormState } from "@/lib/form-state";
+import { saveInfluencerPackage, setPackageActive } from "@/app/actions";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
 import { EmptyState } from "@/components/EmptyState";
 import { formatRupiah } from "@/lib/format";
-
-type Row = {
-  id: number;
-  name: string;
-  price: number;
-  summary: string;
-  includes: string[];
-  quota: number;
-  days: number;
-};
 
 type Draft = {
   name: string;
@@ -52,45 +43,49 @@ const FIELD =
   "w-full rounded-xl border bg-neutral-0 px-4 py-2.5 text-sm text-neutral-900 placeholder:text-neutral-400 transition-colors duration-150 ease-standard focus:outline-none focus:ring-2";
 
 /**
- * PaketClient (ARCHITECTURE §4.6): kelola paket & harga. CRUD simulasi
- * state lokal (data layer mock tidak diubah) dengan kuota revisi 1–5 dan
- * estimasi pengerjaan. Menampilkan pengingat: harga publik + perubahan
- * hanya untuk permintaan baru.
+ * PaketClient (ARCHITECTURE §4.6): kelola paket & harga.
+ *
+ * The list is whatever the server rendered - there is no local copy of it. A
+ * create, edit, activation, or deactivation goes to a Server Action, which
+ * writes through the service role (the only writer the policies allow) and
+ * revalidates the public pages; the trigger then recomputes the creator's
+ * starting price. Keeping rows in client state is what the prototype did, and it
+ * would put the page back out of step with the database on the next load.
  */
 export function PaketClient({ packages }: { packages: PackageType[] }) {
-  const [rows, setRows] = useState<Row[]>(() =>
-    packages.map((p) => ({
-      id: p.id,
-      name: p.name,
-      price: p.price,
-      summary: p.summary,
-      includes: p.includes,
-      ...packageMeta(p.name),
-    })),
-  );
   const [formMode, setFormMode] = useState<"closed" | "add" | "edit">("closed");
   const [formId, setFormId] = useState<number | null>(null);
   const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT);
-  const [formError, setFormError] = useState("");
   const [confirmId, setConfirmId] = useState<number | null>(null);
 
-  const nextIdRef = useRef(
-    packages.reduce((max, p) => Math.max(max, p.id), 0) + 1,
+  const [state, formAction, pending] = useActionState(
+    saveInfluencerPackage,
+    idleFormState,
   );
 
-  const totalValue = useMemo(
-    () => rows.reduce((sum, r) => sum + r.price, 0),
-    [rows],
-  );
+  // A successful save re-renders the page with the new list; close the form so
+  // the creator is not left staring at a filled-in form they already submitted.
+  useEffect(() => {
+    if (state.notice) closeForm();
+  }, [state]);
+
+  const formOpen = formMode !== "closed";
+  const activeRows = packages.filter((p) => p.isActive);
+  const totalValue = activeRows.reduce((sum, p) => sum + p.price, 0);
+
+  function closeForm() {
+    setFormMode("closed");
+    setFormId(null);
+    setDraft(EMPTY_DRAFT);
+  }
 
   const openAdd = () => {
     setFormMode("add");
     setFormId(null);
     setDraft(EMPTY_DRAFT);
-    setFormError("");
   };
 
-  const openEdit = (row: Row) => {
+  const openEdit = (row: PackageType) => {
     setFormMode("edit");
     setFormId(row.id);
     setDraft({
@@ -98,68 +93,10 @@ export function PaketClient({ packages }: { packages: PackageType[] }) {
       price: String(row.price),
       summary: row.summary,
       includes: row.includes.join(", "),
-      quota: row.quota,
-      days: String(row.days),
+      quota: row.revisionQuota,
+      days: String(row.estimatedDays),
     });
-    setFormError("");
   };
-
-  const cancelForm = () => {
-    setFormMode("closed");
-    setFormId(null);
-    setDraft(EMPTY_DRAFT);
-    setFormError("");
-  };
-
-  const save = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const price = Number(draft.price);
-    const days = Number(draft.days);
-    const name = draft.name.trim();
-    const summary = draft.summary.trim();
-    if (!name) return setFormError("Nama paket wajib diisi.");
-    if (!Number.isFinite(price) || price <= 0)
-      return setFormError("Harga harus lebih dari 0.");
-    if (!summary) return setFormError("Ringkasan wajib diisi.");
-    if (!Number.isFinite(days) || days < 1)
-      return setFormError("Estimasi pengerjaan minimal 1 hari.");
-
-    const includes = draft.includes
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-
-    if (formMode === "edit") {
-      setRows((prev) =>
-        prev.map((r) =>
-          r.id === formId
-            ? { ...r, name, price, summary, includes, quota: draft.quota, days }
-            : r,
-        ),
-      );
-    } else {
-      setRows((prev) => [
-        ...prev,
-        {
-          id: nextIdRef.current++,
-          name,
-          price,
-          summary,
-          includes,
-          quota: draft.quota,
-          days,
-        },
-      ]);
-    }
-    cancelForm();
-  };
-
-  const remove = (id: number) => {
-    setRows((prev) => prev.filter((r) => r.id !== id));
-    setConfirmId(null);
-  };
-
-  const formOpen = formMode !== "closed";
 
   return (
     <div className="space-y-6">
@@ -186,10 +123,10 @@ export function PaketClient({ packages }: { packages: PackageType[] }) {
         </Button>
       </div>
 
-      {/* Form tambah/edit */}
+      {/* Form tambah/edit. Submits to the Server Action, so the values persist. */}
       {formOpen && (
         <form
-          onSubmit={save}
+          action={formAction}
           className="rounded-2xl border border-primary-200 bg-neutral-0 p-5 shadow-xs sm:p-6"
         >
           <div className="flex items-center justify-between gap-3">
@@ -198,13 +135,15 @@ export function PaketClient({ packages }: { packages: PackageType[] }) {
             </h2>
             <button
               type="button"
-              onClick={cancelForm}
+              onClick={closeForm}
               aria-label="Tutup form"
               className="grid h-9 w-9 place-items-center rounded-xl text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900"
             >
               <X className="h-4.5 w-4.5" />
             </button>
           </div>
+
+          <input type="hidden" name="packageId" value={formId ?? ""} />
 
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <Input
@@ -213,7 +152,6 @@ export function PaketClient({ packages }: { packages: PackageType[] }) {
               value={draft.name}
               onChange={(e) => setDraft({ ...draft, name: e.target.value })}
               placeholder="Contoh: Paket Basic"
-              error={formError && !draft.name.trim() ? formError : undefined}
             />
             <Input
               label="Harga (Rp per video)"
@@ -224,11 +162,6 @@ export function PaketClient({ packages }: { packages: PackageType[] }) {
               value={draft.price}
               onChange={(e) => setDraft({ ...draft, price: e.target.value })}
               placeholder="750000"
-              error={
-                formError && (Number(draft.price) <= 0 || draft.price === "")
-                  ? formError
-                  : undefined
-              }
             />
             <label className="sm:col-span-2">
               <span className="mb-1.5 block type-label leading-5 text-neutral-700">
@@ -294,39 +227,44 @@ export function PaketClient({ packages }: { packages: PackageType[] }) {
               value={draft.days}
               onChange={(e) => setDraft({ ...draft, days: e.target.value })}
               hint="Hari sampai versi pertama terkirim."
-              error={
-                formError && Number(draft.days) < 1 ? formError : undefined
-              }
             />
           </div>
 
-          {formError && (
+          {state.error && (
             <p className="mt-4 flex items-center gap-1.5 type-label text-error-700">
-              <AlertTriangle className="h-4 w-4" /> {formError}
+              <AlertTriangle className="h-4 w-4" /> {state.error}
             </p>
           )}
 
           <div className="mt-5 flex gap-2">
-            <Button type="submit">
+            <Button type="submit" disabled={pending}>
               {formMode === "edit" ? (
                 <>
-                  <CheckCircle2 className="h-4 w-4" /> Simpan Perubahan
+                  <CheckCircle2 className="h-4 w-4" />{" "}
+                  {pending ? "Menyimpan…" : "Simpan Perubahan"}
                 </>
               ) : (
                 <>
-                  <PackagePlus className="h-4 w-4" /> Simpan Paket
+                  <PackagePlus className="h-4 w-4" />{" "}
+                  {pending ? "Menyimpan…" : "Simpan Paket"}
                 </>
               )}
             </Button>
-            <Button variant="secondary" onClick={cancelForm}>
+            <Button variant="secondary" onClick={closeForm}>
               Batal
             </Button>
           </div>
         </form>
       )}
 
+      {state.notice && !formOpen && (
+        <p className="flex items-center gap-1.5 rounded-2xl border border-success-200 bg-success-50 px-4 py-3 type-label text-success-700">
+          <CheckCircle2 className="h-4 w-4" /> {state.notice}
+        </p>
+      )}
+
       {/* Daftar paket */}
-      {rows.length === 0 ? (
+      {packages.length === 0 ? (
         <EmptyState
           icon={PackagePlus}
           title="Belum ada paket"
@@ -339,21 +277,30 @@ export function PaketClient({ packages }: { packages: PackageType[] }) {
         />
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
-          {rows.map((row) => (
+          {packages.map((row) => (
             <div
               key={row.id}
-              className="flex flex-col rounded-2xl border border-neutral-200 bg-neutral-0 p-5 shadow-xs"
+              className={`flex flex-col rounded-2xl border bg-neutral-0 p-5 shadow-xs ${
+                row.isActive
+                  ? "border-neutral-200"
+                  : "border-neutral-200 opacity-75"
+              }`}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <h3 className="type-card-title font-head text-neutral-900">
+                  <h3 className="flex items-center gap-2 type-card-title font-head text-neutral-900">
                     {row.name}
+                    {!row.isActive && (
+                      <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-neutral-500">
+                        Nonaktif
+                      </span>
+                    )}
                   </h3>
                   <p className="mt-0.5 type-table text-neutral-500">
                     {row.summary}
                   </p>
                 </div>
-                <p className="shrink-0 font-head text-lg font-extrabold tracking-[-0.02em] text-primary-700">
+                <p className="shrink-0 font-head type-card-title text-primary-700">
                   {formatRupiah(row.price)}
                 </p>
               </div>
@@ -374,10 +321,10 @@ export function PaketClient({ packages }: { packages: PackageType[] }) {
 
               <div className="mt-4 flex flex-wrap gap-2">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-neutral-50 px-2.5 py-1 type-badge text-neutral-700 ring-1 ring-inset ring-neutral-200">
-                  <RefreshCcw className="h-3 w-3" /> {row.quota} revisi
+                  <RefreshCcw className="h-3 w-3" /> {row.revisionQuota} revisi
                 </span>
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-neutral-50 px-2.5 py-1 type-badge text-neutral-700 ring-1 ring-inset ring-neutral-200">
-                  <Clock className="h-3 w-3" /> Estimasi {row.days} hari
+                  <Clock className="h-3 w-3" /> Estimasi {row.estimatedDays} hari
                 </span>
               </div>
 
@@ -390,32 +337,41 @@ export function PaketClient({ packages }: { packages: PackageType[] }) {
                 >
                   <Pencil className="h-3.5 w-3.5" /> Edit
                 </Button>
-                {confirmId === row.id ? (
-                  <div className="flex items-center gap-2">
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => remove(row.id)}
-                    >
-                      Yakin hapus?
-                    </Button>
+
+                {row.isActive ? (
+                  confirmId === row.id ? (
+                    <form action={setPackageActive} className="flex items-center gap-2">
+                      <input type="hidden" name="packageId" value={row.id} />
+                      <input type="hidden" name="active" value="0" />
+                      <Button size="sm" variant="destructive" type="submit">
+                        Yakin nonaktifkan?
+                      </Button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmId(null)}
+                        className="rounded-xl border border-neutral-200 bg-neutral-0 px-3 py-2 type-badge text-neutral-600 transition-colors hover:bg-neutral-100"
+                      >
+                        Batal
+                      </button>
+                    </form>
+                  ) : (
                     <button
                       type="button"
-                      onClick={() => setConfirmId(null)}
-                      className="rounded-xl border border-neutral-200 bg-neutral-0 px-3 py-2 type-badge text-neutral-600 transition-colors hover:bg-neutral-100"
+                      onClick={() => setConfirmId(row.id)}
+                      disabled={formOpen}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-error-200 bg-error-50 px-3.5 py-2 type-badge text-error-700 transition-colors hover:bg-error-100 disabled:pointer-events-none disabled:bg-neutral-100 disabled:text-neutral-400"
                     >
-                      Batal
+                      <Trash2 className="h-3.5 w-3.5" /> Nonaktifkan
                     </button>
-                  </div>
+                  )
                 ) : (
-                  <button
-                    type="button"
-                    onClick={() => setConfirmId(row.id)}
-                    disabled={formOpen}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-error-200 bg-error-50 px-3.5 py-2 type-badge text-error-700 transition-colors hover:bg-error-100 disabled:pointer-events-none disabled:bg-neutral-100 disabled:text-neutral-400"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" /> Hapus
-                  </button>
+                  <form action={setPackageActive}>
+                    <input type="hidden" name="packageId" value={row.id} />
+                    <input type="hidden" name="active" value="1" />
+                    <Button size="sm" variant="secondary" type="submit">
+                      <RefreshCcw className="h-3.5 w-3.5" /> Aktifkan
+                    </Button>
+                  </form>
                 )}
               </div>
             </div>
@@ -424,9 +380,9 @@ export function PaketClient({ packages }: { packages: PackageType[] }) {
       )}
 
       {/* Ringkasan nilai total (info publik kreasi) */}
-      {rows.length > 0 && (
+      {packages.length > 0 && (
         <p className="type-caption text-neutral-500">
-          {rows.length} paket aktif · total nilai penawaran{" "}
+          {activeRows.length} paket aktif · total nilai penawaran{" "}
           <strong className="text-neutral-700">{formatRupiah(totalValue)}</strong>
         </p>
       )}
