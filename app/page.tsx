@@ -239,13 +239,13 @@ MASALAH → SOLUSI
               icon: Wallet,
               title: "Harga per video jelas",
               desc: "Setiap kreator memajang paket lengkap — Review Video, Unboxing & Story, hingga Kampanye Komplit. Tanpa tawar-menawar di DM.",
-              color: "from-primary-500 to-primary-800",
+              color: "from-secondary-500 to-secondary-700",
             },
             {
               icon: ClipboardList,
               title: "Booking 3 langkah",
               desc: "Pilih paket, tulis brief singkat, kirim. Kreator tinggal setujui atau tolak — status langsung terpantau.",
-              color: "from-success-500 to-success-600",
+              color: "from-success-500 to-success-700",
             },
             {
               icon: LayoutDashboard,
