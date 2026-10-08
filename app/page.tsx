@@ -1,8 +1,7 @@
-import { getCategories, getFeaturedInfluencers, getLandingStats } from "@/lib/data/catalog";
+import { getLandingStats } from "@/lib/data/catalog";
 import Link from "next/link";
 import {
   ArrowRight,
-  ArrowUpRight,
   BarChart3,
   ChevronDown,
   ClipboardList,
@@ -19,7 +18,6 @@ import {
   Zap,
 } from "lucide-react";
 
-import { CreatorCard } from "@/components/CreatorCard";
 import { Reveal } from "@/components/Reveal";
 
 export const dynamic = "force-dynamic";
@@ -43,8 +41,6 @@ const marqueeItems = [
 
 export default async function LandingPage() {
   const stats = await getLandingStats();
-  const featured = await getFeaturedInfluencers(4);
-  const categories = await getCategories();
 
   return (
     <div>
@@ -350,57 +346,6 @@ MASALAH → SOLUSI
               </Reveal>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* ================================================================
-          KATEGORI + KREATOR PILIHAN
-      ================================================================ */}
-      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
-        <Reveal>
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <p className="text-sm font-bold uppercase tracking-widest text-primary-600">
-                Jelajahi
-              </p>
-            <h2 className="font-head mt-2 text-3xl font-extrabold tracking-[-0.02em] text-neutral-900">
-              Kreator per kategori
-            </h2>
-            <p className="mt-2 max-w-md text-neutral-600">
-              Semua kreator sudah kami kurasi. Pilih sesuai kategori usahamu dan
-              mulai kolaborasi hari ini.
-            </p>
-          </div>
-          <Link
-            href="/influencers"
-            className="group inline-flex items-center gap-1 text-sm font-semibold text-primary-600 hover:text-primary-800"
-          >
-            Semua kreator
-            <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-          </Link>
-          </div>
-        </Reveal>
-
-<Reveal>
-          <div className="mt-8 flex flex-wrap gap-3">
-          {categories.map((n) => (
-            <Link
-              key={n.slug}
-              href={`/influencers?niche=${encodeURIComponent(n.slug)}`}
-              className="rounded-full border border-neutral-200 bg-white px-4 py-2 text-sm font-semibold text-neutral-700 shadow-xs transition-all hover:-translate-y-0.5 hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 hover:shadow-sm"
-            >
-              {n.name}
-            </Link>
-          ))}
-          </div>
-        </Reveal>
-
-        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {featured.map((inf, i) => (
-            <Reveal key={inf.id} delayMs={i * 50}>
-              <CreatorCard influencer={inf} className="h-full" />
-            </Reveal>
-          ))}
         </div>
       </section>
 
