@@ -36,3 +36,21 @@ export function formatDate(iso: string): string {
     year: "numeric",
   });
 }
+
+/**
+ * Tanggal + jam ISO -> "12 Sep 2026, 14.30".
+ *
+ * Milestone timestamps are displayed-only, but a payment due time or a
+ * production deadline without an hour is only half the fact, so the detail
+ * pages show both.
+ */
+export function formatDateTime(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleString("id-ID", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}

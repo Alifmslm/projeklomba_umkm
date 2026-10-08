@@ -1,9 +1,14 @@
+import { getCategories, getCities, getInfluencers } from "@/lib/data/catalog";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { type ReactNode } from "react";
 import { SearchX, SlidersHorizontal } from "lucide-react";
-import { getCities, getInfluencers, getNiches } from "@/lib/data";
-import { InfluencerCard } from "@/components/InfluencerCard";
+import { getUserContext } from "@/lib/auth";
+import { UmkmShell } from "@/components/UmkmShell";
+import { CreatorCard } from "@/components/CreatorCard";
+import { EmptyState } from "@/components/EmptyState";
+import { Input } from "@/components/Input";
+import { Select } from "@/components/Select";
+import { Button } from "@/components/Button";
 
 export const dynamic = "force-dynamic";
 
@@ -27,28 +32,10 @@ const SORTS = [
   { value: "rating", label: "Rating tertinggi" },
 ];
 
-// Komponen kecil murni-server agar tidak mengubah tanda tangan page
-function FilterField({
-  label,
-  children,
-}: {
-  label: string;
-  children: ReactNode;
-}) {
-  return (
-    <label className="block">
-      <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-        {label}
-      </span>
-      {children}
-    </label>
-  );
-}
-
-const inputCls =
-  "w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-800 shadow-sm outline-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200";
-
 export default async function InfluencersPage(props: PageProps<"/influencers">) {
+  const account = await getUserContext();
+  const isUmkm = account?.role === "umkm";
+
   const params = await props.searchParams;
   const q = typeof params.q === "string" ? params.q.trim() : "";
   const niche = typeof params.niche === "string" ? params.niche : "";
@@ -60,108 +47,130 @@ export default async function InfluencersPage(props: PageProps<"/influencers">) 
   );
   const sort = typeof params.sort === "string" ? params.sort : "";
 
-  const influencers = getInfluencers({
+  const influencers = await getInfluencers({
     q: q || undefined,
-    niche: niche || undefined,
+    category: niche || undefined,
     city: city || undefined,
     maxPrice: maxPrice || undefined,
     sort: (sort as "terpopuler" | "termurah" | "rating") || undefined,
   });
 
-  const niches = getNiches();
-  const cities = getCities();
+  const niches = await getCategories();
+  const cities = await getCities();
 
-  return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+  // Pertahankan filter lain saat chip niche di-toggle (semantik GET sama
+  // dengan form; hanya mempermudah pemilihan kategori).
+  const preserved = new URLSearchParams();
+  if (q) preserved.set("q", q);
+  if (city) preserved.set("city", city);
+  if (maxPrice) preserved.set("maxPrice", String(maxPrice));
+  if (sort) preserved.set("sort", sort);
+  const chipHref = (n: string) => {
+    const sp = new URLSearchParams(preserved);
+    if (n) sp.set("niche", n);
+    else sp.delete("niche");
+    const s = sp.toString();
+    return s ? `/influencers?${s}` : "/influencers";
+  };
+
+  const chipCls = (active: boolean) =>
+    `rounded-full border px-4 py-2 text-sm font-semibold shadow-xs transition-all hover:-translate-y-0.5 hover:shadow-sm ${
+      active
+        ? "border-primary-500 bg-primary-50 text-primary-700"
+        : "border-neutral-200 bg-white text-neutral-700 hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700"
+    }`;
+
+  // Same content renders in both contexts — UMKM sees it inside the
+  // dashboard sidebar + header (UmkmShell provides the page container),
+  // guests/public keep the standalone centered container.
+  const body = (
+    <>
       {/* Header */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
+          <h1 className="font-head text-3xl font-extrabold tracking-[-0.02em] text-neutral-900">
             Cari Kreator
           </h1>
-          <p className="mt-1.5 text-slate-600">
+          <p className="mt-1.5 text-neutral-600">
             {influencers.length} kreator ditemukan untuk UMKM-mu
           </p>
         </div>
-        <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-500">
-          <SlidersHorizontal className="h-4 w-4 text-indigo-600" />
+        <div className="flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-3 py-2 text-xs font-semibold text-neutral-500">
+          <SlidersHorizontal className="h-4 w-4 text-primary-600" />
           Gunakan filter untuk mempersempit pencarian
         </div>
+      </div>
+
+      {/* Chip kategori */}
+      <div className="mt-6 flex flex-wrap gap-2">
+        <Link href={chipHref("")} className={chipCls(niche === "")}>
+          Semua kategori
+        </Link>
+        {niches.map((n) => (
+          <Link key={n.slug} href={chipHref(n.slug)} className={chipCls(niche === n.slug)}>
+            {n.name}
+          </Link>
+        ))}
       </div>
 
       {/* Filter bar */}
       <form
         method="GET"
         action="/influencers"
-        className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+        className="mt-4 rounded-2xl border border-neutral-200 bg-white p-5 shadow-xs"
       >
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
           <div className="lg:col-span-2">
-            <FilterField label="Cari nama / kota / kategori">
-              <input
-                type="search"
-                name="q"
-                defaultValue={q}
-                placeholder="Misal: kuliner Bandung…"
-                className={inputCls}
-              />
-            </FilterField>
+            <Input
+              type="search"
+              name="q"
+              defaultValue={q}
+              placeholder="Misal: kuliner Bandung…"
+              label="Cari nama / kota / kategori"
+            />
           </div>
-          <FilterField label="Kategori">
-            <select name="niche" defaultValue={niche} className={inputCls}>
-              <option value="">Semua kategori</option>
-              {niches.map((n) => (
-                <option key={n} value={n}>
-                  {n}
-                </option>
-              ))}
-            </select>
-          </FilterField>
-          <FilterField label="Kota">
-            <select name="city" defaultValue={city} className={inputCls}>
-              <option value="">Semua kota</option>
-              {cities.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </FilterField>
-          <FilterField label="Harga / video">
-            <select
-              name="maxPrice"
-              defaultValue={
-                maxPrice ? String(maxPrice) : "" // sertakan nilai kustom jika ada
-              }
-              className={inputCls}
-            >
-              {MAX_PRICES.map((p) => (
-                <option key={p.value} value={p.value}>
-                  {p.label}
-                </option>
-              ))}
-            </select>
-          </FilterField>
-          <FilterField label="Urutkan">
-            <select name="sort" defaultValue={sort} className={inputCls}>
-              {SORTS.map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-          </FilterField>
+          <Select name="niche" defaultValue={niche} label="Kategori">
+            <option value="">Semua kategori</option>
+            {niches.map((n) => (
+              <option key={n.slug} value={n.slug}>
+                {n.name}
+              </option>
+            ))}
+          </Select>
+          <Select name="city" defaultValue={city} label="Kota">
+            <option value="">Semua kota</option>
+            {cities.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </Select>
+          <Select
+            name="maxPrice"
+            defaultValue={maxPrice ? String(maxPrice) : ""}
+            label="Harga / video"
+          >
+            {MAX_PRICES.map((p) => (
+              <option key={p.value} value={p.value}>
+                {p.label}
+              </option>
+            ))}
+          </Select>
+          <Select name="sort" defaultValue={sort} label="Urutkan">
+            {SORTS.map((s) => (
+              <option key={s.value} value={s.value}>
+                {s.label}
+              </option>
+            ))}
+          </Select>
         </div>
         <div className="mt-4 flex items-center justify-between gap-3">
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-neutral-400">
             Harga per video adalah rata-rata paket paling murah tiap kreator.
           </p>
-          <button
-            type="submit"
-            className="rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-indigo-500/25 transition-all hover:shadow-lg hover:brightness-110"
-          >
+          <Button type="submit" variant="primary">
             Terapkan Filter
-          </button>
+          </Button>
         </div>
       </form>
 
@@ -169,28 +178,32 @@ export default async function InfluencersPage(props: PageProps<"/influencers">) 
       {influencers.length > 0 ? (
         <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {influencers.map((inf) => (
-            <InfluencerCard key={inf.id} influencer={inf} />
+            <CreatorCard key={inf.id} influencer={inf} />
           ))}
         </div>
       ) : (
-        <div className="mt-8 flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-20 text-center">
-          <span className="grid h-14 w-14 place-items-center rounded-2xl bg-slate-100 text-slate-400">
-            <SearchX className="h-7 w-7" />
-          </span>
-          <h3 className="mt-4 text-lg font-bold text-slate-900">
-            Tidak ada kreator yang cocok
-          </h3>
-          <p className="mt-1 max-w-sm text-sm text-slate-500">
-            Coba perlonggar filter atau ubah kata kunci pencarianmu.
-          </p>
-          <Link
-            href="/influencers"
-            className="mt-5 rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:border-indigo-300 hover:text-indigo-700"
-          >
-            Reset Filter
-          </Link>
+        <div className="mt-8">
+          <EmptyState
+            icon={SearchX}
+            title="Tidak ada kreator yang cocok"
+            description="Coba perlonggar filter atau ubah kata kunci pencarianmu."
+            action={
+              <Link
+                href="/influencers"
+                className="rounded-xl border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-700 transition-colors hover:border-primary-300 hover:text-primary-700"
+              >
+                Reset Filter
+              </Link>
+            }
+          />
         </div>
       )}
-    </div>
+    </>
+  );
+
+  if (isUmkm) return <UmkmShell>{body}</UmkmShell>;
+
+  return (
+    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">{body}</div>
   );
 }

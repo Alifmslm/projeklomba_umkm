@@ -1,0 +1,117 @@
+import { getInfluencerById } from "@/lib/data/catalog";
+import { getBookingDetail, getReviewForBookingRole } from "@/lib/data/bookings";
+import type { Metadata } from "next";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { Star } from "lucide-react";
+import { requireUmkm } from "@/lib/auth";
+
+import { StatusBadge } from "@/components/StatusBadge";
+import { Button } from "@/components/Button";
+import {
+  BookingDetailView,
+  BookingFlash,
+  SectionCard,
+  UmkmActions,
+} from "@/components/booking";
+
+export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Detail Kolaborasi",
+  description: "Rincian pengajuan kolaborasi UMKM di Kolab.id.",
+};
+
+export default async function BookingDetailPage(
+  props: PageProps<"/dashboard/riwayat/[id]">,
+) {
+  const account = await requireUmkm();
+
+  const params = await props.params;
+  const id = Number(params.id);
+  if (!Number.isFinite(id)) redirect("/dashboard/riwayat");
+
+  const booking = await getBookingDetail(id);
+  if (!booking || booking.umkmId !== account.umkmId) {
+    redirect("/dashboard/riwayat");
+  }
+
+  const influencer = await getInfluencerById(booking.influencerId);
+  const reviewed = await getReviewForBookingRole(booking.id, "umkm");
+  const searchParams = await props.searchParams;
+  const ok = typeof searchParams.ok === "string" ? searchParams.ok : undefined;
+  const gagal =
+    typeof searchParams.gagal === "string" ? searchParams.gagal : undefined;
+
+  return (
+    <>
+      <div>
+        <p className="flex flex-wrap items-center gap-2 type-table-head uppercase text-primary-700">
+          <Link href="/dashboard/riwayat" className="hover:text-primary-800">
+            Riwayat
+          </Link>
+          <span className="text-neutral-300">/</span>
+          <span className="font-mono normal-case tracking-normal text-neutral-700">
+            {booking.code}
+          </span>
+        </p>
+        <div className="mt-1 flex flex-wrap items-center gap-3">
+          <h1 className="font-head type-page-title text-neutral-900">
+            Detail Kolaborasi
+          </h1>
+          <StatusBadge status={booking.status} />
+        </div>
+        <p className="mt-1.5 text-neutral-600">
+          Brief, paket, progres, dan aksi untuk kolaborasi ini.
+        </p>
+      </div>
+
+      <div className="mt-8">
+        <BookingFlash ok={ok} gagal={gagal} />
+      </div>
+
+      <div className="mt-5">
+        <BookingDetailView
+          perspective="umkm"
+          booking={booking}
+          counterpart={
+            influencer
+              ? {
+                  name: influencer.name,
+                  handle: influencer.handle,
+                  categorySlug: influencer.categorySlug,
+                  category: influencer.category,
+                  city: influencer.city,
+                  href: `/influencers/${influencer.id}`,
+                }
+              : null
+          }
+        >
+          <SectionCard
+            title="Aksi"
+            action={<StatusBadge status={booking.status} />}
+          >
+            <div className="space-y-5">
+              <UmkmActions booking={booking} />
+              {booking.status === "COMPLETED" && (
+                <Button
+                  variant={reviewed ? "secondary" : "primary"}
+                  href={`/review/${booking.id}`}
+                >
+                  <Star className="h-4 w-4" />
+                  {reviewed ? "Lihat Ulasan" : "Beri Ulasan"}
+                </Button>
+              )}
+              <Link
+                href="/dashboard/riwayat"
+                className="inline-block type-label text-primary-700 hover:text-primary-800"
+              >
+                ← Kembali ke Riwayat
+              </Link>
+            </div>
+          </SectionCard>
+        </BookingDetailView>
+      </div>
+    </>
+  );
+}

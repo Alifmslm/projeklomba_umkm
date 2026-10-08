@@ -14,6 +14,7 @@ type InfluencerSeed = {
   niche: string;
   city: string;
   followers: number;
+  engagementRate: number;
   basePrice: number;
   rating: number;
   reviewCount: number;
@@ -29,6 +30,7 @@ const influencers: InfluencerSeed[] = [
     niche: "Kuliner",
     city: "Bandung",
     followers: 245_000,
+    engagementRate: 0.06,
     basePrice: 1_200_000,
     rating: 4.9,
     reviewCount: 127,
@@ -42,6 +44,7 @@ const influencers: InfluencerSeed[] = [
     niche: "Gadget & Teknologi",
     city: "Jakarta",
     followers: 512_000,
+    engagementRate: 0.045,
     basePrice: 2_500_000,
     rating: 4.8,
     reviewCount: 203,
@@ -55,6 +58,7 @@ const influencers: InfluencerSeed[] = [
     niche: "Kecantikan",
     city: "Jakarta",
     followers: 389_000,
+    engagementRate: 0.07,
     basePrice: 1_800_000,
     rating: 4.7,
     reviewCount: 168,
@@ -68,6 +72,7 @@ const influencers: InfluencerSeed[] = [
     niche: "Kesehatan & Fitnes",
     city: "Surabaya",
     followers: 178_000,
+    engagementRate: 0.05,
     basePrice: 850_000,
     rating: 4.6,
     reviewCount: 94,
@@ -81,6 +86,7 @@ const influencers: InfluencerSeed[] = [
     niche: "Parenting & Edukasi",
     city: "Yogyakarta",
     followers: 96_000,
+    engagementRate: 0.08,
     basePrice: 600_000,
     rating: 4.9,
     reviewCount: 76,
@@ -94,6 +100,7 @@ const influencers: InfluencerSeed[] = [
     niche: "Travel",
     city: "Medan",
     followers: 620_000,
+    engagementRate: 0.03,
     basePrice: 3_000_000,
     rating: 4.8,
     reviewCount: 241,
@@ -107,6 +114,7 @@ const influencers: InfluencerSeed[] = [
     niche: "Fashion",
     city: "Jakarta",
     followers: 410_000,
+    engagementRate: 0.05,
     basePrice: 2_000_000,
     rating: 4.7,
     reviewCount: 182,
@@ -120,6 +128,7 @@ const influencers: InfluencerSeed[] = [
     niche: "Gaming",
     city: "Surabaya",
     followers: 335_000,
+    engagementRate: 0.04,
     basePrice: 1_500_000,
     rating: 4.5,
     reviewCount: 143,
@@ -133,6 +142,7 @@ const influencers: InfluencerSeed[] = [
     niche: "Kuliner",
     city: "Yogyakarta",
     followers: 152_000,
+    engagementRate: 0.07,
     basePrice: 700_000,
     rating: 4.8,
     reviewCount: 88,
@@ -146,6 +156,7 @@ const influencers: InfluencerSeed[] = [
     niche: "Rumah & Dekorasi",
     city: "Bandung",
     followers: 74_000,
+    engagementRate: 0.06,
     basePrice: 450_000,
     rating: 4.6,
     reviewCount: 51,
@@ -159,6 +170,7 @@ const influencers: InfluencerSeed[] = [
     niche: "Fashion",
     city: "Bali",
     followers: 205_000,
+    engagementRate: 0.055,
     basePrice: 950_000,
     rating: 4.9,
     reviewCount: 119,
@@ -172,6 +184,7 @@ const influencers: InfluencerSeed[] = [
     niche: "Otomotif",
     city: "Jakarta",
     followers: 88_000,
+    engagementRate: 0.04,
     basePrice: 500_000,
     rating: 4.4,
     reviewCount: 42,
@@ -271,7 +284,7 @@ const bookings: BookingSeed[] = [
     umkm: "Warung Kopi Senja",
     packageName: "Review Video",
     amount: 700_000,
-    status: "DONE",
+    status: "COMPLETED",
     createdAt: "2026-08-21T09:00:00.000Z",
     message: "Review menu kopi & camilan baru, tone santai dan kekinian.",
   },
@@ -280,7 +293,7 @@ const bookings: BookingSeed[] = [
     umkm: "Warung Kopi Senja",
     packageName: "Kampanye Komplit",
     amount: roundK(1_200_000 * 1.8),
-    status: "DONE",
+    status: "COMPLETED",
     createdAt: "2026-09-02T11:30:00.000Z",
     message: "Kampanye grand opening cabang kedua, fokus ke night vibe.",
   },
@@ -289,7 +302,7 @@ const bookings: BookingSeed[] = [
     umkm: "Warung Kopi Senja",
     packageName: "Unboxing & Story",
     amount: roundK(950_000 * 0.6),
-    status: "APPROVED",
+    status: "ACCEPTED",
     createdAt: "2026-09-15T07:45:00.000Z",
     message: "Promo merchandise kopi edisi terbatas.",
   },
@@ -317,7 +330,7 @@ const bookings: BookingSeed[] = [
     umkm: "Batik Nusantara",
     packageName: "Unboxing & Story",
     amount: roundK(1_200_000 * 0.6),
-    status: "APPROVED",
+    status: "ACCEPTED",
     createdAt: "2026-09-18T08:10:00.000Z",
     message: "Review batik modern untuk acara pernikahan, 3 outfit.",
   },
@@ -326,7 +339,7 @@ const bookings: BookingSeed[] = [
     umkm: "Kopi & Kita",
     packageName: "Review Video",
     amount: 1_200_000,
-    status: "DONE",
+    status: "COMPLETED",
     createdAt: "2026-09-05T14:00:00.000Z",
     message: "Review kopi gayo single origin + breakfast set.",
   },
@@ -350,23 +363,75 @@ const bookings: BookingSeed[] = [
   },
 ];
 
+type ReviewSeed = {
+  /** kode booking yang sudah DONE */
+  bookingCode: string;
+  reviewerRole: "umkm" | "influencer";
+  rating: number;
+  comment: string;
+  createdAt: string;
+};
+
+/**
+ * Review demo (fitur rating 2 arah).
+ * Dipilih agar tombol "Beri Ulasan"/"Nilai UMKM" tetap muncul di dashboard:
+ * - UMKM belum menilai booking 0002 (Rara Nadia)
+ * - Kreator belum menilai booking 0007 (Kopi & Kita)
+ */
+const reviews: ReviewSeed[] = [
+  // UMKM → Kreator
+  {
+    bookingCode: "CLB-2026-0001",
+    reviewerRole: "umkm",
+    rating: 5,
+    comment:
+      "Video review kopinya dapet banget. Kafe kami ramai seminggu penuh, orderan online ikut naik!",
+    createdAt: "2026-08-24T09:00:00.000Z",
+  },
+  {
+    bookingCode: "CLB-2026-0007",
+    reviewerRole: "umkm",
+    rating: 5,
+    comment:
+      "Konten kopi gayo single origin-nya bagus banget, ada beberapa pelanggan baru yang datang karena video itu.",
+    createdAt: "2026-09-08T14:00:00.000Z",
+  },
+  // Kreator → UMKM
+  {
+    bookingCode: "CLB-2026-0001",
+    reviewerRole: "influencer",
+    rating: 5,
+    comment:
+      "Brief jelas, produknya enak, jadwal tayang fleksibel. Recommended!",
+    createdAt: "2026-08-25T09:00:00.000Z",
+  },
+  {
+    bookingCode: "CLB-2026-0002",
+    reviewerRole: "influencer",
+    rating: 4,
+    comment:
+      "Produk bagus dan koordinasi rapi, tapi revisi brief agak telat menjelang tayang.",
+    createdAt: "2026-09-06T11:00:00.000Z",
+  },
+];
+
 export function seed(clear = true) {
   const run = db.prepare("SELECT COUNT(*) AS c FROM influencers").get() as {
     c: number;
   };
   if (clear || run.c === 0) {
-    db.exec("DELETE FROM bookings; DELETE FROM packages; DELETE FROM umkms; DELETE FROM influencers;");
+    db.exec("DELETE FROM reviews; DELETE FROM bookings; DELETE FROM packages; DELETE FROM umkms; DELETE FROM influencers;");
     // Reset urutan AUTOINCREMENT agar ID selalu deterministik
     // (id 1 = Rara Nadia / Warung Kopi Senja, dst. setiap kali seed dijalankan).
     db.exec(
-      "DELETE FROM sqlite_sequence WHERE name IN ('bookings','packages','umkms','influencers');",
+      "DELETE FROM sqlite_sequence WHERE name IN ('reviews','bookings','packages','umkms','influencers');",
     );
   }
 
   const insertInfluencer = db.prepare(
     `INSERT INTO influencers
-       (name, handle, niche, city, followers, base_price, rating, review_count, verified, bio, color)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       (name, handle, niche, city, followers, engagement_rate, base_price, rating, review_count, verified, bio, color)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   );
   const insertPackage = db.prepare(
     `INSERT INTO packages (influencer_id, name, price, summary, includes)
@@ -389,6 +454,7 @@ export function seed(clear = true) {
       inf.niche,
       inf.city,
       inf.followers,
+      inf.engagementRate,
       inf.basePrice,
       inf.rating,
       inf.reviewCount,
@@ -428,7 +494,35 @@ export function seed(clear = true) {
     );
   }
 
+  const insertReview = db.prepare(
+    `INSERT INTO reviews
+       (booking_id, reviewer_role, reviewer_id, reviewee_type, reviewee_id, rating, comment, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+  );
+  const bookedById = db.prepare(
+    "SELECT id, influencer_id AS influencerId, umkm_id AS umkmId FROM bookings WHERE code = ?",
+  );
+  let reviewCount = 0;
+  for (const r of reviews) {
+    const booking = bookedById.get(r.bookingCode) as
+      | { id: number; influencerId: number; umkmId: number }
+      | undefined;
+    if (!booking) continue;
+    const isUmkm = r.reviewerRole === "umkm";
+    insertReview.run(
+      booking.id,
+      r.reviewerRole,
+      isUmkm ? booking.umkmId : booking.influencerId,
+      isUmkm ? "influencer" : "umkm",
+      isUmkm ? booking.influencerId : booking.umkmId,
+      r.rating,
+      r.comment,
+      r.createdAt,
+    );
+    reviewCount += 1;
+  }
+
   console.log(
-    `Seed selesai: ${influencers.length} influencer, ${influencers.length * 3} paket, ${umkms.length} UMKM, ${bookings.length} booking.`,
+    `Seed selesai: ${influencers.length} influencer, ${influencers.length * 3} paket, ${umkms.length} UMKM, ${bookings.length} booking, ${reviewCount} review.`,
   );
 }

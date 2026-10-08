@@ -1,93 +1,82 @@
-# Kolab — Jembatan UMKM & Kreator
+# Kolab.id — Jembatan UMKM & Kreator
 
-Platform marketplace kolaborasi untuk UMKM dan content creator (Proyek Lomba — Kompetisi Inovasi Digital).
+Platform kolaborasi yang mempertemukan **UMKM** dengan **content creator** secara langsung, dengan **harga transparan** dan proses yang jelas, tanpa agensi mahal dan tanpa negosiasi yang membingungkan.
 
-**Masalah:** Banyak UMKM dengan produk bagus gagal berkembang karena pemasaran mentok — jangkauan terbatas, iklan/agensi kemahalan, dan cari kreator ribet.
-
-**Solusi:** Kolab menghubungkan UMKM dengan content creator secara langsung — daftar kreator dengan **harga per video transparan**, booking kolaborasi dalam 3 langkah, dan dashboard untuk kedua sisi.
+> Catatan untuk developer dan desainer: panduan teknis ada di [DEVELOPMENT.md](./DEVELOPMENT.md), arsitektur informasi dan alur tiap tugas ada di [ARCHITECTURE.md](./ARCHITECTURE.md).
 
 ---
 
-## Fitur
+## Latar Belakang & Masalah
 
-- **Landing page** — hero, masalah/solusi, kategori kreator, cara kerja, testimoni, CTA
-- **Daftar kreator + filter** — cari nama, filter niche/kota/harga maks, urutkan (populer/rating/harga/followers)
-- **Detail kreator** — profil, statistik, paket harga (Review Video / Unboxing & Story / Kampanye Komplit)
-- **Booking kolaborasi** — pilih paket, isi brief, kirim pengajuan (khusus UMKM)
-- **Dashboard UMKM** — ringkasan statistik (total kolaborasi, berjalan, menunggu, anggaran), riwayat lengkap
-- **Dashboard Kreator** — permintaan masuk, setujui/tolak, tandai selesai
+### 1. Konsumen muda mencari informasi lewat media sosial dan kreator
+Gen Z dan generasi muda kini tidak lagi mengandalkan iklan konvensional. Mereka menemukan tempat makan, produk fashion, hingga skincare lewat **TikTok, Instagram, dan YouTube**, dan lebih percaya pada rekomendasi kreator yang mereka ikuti dibanding iklan brand. Artinya, UMKM yang tidak hadir di percakapan media sosial berisiko tidak terlihat oleh pasar yang paling aktif berbelanja.
 
-## Tech Stack
+### 2. UMKM sulit menjangkau pasar tersebut
+Banyak UMKM punya produk bagus, tetapi pemasarannya mentok: jangkauan terbatas, biaya iklan dan agensi terlalu mahal, dan tidak tahu harus mulai dari kreator mana.
 
-- **Next.js 16** (App Router) + **TypeScript**
-- **Tailwind CSS v4**
-- **SQLite** via `node:sqlite` bawaan Node (tanpa dependency native, file `data.db`)
-- **Auth mock** — sesi berbasis cookie `kolab_session` (login demo tanpa password, relevan untuk demo lomba)
-- **Font lokal** (Plus Jakarta Sans, via `next/font/local`) — 100% offline, tanpa fetch Google Fonts
+### 3. Proses hiring kreator kurang transparan
+Saat ini, menyewa content creator hampir selalu dilakukan lewat **chat pribadi**. Akibatnya:
+- Harga tidak terpublikasi, sehingga UMKM **tidak tahu apakah harga yang ditawarkan wajar atau "ditembak"** (dinaikkan sepihak).
+- UMKM harus bertanya dan menawar satu per satu, memakan waktu dan melelahkan.
+- Tidak ada standar pembanding harga, sehingga keputusan diambil dengan informasi yang minim.
+- Kesepakatan, jadwal, dan hasil kerja sulit dilacak karena tersebar di percakapan.
 
-## Setup
+### 4. Kreator kecil sulit mendapat kesempatan
+Kreator dengan pengikut terbatas (nano dan micro influencer) sering kalah terlihat dibanding kreator besar, padahal audiens mereka biasanya lebih dekat dan engagement-nya tinggi. Tanpa wadah yang tepat, mereka sulit menemukan klien dan menetapkan harga yang pantas.
 
-Prasyarat: Node.js **22.5+** (node:sqlite) — dikembangkan dan diuji di Node 25.
+---
 
-```bash
-npm install
-npm run db:seed   # buat + isi database demo (12 kreator, 36 paket, 4 UMKM, 9 booking)
-npm run dev       # http://localhost:3000
-```
+## Solusi Kami
 
-Build production:
+Kolab.id menjadi **jembatan dua arah** antara UMKM dan kreator:
 
-```bash
-npm run build
-npm start
-```
+- **Harga transparan per video.** Setiap kreator menampilkan paket dan harganya secara terbuka, sehingga tidak ada lagi tebak-tebakan harga lewat chat pribadi.
+- **Filter harga di daftar kreator.** UMKM bisa menyaring kreator sesuai budget dan membandingkan harga antar kreator dalam satu halaman, sehingga mudah menilai kewajaran harga.
+- **Kolaborasi dalam 3 langkah.** Pilih kreator, ajukan brief, lalu pantau progres, semuanya di satu tempat.
+- **Pembayaran yang aman.** Dana ditahan dulu dan baru diteruskan ke kreator setelah konten disetujui. Semua diskusi tercatat di Chat tiap kolaborasi.
+- **Jangkauan ke Gen Z dan anak muda.** Lewat konten kreator yang sudah dipercaya audiens muda, UMKM bisa tampil di tempat calon pelanggan benar-benar mencari referensi.
+- **Ruang tumbuh bagi kreator kecil.** Semua kreator mendapat halaman profil, paket harga, dan ulasan yang setara, sehingga kualitas dan reputasi, bukan jumlah pengikut semata, yang membuka peluang kerja sama.
 
-## Akun Demo (login mock, tanpa password)
+## Tujuan
 
-Buka `/login` lalu pilih salah satu:
+1. Membantu **UMKM** meningkatkan jangkauan pemasaran ke generasi muda dengan biaya yang terukur.
+2. Menciptakan **transparansi harga** dalam kerja sama UMKM dan kreator.
+3. Membuka **peluang penghasilan bagi kreator kecil** lewat kerja sama yang jelas, terjadwal, dan terpercaya.
 
-| Peran | Akun | Tujuan |
-| --- | --- | --- |
-| UMKM | Warung Kopi Senja | Dashboard UMKM, booking kreator |
-| Kreator | Rara Nadia | Dashboard kreator, konfirmasi booking |
+---
 
-## Struktur Route
+## Apa yang Bisa Dilakukan di Kolab.id?
 
-| Route | Deskripsi |
+### Untuk UMKM
+- **Cari dan filter kreator** berdasarkan nama, bidang usaha (kuliner, fashion, kecantikan, dll.), kota, dan budget
+- **Lihat harga paket yang jelas**, tanpa perlu tanya-tanya atau menawar satu per satu
+- **Ajukan kolaborasi** dengan mengisi brief singkat tentang produk dan kebutuhan promosi
+- **Pantau semua pengajuan** di dashboard, lengkap dengan status dan riwayat
+- **Dapatkan rekomendasi kreator otomatis** yang dicocokkan dengan jenis usaha, kota, dan budget
+- **Lihat estimasi jangkauan & ROI** tiap kreator sebelum booking — perkiraan audiens tersentuh per video dan potensi balik modal tiap paket, dengan asumsi yang transparan
+- **Beri nilai dan ulasan** setelah kerja sama selesai
+
+### Untuk Kreator / Influencer
+- **Terima permintaan kolaborasi** yang masuk dari UMKM
+- **Setujui, tolak, atau tandai selesai** setiap proyek dengan satu klik
+- **Bangun reputasi** lewat rating dan ulasan dari UMKM partner
+- **Beri nilai dan ulasan** untuk UMKM partner setelah proyek selesai
+
+### Untuk Semua Pengunjung
+- **Lihat Wawasan Harga Pasar** — standar harga video promosi per kategori usaha, terbuka tanpa perlu masuk
+
+---
+
+## Halaman-Halaman Utama
+
+| Halaman | Isinya |
 | --- | --- |
-| `/` | Landing page |
-| `/influencers` | Daftar kreator + filter |
-| `/influencers/[id]` | Detail kreator & paket harga |
-| `/booking/[influencerId]` | Form pengajuan kolaborasi *(guard: UMKM)* |
-| `/dashboard` | Dashboard UMKM |
-| `/dashboard/influencer` | Dashboard kreator |
-| `/login` | Login demo |
-
-## Struktur Kode
-
-```
-app/
-  actions.ts            # server actions (login/logout, submitBooking, setBookingStatus)
-  page.tsx              # landing page
-  influencers/          # daftar + detail kreator
-  booking/[influencerId]
-  dashboard/            # dashboard UMKM + dashboard kreator
-  login/
-components/             # Navbar, Footer, InfluencerCard, StatusBadge, dll.
-lib/
-  db.ts                 # koneksi SQLite + schema
-  seed.ts               # data demo
-  data.ts               # query functions
-  auth.ts               # sesi cookie mock
-  format.ts             # format Rupiah, angka, tanggal
-  types.ts
-scripts/seed.ts         # CLI seeder (npm run db:seed)
-```
-
-## Catatan
-
-- Database lokal `data.db` (gitignored). Jalankan `npm run db:seed` kapan saja untuk reset ke data demo.
-- Semua halaman yang membaca DB bersifat dinamis (`export const dynamic = "force-dynamic"`).
-- Auth adalah **mock** untuk demo — tidak ada password asli, sesi hanya cookie base64url.
-
-Dibuat untuk kompetisi inovasi digital — menghubungkan UMKM yang butuh pemasaran dengan kreator yang butuh pendapatan.
+| Beranda | Pengenalan Kolab.id, cara kerja, dan testimoni |
+| Daftar Kreator | Semua kreator lengkap dengan filter pencarian (kategori, kota, dan harga) |
+| Detail Kreator | Profil, paket harga + **estimasi jangkauan & ROI**, dan ulasan dari UMKM |
+| Wawasan Harga | Standar harga video promosi per kategori usaha |
+| Dashboard UMKM | Ringkasan aktivitas, rekomendasi kreator, dan riwayat kolaborasi |
+| Riwayat Kolaborasi | Semua pengajuan kolaborasi beserta statusnya |
+| Profile Usaha | Data usaha UMKM (bisa diubah, memengaruhi rekomendasi kreator) |
+| Dashboard Kreator | Permintaan masuk, konfirmasi, dan penyelesaian proyek |
+| Chat | Diskusi langsung dengan kreator di tiap kolaborasi |

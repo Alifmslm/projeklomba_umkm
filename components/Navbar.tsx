@@ -1,22 +1,22 @@
 import Link from "next/link";
 import { LogOut, LayoutDashboard } from "lucide-react";
-import { getSession } from "@/lib/auth";
-import { logout } from "@/app/actions";
+import { DASHBOARD_BY_ROLE, getUserContext } from "@/lib/auth";
+import { signOut } from "@/app/actions";
 import { Logo } from "./Logo";
+import { NavbarLinks } from "./NavbarLinks";
 
 const links = [
-  { href: "/", label: "Beranda" },
-  { href: "/influencers", label: "Cari Kreator" },
+  { href: "/#beranda", label: "Beranda" },
+  { href: "/#fitur", label: "Fitur" },
   { href: "/#cara-kerja", label: "Cara Kerja" },
+  { href: "/#faq", label: "FAQ" },
 ];
 
 export async function Navbar() {
-  const session = await getSession();
-  const dashHref =
-    session?.role === "umkm" ? "/dashboard" : "/dashboard/influencer";
+  const account = await getUserContext();
 
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-200/70 bg-white/85 backdrop-blur-md">
+    <header className="sticky top-0 z-50 border-b border-neutral-200/70 bg-neutral-0/85 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link
           href="/"
@@ -26,32 +26,22 @@ export async function Navbar() {
           <Logo />
         </Link>
 
-        <nav className="hidden items-center gap-7 md:flex">
-          {links.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              className="text-sm font-medium text-slate-600 transition-colors hover:text-indigo-700"
-            >
-              {l.label}
-            </Link>
-          ))}
-        </nav>
+        <NavbarLinks links={links} />
 
         <div className="hidden items-center gap-3 md:flex">
-          {session ? (
+          {account ? (
             <>
               <Link
-                href={dashHref}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-indigo-200 hover:text-indigo-700"
+                href={DASHBOARD_BY_ROLE[account.role]}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-neutral-200 bg-neutral-0 px-3.5 py-2 text-sm font-semibold text-neutral-700 transition-colors hover:border-primary-200 hover:text-primary-700"
               >
                 <LayoutDashboard className="h-4 w-4" />
-                {session.name}
+                {account.fullName}
               </Link>
-              <form action={logout}>
+              <form action={signOut}>
                 <button
                   type="submit"
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-3.5 py-2 text-sm font-semibold text-white transition-colors hover:bg-rose-600"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-neutral-900 px-3.5 py-2 text-sm font-semibold text-neutral-0 transition-colors hover:bg-error-600"
                 >
                   <LogOut className="h-4 w-4" />
                   Keluar
@@ -61,7 +51,7 @@ export async function Navbar() {
           ) : (
             <Link
               href="/login"
-              className="inline-flex items-center rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-indigo-500/25 transition-all hover:shadow-lg hover:brightness-110"
+              className="inline-flex items-center rounded-xl bg-gradient-to-r from-primary-600 to-primary-500 px-4 py-2 text-sm font-semibold text-neutral-0 shadow-md shadow-primary-500/25 transition-all hover:shadow-lg hover:brightness-110"
             >
               Masuk
             </Link>

@@ -7,13 +7,23 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "db:seed": "tsx scripts/seed.ts"
+    "db:seed": "tsx scripts/seed.ts",
+    "db:reset": "supabase db reset",
+    "db:migrate": "supabase db push",
+    "db:types": "supabase gen types typescript --local > utils/supabase/database.types.ts",
+    "verify:auth": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-auth.ps1",
+    "verify:rls": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-rls.ps1",
+    "verify:offers": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-offers.ps1",
+    "verify": "npm run verify:auth && npm run verify:rls && npm run verify:offers"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.117.2",
     "lucide-react": "^1.47.0",
     "next": "16.3.6",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -22,6 +32,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.6",
+    "supabase": "^2.119.0",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
     "typescript": "^5"
