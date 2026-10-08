@@ -1,4 +1,3 @@
-import { getLandingStats } from "@/lib/data/catalog";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -7,7 +6,6 @@ import {
   ClipboardList,
   Handshake,
   LayoutDashboard,
-  MapPin,
   Megaphone,
   Search,
   ShieldCheck,
@@ -15,7 +13,6 @@ import {
   TrendingUp,
   Users,
   Wallet,
-  Zap,
 } from "lucide-react";
 
 import { Reveal } from "@/components/Reveal";
@@ -40,8 +37,6 @@ const marqueeItems = [
 ];
 
 export default async function LandingPage() {
-  const stats = await getLandingStats();
-
   return (
     <div>
       {/* ================================================================
@@ -416,11 +411,7 @@ MASALAH → SOLUSI
           <div className="bg-grid absolute inset-0 opacity-20" />
 
           <div className="relative mx-auto max-w-2xl">
-            <span className="inline-flex items-center gap-2 rounded-full border border-secondary-300/50 bg-secondary-500/15 px-3 py-1 text-xs font-semibold backdrop-blur">
-              <Zap className="h-3.5 w-3.5 text-secondary-300" />
-              Gratis untuk memulai
-            </span>
-            <h2 className="font-head mt-5 text-3xl font-extrabold tracking-[-0.02em] sm:text-4xl lg:text-5xl">
+            <h2 className="font-head text-3xl font-extrabold tracking-[-0.02em] sm:text-4xl lg:text-5xl">
               Siap membawa UMKM-mu naik kelas?
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-primary-100">
@@ -441,15 +432,6 @@ MASALAH → SOLUSI
               >
                 Coba Demo Sekarang
               </Link>
-            </div>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-primary-100">
-              <span className="flex items-center gap-1.5">
-                <MapPin className="h-3.5 w-3.5" /> 6+ kota di Indonesia
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Handshake className="h-3.5 w-3.5" /> {stats.completedCount}+
-                kolaborasi selesai
-              </span>
             </div>
           </div>
           </div>
